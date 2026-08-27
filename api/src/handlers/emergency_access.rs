@@ -35,6 +35,42 @@ pub struct GrantBoundEmergencyAccessResponse {
     pub commitment_verified: bool,
 }
 
+async fn persist_emergency_disclosure(
+    data: &web::Data<AppState>,
+    event: crate::deferred_emergency_audit::DeferredEmergencyAudit,
+) -> Result<(), HttpResponse> {
+    match crate::emergency_capsule::persist_access(data, event.disclosure.clone()).await {
+        Ok(()) => return Ok(()),
+        Err(error) => log::error!("{error}"),
+    }
+    let mode =
+        crate::deferred_emergency_audit::EmergencyAuditMode::from_env().map_err(|error| {
+            log::error!("Emergency audit policy configuration invalid: {error}");
+            emergency_error(
+                HttpResponse::ServiceUnavailable(),
+                "Emergency access audit is unavailable",
+                "AUDIT_POLICY_INVALID",
+            )
+        })?;
+    if mode == crate::deferred_emergency_audit::EmergencyAuditMode::Deny {
+        return Err(emergency_error(
+            HttpResponse::ServiceUnavailable(),
+            "Emergency access audit is unavailable",
+            "AUDIT_PERSISTENCE_REQUIRED",
+        ));
+    }
+    crate::deferred_emergency_audit::persist(event)
+        .await
+        .map_err(|error| {
+            log::error!("Durable deferred emergency audit failed: {error}");
+            emergency_error(
+                HttpResponse::ServiceUnavailable(),
+                "Emergency access audit is unavailable",
+                "AUDIT_FALLBACK_UNAVAILABLE",
+            )
+        })
+}
+
 /// Return the minimum emergency summary only after validating a live work
 /// context, approved device, and newly issued server-side emergency grant.
 #[post("/api/emergency/access")]
@@ -198,8 +234,7 @@ pub async fn grant_bound_emergency_access(
         None => (None, false),
     };
     let fields_revealed = crate::emergency_capsule::emergency_summary_revealed_fields();
-    if let Err(error) = crate::emergency_capsule::log_access(
-        &data,
+    let disclosure = crate::emergency_capsule::build_access_entry(
         &grant.patient_id,
         capsule_version,
         &grant.requesting_person_id,
@@ -208,15 +243,26 @@ pub async fn grant_bound_emergency_access(
         body.reason_text.clone(),
         fields_revealed,
         commitment_verified,
-    )
-    .await
-    {
-        log::error!("{error}");
-        return emergency_error(
-            HttpResponse::ServiceUnavailable(),
-            "Emergency access audit is unavailable",
-            "AUDIT_PERSISTENCE_REQUIRED",
-        );
+    );
+    let deferred = crate::deferred_emergency_audit::DeferredEmergencyAudit {
+        event_id: disclosure.id.clone(),
+        disclosure,
+        organization_id: grant.organization_id.clone(),
+        facility_id: grant.facility_id.clone(),
+        device_id: body.device_id.clone(),
+        work_context_id: body.work_context_id.clone(),
+        correlation_id: req
+            .headers()
+            .get("x-correlation-id")
+            .and_then(|value| value.to_str().ok())
+            .filter(|value| !value.trim().is_empty())
+            .map(str::to_string)
+            .unwrap_or_else(|| uuid::Uuid::new_v4().to_string()),
+        authorization: "active_professional_context_and_emergency_grant".to_string(),
+        deferred_at: Utc::now(),
+    };
+    if let Err(response) = persist_emergency_disclosure(&data, deferred).await {
+        return response;
     }
 
     HttpResponse::Ok().json(GrantBoundEmergencyAccessResponse {

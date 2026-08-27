@@ -377,6 +377,7 @@ pub async fn load_current_verified(
 /// succeeds. A warning in process logs is not an immutable disclosure record,
 /// and a database outage must not create an unaudited break-glass path.
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub async fn log_access(
     data: &web::Data<AppState>,
     patient_id: &str,
@@ -388,7 +389,31 @@ pub async fn log_access(
     fields_revealed: Vec<String>,
     commitment_verified: bool,
 ) -> Result<(), String> {
-    let entry = EmergencyCapsuleAccessEntity {
+    let entry = build_access_entry(
+        patient_id,
+        capsule_version,
+        accessed_by,
+        grant_id,
+        reason_code,
+        reason_text,
+        fields_revealed,
+        commitment_verified,
+    );
+    persist_access(data, entry).await
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn build_access_entry(
+    patient_id: &str,
+    capsule_version: Option<i32>,
+    accessed_by: &str,
+    grant_id: Option<String>,
+    reason_code: &str,
+    reason_text: Option<String>,
+    fields_revealed: Vec<String>,
+    commitment_verified: bool,
+) -> EmergencyCapsuleAccessEntity {
+    EmergencyCapsuleAccessEntity {
         id: format!("ECA-{}", uuid::Uuid::new_v4()),
         patient_id: patient_id.to_string(),
         capsule_version,
@@ -399,8 +424,13 @@ pub async fn log_access(
         fields_revealed,
         commitment_verified,
         accessed_at: chrono::Utc::now(),
-    };
+    }
+}
 
+pub async fn persist_access(
+    data: &web::Data<AppState>,
+    entry: EmergencyCapsuleAccessEntity,
+) -> Result<(), String> {
     data.repositories
         .emergency_capsules
         .log_access(entry)

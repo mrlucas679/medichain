@@ -88,7 +88,7 @@ or response claims it happened.
 
 ---
 
-## 3. Break-glass access when the audit store is unavailable (open tradeoff)
+## 3. Break-glass access when the audit store is unavailable (mechanism built; selection open)
 
 ### What changed, and why it needs a decision
 
@@ -118,10 +118,25 @@ took emergency access down with it.
 3. Does the answer differ between a total audit outage and a single rejected write (for example a constraint violation on one record)?
 4. Who is accountable for the decision, and where is it recorded for the regulator?
 
-Until this is answered the code stays fail-closed, because that is the safer
-default for the *record*; but note that it is the less safe default for the
-*patient in front of the paramedic*, and that asymmetry is exactly why it is not
-an engineering call.
+The engineering mechanism now exposes both choices without selecting the
+clinical policy:
+
+* EMERGENCY_AUDIT_AVAILABILITY_MODE=deny remains the default and refuses the
+  disclosure.
+* durable_defer may disclose only after an immutable event has been written
+  and fsynced under EMERGENCY_DEFERRED_AUDIT_DIR. The event preserves actor,
+  patient, grant, purpose, fields, device, organisation/facility, professional
+  context, timestamp and correlation identity. A startup/background reconciler
+  replays the original event idempotently into the canonical capsule-access
+  ledger and writes a separate acknowledgement without deleting the original.
+* EMERGENCY_DEFERRED_AUDIT_MAX_AGE_SECS has no code-selected default. Once an
+  unacknowledged event exceeds the deployment-approved limit, further deferred
+  disclosures fail closed and the reconciler logs an error every cycle.
+* Failure of both the canonical ledger and durable fallback always refuses PHI.
+
+Deployment owners must still select the mode, durable medium, maximum age,
+alert routing and accountable approver. This mechanism is not a regulatory or
+clinical approval and does not claim one.
 
 ---
 

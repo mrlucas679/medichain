@@ -43,6 +43,7 @@ mod auth_sessions;
 mod blockchain;
 mod clinical;
 mod clinical_endpoints;
+mod deferred_emergency_audit;
 mod device_lifecycle;
 mod emergency_capsule;
 mod emergency_grants;
@@ -432,6 +433,33 @@ async fn main() -> std::io::Result<()> {
                 }
             }
         });
+    }
+
+    match crate::deferred_emergency_audit::EmergencyAuditMode::from_env()
+        .map_err(std::io::Error::other)?
+    {
+        crate::deferred_emergency_audit::EmergencyAuditMode::Deny => {}
+        crate::deferred_emergency_audit::EmergencyAuditMode::DurableDefer => {
+            crate::deferred_emergency_audit::replay_pending(&app_state)
+                .await
+                .map_err(std::io::Error::other)?;
+            let replay_state = app_state.clone();
+            tokio::spawn(async move {
+                let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
+                loop {
+                    interval.tick().await;
+                    match crate::deferred_emergency_audit::replay_pending(&replay_state).await {
+                        Ok(count) if count > 0 => {
+                            log::info!("Reconciled {count} deferred emergency audit event(s)")
+                        }
+                        Ok(_) => {}
+                        Err(error) => {
+                            log::error!("Deferred emergency audit backlog unreconciled: {error}")
+                        }
+                    }
+                }
+            });
+        }
     }
 
     // Start medication reminder background task
