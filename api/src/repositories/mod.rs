@@ -49,6 +49,21 @@ pub use traits::*;
 
 use std::sync::Arc;
 
+#[derive(Debug, Clone, Copy)]
+pub enum PrescriptionEventTarget {
+    Dispense,
+    Verification,
+}
+
+pub struct PrescriptionMutation {
+    pub prescription_id: String,
+    pub guard_field: String,
+    pub expected_value: String,
+    pub record: JsonRecordEntity,
+    pub events: Vec<(PrescriptionEventTarget, JsonRecordEntity)>,
+    pub audit: AccessLogEntity,
+}
+
 /// Storage backend type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum StorageBackend {
@@ -80,6 +95,7 @@ pub struct RepositoryContainer {
     /// Connection pool, present only for the PostgreSQL backend. Used to run
     /// multi-step writes inside a single transaction (see `create_patient_with_nfc`).
     pub pool: Option<sqlx::PgPool>,
+    prescription_workflow_lock: Arc<tokio::sync::Mutex<()>>,
     // Phase 1 repositories
     pub patients: Arc<dyn PatientRepository>,
     pub allergies: Arc<dyn AllergyRepository>,
@@ -276,6 +292,8 @@ pub struct RepositoryContainer {
     /// Pharmacy dispensing events, including corrections (SCR-013).
     /// Append-only by convention: a reversal adds an entry, never removes one.
     pub dispense_events: Arc<dyn JsonRecordRepository>,
+    /// Append-only request/decision history for secondary dispensing checks.
+    pub prescription_verification_events: Arc<dyn JsonRecordRepository>,
     pub death_certificate_records: Arc<dyn JsonRecordRepository>,
     pub family_history_records: Arc<dyn JsonRecordRepository>,
     pub user_setting_records: Arc<dyn JsonRecordRepository>,
@@ -325,12 +343,100 @@ fn booking_conflict_error(provider_id: &str) -> RepositoryError {
     ))
 }
 
+async fn insert_prescription_event(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    target: PrescriptionEventTarget,
+    event: &JsonRecordEntity,
+) -> RepositoryResult<()> {
+    let sql = match target {
+        PrescriptionEventTarget::Dispense => {
+            "INSERT INTO dispense_events (id, owner_id, data, created_at, updated_at)
+             VALUES ($1,$2,$3,$4,$5)
+             ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = EXCLUDED.updated_at"
+        }
+        PrescriptionEventTarget::Verification => {
+            "INSERT INTO prescription_verification_events
+             (id, owner_id, data, created_at, updated_at) VALUES ($1,$2,$3,$4,$5)
+             ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = EXCLUDED.updated_at"
+        }
+    };
+    sqlx::query(sql)
+        .bind(&event.id)
+        .bind(&event.owner_id)
+        .bind(&event.data)
+        .bind(event.created_at)
+        .bind(event.updated_at)
+        .execute(&mut **tx)
+        .await?;
+    Ok(())
+}
+
+async fn insert_access_log(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    log: &AccessLogEntity,
+) -> RepositoryResult<()> {
+    sqlx::query(
+        "INSERT INTO access_logs (
+            id, accessor_id, accessor_role, patient_id, resource_type, resource_id,
+            action, access_reason, is_emergency_access, ip_address, user_agent,
+            blockchain_tx_hash, accessed_at, facility_id
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)",
+    )
+    .bind(&log.id)
+    .bind(&log.accessor_id)
+    .bind(&log.accessor_role)
+    .bind(&log.patient_id)
+    .bind(&log.resource_type)
+    .bind(&log.resource_id)
+    .bind(&log.action)
+    .bind(&log.access_reason)
+    .bind(log.is_emergency_access)
+    .bind(&log.ip_address)
+    .bind(&log.user_agent)
+    .bind(&log.blockchain_tx_hash)
+    .bind(log.accessed_at)
+    .bind(&log.facility_id)
+    .execute(&mut **tx)
+    .await?;
+    Ok(())
+}
+
+async fn apply_prescription_postgres(
+    pool: &sqlx::PgPool,
+    mutation: PrescriptionMutation,
+) -> RepositoryResult<Option<JsonRecordEntity>> {
+    let mut tx = pool.begin().await?;
+    let changed = sqlx::query_as::<_, JsonRecordEntity>(
+        "UPDATE e_prescription_v2_records
+         SET owner_id = $2, data = $3, updated_at = NOW()
+         WHERE id = $1 AND data #>> string_to_array($4, '.') = $5
+         RETURNING *",
+    )
+    .bind(&mutation.prescription_id)
+    .bind(&mutation.record.owner_id)
+    .bind(&mutation.record.data)
+    .bind(&mutation.guard_field)
+    .bind(&mutation.expected_value)
+    .fetch_optional(&mut *tx)
+    .await?;
+    if changed.is_none() {
+        return Ok(None);
+    }
+    for (target, event) in &mutation.events {
+        insert_prescription_event(&mut tx, *target, event).await?;
+    }
+    insert_access_log(&mut tx, &mutation.audit).await?;
+    tx.commit().await?;
+    Ok(changed)
+}
+
 impl RepositoryContainer {
     /// Create a new repository container with memory backend
     pub fn new_memory() -> Self {
         Self {
             backend: StorageBackend::Memory,
             pool: None,
+            prescription_workflow_lock: Arc::new(tokio::sync::Mutex::new(())),
             patients: Arc::new(memory::MemoryPatientRepository::new()),
             allergies: Arc::new(memory::MemoryAllergyRepository::new()),
             medical_records: Arc::new(memory::MemoryMedicalRecordRepository::new()),
@@ -512,10 +618,48 @@ impl RepositoryContainer {
             transfusion_event_records: Arc::new(memory::MemoryJsonRecordRepository::new()),
             e_prescription_records: Arc::new(memory::MemoryJsonRecordRepository::new()),
             dispense_events: Arc::new(memory::MemoryJsonRecordRepository::new()),
+            prescription_verification_events: Arc::new(memory::MemoryJsonRecordRepository::new()),
             death_certificate_records: Arc::new(memory::MemoryJsonRecordRepository::new()),
             family_history_records: Arc::new(memory::MemoryJsonRecordRepository::new()),
             user_setting_records: Arc::new(memory::MemoryJsonRecordRepository::new()),
             used_emergency_tokens: Arc::new(memory::MemoryJsonRecordRepository::new()),
+        }
+    }
+
+    /// Guard a prescription transition and persist its history/audit as one unit.
+    pub async fn apply_prescription_mutation(
+        &self,
+        mutation: PrescriptionMutation,
+    ) -> RepositoryResult<Option<JsonRecordEntity>> {
+        match &self.pool {
+            Some(pool) => apply_prescription_postgres(pool, mutation).await,
+            None => {
+                let _guard = self.prescription_workflow_lock.lock().await;
+                let changed = self
+                    .e_prescriptions_v2
+                    .replace_if_field_eq(
+                        &mutation.prescription_id,
+                        &mutation.guard_field,
+                        &mutation.expected_value,
+                        mutation.record,
+                    )
+                    .await?;
+                if changed.is_none() {
+                    return Ok(None);
+                }
+                for (target, event) in mutation.events {
+                    match target {
+                        PrescriptionEventTarget::Dispense => {
+                            self.dispense_events.create(event).await?;
+                        }
+                        PrescriptionEventTarget::Verification => {
+                            self.prescription_verification_events.create(event).await?;
+                        }
+                    }
+                }
+                self.access_logs.create(mutation.audit).await?;
+                Ok(changed)
+            }
         }
     }
 
@@ -813,6 +957,7 @@ impl RepositoryContainer {
         Ok(Self {
             backend: StorageBackend::Postgres,
             pool: Some(pool.clone()),
+            prescription_workflow_lock: Arc::new(tokio::sync::Mutex::new(())),
             patients: Arc::new(postgres::PgPatientRepository::new(pool.clone())),
             allergies: Arc::new(postgres::PgAllergyRepository::new(pool.clone())),
             medical_records: Arc::new(postgres::PgMedicalRecordRepository::new(pool.clone())),
@@ -1071,6 +1216,9 @@ impl RepositoryContainer {
                 pool.clone(),
             )),
             dispense_events: Arc::new(postgres::PgDispenseEventRepository::new(pool.clone())),
+            prescription_verification_events: Arc::new(
+                postgres::PgPrescriptionVerificationEventRepository::new(pool.clone()),
+            ),
             death_certificate_records: Arc::new(postgres::PgDeathCertificateRecordRepository::new(
                 pool.clone(),
             )),

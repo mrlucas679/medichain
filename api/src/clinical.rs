@@ -7251,6 +7251,37 @@ pub enum PrescriptionStatus {
     Error,
 }
 
+/// Policy-driven second-person verification state for dispensing.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub enum SecondaryVerificationStatus {
+    #[default]
+    NotRequired,
+    Required,
+    Pending,
+    Verified,
+    Rejected,
+    Expired,
+    Revoked,
+}
+
+/// Evidence binding a second-pharmacist decision to one prescription.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SecondaryDispensingVerification {
+    pub required: bool,
+    pub status: SecondaryVerificationStatus,
+    pub policy_version: Option<String>,
+    pub policy_rule_id: Option<String>,
+    pub verification_ttl_seconds: Option<i64>,
+    pub first_pharmacist_id: Option<String>,
+    pub request_id: Option<String>,
+    pub requested_by: Option<String>,
+    pub requested_at: Option<i64>,
+    pub expires_at: Option<i64>,
+    pub verified_by: Option<String>,
+    pub verified_at: Option<i64>,
+    pub decision_reason: Option<String>,
+}
+
 // ============================================================================
 // PHASE 17: APPOINTMENTS & SCHEDULING
 // ============================================================================
@@ -8779,6 +8810,10 @@ pub struct EPrescription {
     /// still deserialize, as zero dispensed.
     #[serde(default)]
     pub dispensed_quantity: u32,
+    /// Populated only by the configured dispensing-policy mechanism. An empty
+    /// policy never turns a jurisdictional assumption into an enforcement rule.
+    #[serde(default)]
+    pub secondary_verification: SecondaryDispensingVerification,
     pub refills_allowed: u8,
     /// Refills remaining
     pub refills_remaining: u8,

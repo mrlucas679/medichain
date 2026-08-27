@@ -179,3 +179,78 @@ describe('PharmacistDashboardPage dispensing actions (SCR-013)', () => {
     promptSpy.mockRestore();
   });
 });
+
+describe('PharmacistDashboardPage secondary verification actions', () => {
+  const pharmacistId = 'pharmacist-second';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (useAuthStore as any).mockReturnValue({
+      user: { walletAddress: pharmacistId, role: 'Pharmacist' },
+      isAuthenticated: true,
+    });
+  });
+
+  const dashboard = (prescription: Record<string, unknown>, currentId = pharmacistId) => ({
+    pharmacist_id: currentId,
+    prescriptions: { pending_fill: 0, in_progress: 1, completed_today: 0, list: [prescription] },
+    drug_interactions: [],
+    allergy_alerts: [],
+  });
+
+  const response = (body: unknown) => Promise.resolve({
+    ok: true,
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: () => Promise.resolve(body),
+  });
+
+  it('offers request only to the first pharmacist and blocks dispense', async () => {
+    const prescription = {
+      prescription_id: 'RX-VERIFY-REQUEST', patient_id: 'PAT-1', medication_name: 'Medicine',
+      dosage: '1mg', status: 'InProgress', priority: 'Routine',
+      secondary_verification: {
+        required: true, status: 'Required', first_pharmacist_id: 'pharmacist-first',
+      },
+    };
+    mockFetch.mockImplementation(() => response(dashboard(prescription, 'pharmacist-first')));
+    render(<MemoryRouter><PharmacistDashboardPage /></MemoryRouter>);
+
+    expect(await screen.findByRole('button', { name: /request second pharmacist/i })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^dispense$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /approve verification/i })).toBeNull();
+  });
+
+  it('offers approve and reject only to a distinct pharmacist', async () => {
+    const prescription = {
+      prescription_id: 'RX-VERIFY-PENDING', patient_id: 'PAT-2', medication_name: 'Medicine',
+      dosage: '1mg', status: 'InProgress', priority: 'Routine',
+      secondary_verification: {
+        required: true, status: 'Pending', first_pharmacist_id: 'pharmacist-first',
+        requested_by: 'pharmacist-first',
+      },
+    };
+    mockFetch.mockImplementation(() => response(dashboard(prescription)));
+    render(<MemoryRouter><PharmacistDashboardPage /></MemoryRouter>);
+
+    expect(await screen.findByRole('button', { name: /approve verification/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /reject verification/i })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^dispense$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /request second pharmacist/i })).toBeNull();
+  });
+
+  it('enables dispense only after server state is Verified', async () => {
+    const prescription = {
+      prescription_id: 'RX-VERIFY-DONE', patient_id: 'PAT-3', medication_name: 'Medicine',
+      dosage: '1mg', status: 'InProgress', priority: 'Routine',
+      secondary_verification: {
+        required: true, status: 'Verified', first_pharmacist_id: 'pharmacist-first',
+      },
+    };
+    mockFetch.mockImplementation(() => response(dashboard(prescription)));
+    render(<MemoryRouter><PharmacistDashboardPage /></MemoryRouter>);
+
+    expect(await screen.findByRole('button', { name: /^dispense$/i })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /approve verification/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /reject verification/i })).toBeNull();
+  });
+});

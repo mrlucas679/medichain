@@ -1063,6 +1063,23 @@ export async function dispensePrescription(
   });
 }
 
+/** Start the server-governed distinct-pharmacist verification workflow. */
+export async function requestPrescriptionVerification(prescriptionId: string): Promise<void> {
+  await getApiClient().post(`/api/e-prescriptions/${prescriptionId}/verification/request`, {});
+}
+
+/** Approve or reject a pending verification as the distinct second pharmacist. */
+export async function decidePrescriptionVerification(
+  prescriptionId: string,
+  approve: boolean,
+  reason?: string
+): Promise<void> {
+  await getApiClient().post(`/api/e-prescriptions/${prescriptionId}/verification/decide`, {
+    approve,
+    reason,
+  });
+}
+
 /**
  * Correct a dispense that should not have been recorded.
  *

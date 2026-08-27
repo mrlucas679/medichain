@@ -16,6 +16,13 @@ use super::*;
 pub struct CreateEPrescriptionRequest {
     pub patient_id: String,
     pub medication_name: String,
+    #[serde(default)]
+    pub medication_code: Option<String>,
+    #[serde(default)]
+    pub policy_category: Option<String>,
+    /// May only strengthen a matching deployment-supplied policy rule.
+    #[serde(default)]
+    pub force_secondary_verification: bool,
     pub generic_name: Option<String>,
     pub strength: String,
     pub form: String,
@@ -64,6 +71,23 @@ pub async fn create_esignature_prescription(
     let prescription_id = format!("RX-{}", uuid::Uuid::new_v4());
     let now = chrono::Utc::now().timestamp();
     let expires_at = now + (365 * 24 * 60 * 60); // 1 year
+    let verification_policy =
+        match crate::dispensing_policy::decide(crate::dispensing_policy::PolicySubject {
+            medication_code: req.medication_code.as_deref(),
+            category: req.policy_category.as_deref(),
+            medication_name: &req.medication_name,
+            force_secondary_verification: req.force_secondary_verification,
+        }) {
+            Ok(decision) => decision,
+            Err(error) => {
+                log::error!("Dispensing policy evaluation failed: {error}");
+                return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                    success: false,
+                    error: "The approved dispensing policy could not be evaluated".to_string(),
+                    code: "DISPENSING_POLICY_UNAVAILABLE".to_string(),
+                });
+            }
+        };
 
     let prescription = crate::clinical::EPrescription {
         prescription_id: prescription_id.clone(),
@@ -112,6 +136,18 @@ pub async fn create_esignature_prescription(
         is_controlled: req.is_controlled,
         dea_schedule: req.dea_schedule.clone(),
         dispensed_quantity: 0,
+        secondary_verification: crate::clinical::SecondaryDispensingVerification {
+            required: verification_policy.required,
+            status: if verification_policy.required {
+                crate::clinical::SecondaryVerificationStatus::Required
+            } else {
+                crate::clinical::SecondaryVerificationStatus::NotRequired
+            },
+            policy_version: verification_policy.version,
+            policy_rule_id: verification_policy.rule_id,
+            verification_ttl_seconds: verification_policy.ttl_seconds,
+            ..Default::default()
+        },
         refills_allowed: req.refills_allowed,
         refills_remaining: req.refills_allowed,
         last_filled: None,
@@ -196,6 +232,7 @@ fn prescription_record(
 /// neither was audited at all. A failure here is returned to the caller rather
 /// than logged, for the same reason the transition itself is: an unattributable
 /// signature is not a signature.
+#[allow(dead_code)]
 async fn audit_prescription_event(
     data: &web::Data<crate::AppState>,
     prescription: &crate::clinical::EPrescription,
@@ -205,21 +242,28 @@ async fn audit_prescription_event(
 ) -> Result<(), crate::repositories::traits::RepositoryError> {
     data.repositories
         .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: crate::middleware::secure_tokens::generate_access_id(),
-                patient_id: prescription.patient_id.clone(),
-                accessor_id: actor.to_string(),
-                accessor_role: actor_role.to_string(),
-                access_type: event.to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
+        .create(prescription_audit(prescription, actor, actor_role, event))
         .await
         .map(|_| ())
+}
+
+fn prescription_audit(
+    prescription: &crate::clinical::EPrescription,
+    actor: &str,
+    actor_role: &str,
+    event: &str,
+) -> crate::repositories::traits::AccessLogEntity {
+    crate::AccessLogEntry {
+        access_id: crate::middleware::secure_tokens::generate_access_id(),
+        patient_id: prescription.patient_id.clone(),
+        accessor_id: actor.to_string(),
+        accessor_role: actor_role.to_string(),
+        access_type: event.to_string(),
+        location: None,
+        timestamp: chrono::Utc::now(),
+        emergency: false,
+    }
+    .into()
 }
 
 /// The client-observable facts an e-signature attests to.
@@ -360,13 +404,19 @@ pub async fn sign_e_prescription(
     // overwrite the first clinician's signature with its own.
     match data
         .repositories
-        .e_prescriptions_v2
-        .replace_if_field_eq(
-            &prescription_id,
-            "status",
-            &previous_status,
-            prescription_record(&prescription, &prescription_id),
-        )
+        .apply_prescription_mutation(crate::repositories::PrescriptionMutation {
+            prescription_id: prescription_id.clone(),
+            guard_field: "status".to_string(),
+            expected_value: previous_status,
+            record: prescription_record(&prescription, &prescription_id),
+            events: Vec::new(),
+            audit: prescription_audit(
+                &prescription,
+                &current_user_id,
+                &current_user.role.to_string(),
+                "prescription_signed",
+            ),
+        })
         .await
     {
         Ok(Some(_)) => {}
@@ -385,23 +435,6 @@ pub async fn sign_e_prescription(
                 code: "PRESCRIPTION_PERSISTENCE_FAILED".to_string(),
             });
         }
-    }
-
-    if let Err(e) = audit_prescription_event(
-        &data,
-        &prescription,
-        &current_user_id,
-        &current_user.role.to_string(),
-        "prescription_signed",
-    )
-    .await
-    {
-        log::error!("E-prescription signing audit failed for {prescription_id}: {e}");
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "Signature could not be audited".to_string(),
-            code: "AUDIT_UNAVAILABLE".to_string(),
-        });
     }
 
     HttpResponse::Ok().json(serde_json::json!({
@@ -476,13 +509,19 @@ pub async fn transmit_e_prescription(
     // twice. The guard is what makes transmission happen once.
     match data
         .repositories
-        .e_prescriptions_v2
-        .replace_if_field_eq(
-            &prescription_id,
-            "status",
-            &status_token(&crate::clinical::PrescriptionStatus::Signed),
-            prescription_record(&prescription, &prescription_id),
-        )
+        .apply_prescription_mutation(crate::repositories::PrescriptionMutation {
+            prescription_id: prescription_id.clone(),
+            guard_field: "status".to_string(),
+            expected_value: status_token(&crate::clinical::PrescriptionStatus::Signed),
+            record: prescription_record(&prescription, &prescription_id),
+            events: Vec::new(),
+            audit: prescription_audit(
+                &prescription,
+                &current_user_id,
+                &current_user.role.to_string(),
+                "prescription_transmitted",
+            ),
+        })
         .await
     {
         Ok(Some(_)) => {}
@@ -501,23 +540,6 @@ pub async fn transmit_e_prescription(
                 code: "PRESCRIPTION_PERSISTENCE_FAILED".to_string(),
             });
         }
-    }
-
-    if let Err(e) = audit_prescription_event(
-        &data,
-        &prescription,
-        &current_user_id,
-        &current_user.role.to_string(),
-        "prescription_transmitted",
-    )
-    .await
-    {
-        log::error!("E-prescription transmission audit failed for {prescription_id}: {e}");
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "Transmission could not be audited".to_string(),
-            code: "AUDIT_UNAVAILABLE".to_string(),
-        });
     }
 
     HttpResponse::Ok().json(serde_json::json!({
@@ -577,6 +599,18 @@ pub struct ReverseDispenseBody {
     pub reason: String,
 }
 
+#[derive(Debug, serde::Deserialize)]
+pub struct VerificationDecisionBody {
+    pub approve: bool,
+    #[serde(default)]
+    pub reason: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct VerificationRevokeBody {
+    pub reason: String,
+}
+
 /// Only a pharmacist dispenses. An administrator may correct.
 fn may_dispense(role: &crate::Role) -> bool {
     matches!(role, crate::Role::Pharmacist)
@@ -592,6 +626,113 @@ fn dispense_role_refused(role: &crate::Role) -> HttpResponse {
         error: format!("Role {role} cannot dispense. Required: Pharmacist"),
         code: "INSUFFICIENT_ROLE".to_string(),
     })
+}
+
+fn verification_status_token(status: &crate::clinical::SecondaryVerificationStatus) -> String {
+    serde_json::to_value(status)
+        .ok()
+        .and_then(|value| value.as_str().map(str::to_string))
+        .unwrap_or_default()
+}
+
+async fn transition_verification(
+    data: &web::Data<AppState>,
+    prescription: &crate::clinical::EPrescription,
+    expected: &crate::clinical::SecondaryVerificationStatus,
+    events: Vec<crate::repositories::traits::JsonRecordEntity>,
+    actor: &crate::User,
+    audit_action: &str,
+) -> Result<(), HttpResponse> {
+    match data
+        .repositories
+        .apply_prescription_mutation(crate::repositories::PrescriptionMutation {
+            prescription_id: prescription.prescription_id.clone(),
+            guard_field: "secondary_verification.status".to_string(),
+            expected_value: verification_status_token(expected),
+            record: prescription_record(prescription, &prescription.prescription_id),
+            events: events
+                .into_iter()
+                .map(|event| {
+                    (
+                        crate::repositories::PrescriptionEventTarget::Verification,
+                        event,
+                    )
+                })
+                .collect(),
+            audit: prescription_audit(
+                prescription,
+                &actor.wallet_address,
+                &actor.role.to_string(),
+                audit_action,
+            ),
+        })
+        .await
+    {
+        Ok(Some(_)) => Ok(()),
+        Ok(None) => Err(HttpResponse::Conflict().json(ErrorResponse {
+            success: false,
+            error: "The verification state changed; reload the prescription".to_string(),
+            code: "VERIFICATION_RACE_DETECTED".to_string(),
+        })),
+        Err(error) => {
+            log::error!("Secondary verification transition failed: {error}");
+            Err(HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The verification decision could not be saved".to_string(),
+                code: "PRESCRIPTION_PERSISTENCE_FAILED".to_string(),
+            }))
+        }
+    }
+}
+
+fn verification_event(
+    prescription: &crate::clinical::EPrescription,
+    event_id: String,
+    event_type: &str,
+    actor: &str,
+    reason: Option<&str>,
+    closed: bool,
+) -> crate::repositories::traits::JsonRecordEntity {
+    let now = Utc::now();
+    crate::repositories::traits::JsonRecordEntity {
+        id: event_id.clone(),
+        owner_id: prescription.patient_id.clone(),
+        data: serde_json::json!({
+            "event_id": event_id,
+            "event_type": event_type,
+            "prescription_id": prescription.prescription_id,
+            "patient_id": prescription.patient_id,
+            "actor_id": actor,
+            "reason": reason,
+            "request_id": prescription.secondary_verification.request_id,
+            "policy_version": prescription.secondary_verification.policy_version,
+            "policy_rule_id": prescription.secondary_verification.policy_rule_id,
+            "recorded_at": now.timestamp(),
+            "closed": closed,
+        }),
+        created_at: now,
+        updated_at: now,
+    }
+}
+
+#[allow(dead_code)]
+async fn store_verification_event(
+    data: &web::Data<AppState>,
+    event: crate::repositories::traits::JsonRecordEntity,
+) -> Result<(), HttpResponse> {
+    data.repositories
+        .prescription_verification_events
+        .create(event)
+        .await
+        .map(|_| ())
+        .map_err(|error| {
+            log::error!("Prescription verification history write failed: {error}");
+            HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The verification history could not be saved".to_string(),
+                code: "VERIFICATION_HISTORY_FAILED".to_string(),
+            })
+        })
 }
 
 /// Loads a prescription, or the response explaining why it could not be.
@@ -637,17 +778,25 @@ async fn transition_status(
     prescription_id: &str,
     from: crate::clinical::PrescriptionStatus,
     to: crate::clinical::PrescriptionStatus,
+    actor: &crate::User,
+    audit_action: &str,
 ) -> Result<(), HttpResponse> {
     prescription.status = to;
     match data
         .repositories
-        .e_prescriptions_v2
-        .replace_if_field_eq(
-            prescription_id,
-            "status",
-            &status_token(&from),
-            prescription_record(prescription, prescription_id),
-        )
+        .apply_prescription_mutation(crate::repositories::PrescriptionMutation {
+            prescription_id: prescription_id.to_string(),
+            guard_field: "status".to_string(),
+            expected_value: status_token(&from),
+            record: prescription_record(prescription, prescription_id),
+            events: Vec::new(),
+            audit: prescription_audit(
+                prescription,
+                &actor.wallet_address,
+                &actor.role.to_string(),
+                audit_action,
+            ),
+        })
         .await
     {
         Ok(Some(_)) => Ok(()),
@@ -686,32 +835,20 @@ pub async fn receive_prescription(
         Ok(p) => p,
         Err(resp) => return resp,
     };
+    prescription.secondary_verification.first_pharmacist_id =
+        Some(current_user.wallet_address.clone());
     if let Err(resp) = transition_status(
         &data,
         &mut prescription,
         &prescription_id,
         crate::clinical::PrescriptionStatus::Transmitted,
         crate::clinical::PrescriptionStatus::Received,
-    )
-    .await
-    {
-        return resp;
-    }
-    if let Err(e) = audit_prescription_event(
-        &data,
-        &prescription,
-        &current_user.wallet_address,
-        &current_user.role.to_string(),
+        &current_user,
         "prescription_received",
     )
     .await
     {
-        log::error!("Dispensing audit failed for {prescription_id}: {e}");
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "The dispensing step could not be audited".to_string(),
-            code: "AUDIT_UNAVAILABLE".to_string(),
-        });
+        return resp;
     }
     HttpResponse::Ok().json(serde_json::json!({
         "success": true,
@@ -745,31 +882,420 @@ pub async fn start_prescription_fill(
         &prescription_id,
         crate::clinical::PrescriptionStatus::Received,
         crate::clinical::PrescriptionStatus::InProgress,
+        &current_user,
+        "prescription_fill_started",
     )
     .await
     {
         return resp;
     }
-    if let Err(e) = audit_prescription_event(
-        &data,
-        &prescription,
-        &current_user.wallet_address,
-        &current_user.role.to_string(),
-        "prescription_fill_started",
-    )
-    .await
-    {
-        log::error!("Dispensing audit failed for {prescription_id}: {e}");
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "The dispensing step could not be audited".to_string(),
-            code: "AUDIT_UNAVAILABLE".to_string(),
-        });
-    }
     HttpResponse::Ok().json(serde_json::json!({
         "success": true,
         "prescription_id": prescription_id,
         "status": status_token(&prescription.status),
+    }))
+}
+
+/// The first pharmacist requests a distinct second-person verification.
+#[post("/api/e-prescriptions/{prescription_id}/verification/request")]
+pub async fn request_secondary_verification(
+    data: web::Data<AppState>,
+    http_req: HttpRequest,
+    path: web::Path<String>,
+) -> impl Responder {
+    let current_user = match crate::support::require_clinical_staff(&data, &http_req) {
+        Ok(user) => user,
+        Err(response) => return response,
+    };
+    if !may_dispense(&current_user.role) {
+        return dispense_role_refused(&current_user.role);
+    }
+    let prescription_id = path.into_inner();
+    let mut prescription = match load_prescription(&data, &prescription_id).await {
+        Ok(value) => value,
+        Err(response) => return response,
+    };
+    if !prescription.secondary_verification.required {
+        return HttpResponse::Conflict().json(ErrorResponse {
+            success: false,
+            error: "This prescription does not require secondary verification".to_string(),
+            code: "VERIFICATION_NOT_REQUIRED".to_string(),
+        });
+    }
+    if prescription
+        .secondary_verification
+        .first_pharmacist_id
+        .as_deref()
+        != Some(current_user.wallet_address.as_str())
+    {
+        return HttpResponse::Forbidden().json(ErrorResponse {
+            success: false,
+            error: "Only the first pharmacist may request verification".to_string(),
+            code: "VERIFICATION_REQUESTER_MISMATCH".to_string(),
+        });
+    }
+    let expected = prescription.secondary_verification.status.clone();
+    if !matches!(
+        expected,
+        crate::clinical::SecondaryVerificationStatus::Required
+            | crate::clinical::SecondaryVerificationStatus::Rejected
+            | crate::clinical::SecondaryVerificationStatus::Expired
+            | crate::clinical::SecondaryVerificationStatus::Revoked
+    ) {
+        return verification_state_conflict(&expected);
+    }
+    let ttl = match prescription
+        .secondary_verification
+        .verification_ttl_seconds
+        .filter(|seconds| *seconds > 0)
+    {
+        Some(value) => value,
+        None => return verification_policy_missing(),
+    };
+    let now = Utc::now();
+    let request_id = format!("RXV-{}", uuid::Uuid::new_v4());
+    prescription.secondary_verification.status =
+        crate::clinical::SecondaryVerificationStatus::Pending;
+    prescription.secondary_verification.request_id = Some(request_id.clone());
+    prescription.secondary_verification.requested_by = Some(current_user.wallet_address.clone());
+    prescription.secondary_verification.requested_at = Some(now.timestamp());
+    prescription.secondary_verification.expires_at =
+        Some((now + chrono::Duration::seconds(ttl)).timestamp());
+    prescription.secondary_verification.verified_by = None;
+    prescription.secondary_verification.verified_at = None;
+    prescription.secondary_verification.decision_reason = None;
+    let event = verification_event(
+        &prescription,
+        request_id.clone(),
+        "verification_requested",
+        &current_user.wallet_address,
+        None,
+        false,
+    );
+    if let Err(response) = transition_verification(
+        &data,
+        &prescription,
+        &expected,
+        vec![event],
+        &current_user,
+        "prescription_verification_requested",
+    )
+    .await
+    {
+        return response;
+    }
+    HttpResponse::Ok().json(serde_json::json!({
+        "success": true,
+        "prescription_id": prescription_id,
+        "request_id": request_id,
+        "verification_status": "Pending",
+        "expires_at": prescription.secondary_verification.expires_at,
+    }))
+}
+
+fn verification_state_conflict(
+    status: &crate::clinical::SecondaryVerificationStatus,
+) -> HttpResponse {
+    HttpResponse::Conflict().json(ErrorResponse {
+        success: false,
+        error: format!(
+            "Verification cannot be requested while in state {}",
+            verification_status_token(status)
+        ),
+        code: "VERIFICATION_STATE_CONFLICT".to_string(),
+    })
+}
+
+fn verification_policy_missing() -> HttpResponse {
+    HttpResponse::ServiceUnavailable().json(ErrorResponse {
+        success: false,
+        error: "The approved verification policy is incomplete".to_string(),
+        code: "DISPENSING_POLICY_UNAVAILABLE".to_string(),
+    })
+}
+
+#[allow(dead_code)]
+fn audit_unavailable() -> HttpResponse {
+    HttpResponse::ServiceUnavailable().json(ErrorResponse {
+        success: false,
+        error: "The verification decision could not be audited".to_string(),
+        code: "AUDIT_UNAVAILABLE".to_string(),
+    })
+}
+
+async fn closed_verification_request(
+    data: &web::Data<AppState>,
+    request_id: &str,
+    outcome: &str,
+) -> Result<crate::repositories::traits::JsonRecordEntity, HttpResponse> {
+    let mut request = match data
+        .repositories
+        .prescription_verification_events
+        .get_by_id(request_id)
+        .await
+    {
+        Ok(Some(value)) => value,
+        Ok(None) => {
+            return Err(HttpResponse::Conflict().json(ErrorResponse {
+                success: false,
+                error: "The verification request history is missing".to_string(),
+                code: "VERIFICATION_HISTORY_MISSING".to_string(),
+            }))
+        }
+        Err(error) => {
+            log::error!("Verification request history read failed: {error}");
+            return Err(verification_policy_missing());
+        }
+    };
+    request.data["closed"] = serde_json::Value::Bool(true);
+    request.data["outcome"] = serde_json::Value::String(outcome.to_string());
+    request.updated_at = Utc::now();
+    Ok(request)
+}
+
+/// A distinct active pharmacist approves or rejects one pending request.
+#[post("/api/e-prescriptions/{prescription_id}/verification/decide")]
+pub async fn decide_secondary_verification(
+    data: web::Data<AppState>,
+    http_req: HttpRequest,
+    path: web::Path<String>,
+    body: web::Json<VerificationDecisionBody>,
+) -> impl Responder {
+    let current_user = match crate::support::require_clinical_staff(&data, &http_req) {
+        Ok(user) => user,
+        Err(response) => return response,
+    };
+    if !may_dispense(&current_user.role) {
+        return dispense_role_refused(&current_user.role);
+    }
+    let prescription_id = path.into_inner();
+    let mut prescription = match load_prescription(&data, &prescription_id).await {
+        Ok(value) => value,
+        Err(response) => return response,
+    };
+    if prescription.secondary_verification.status
+        != crate::clinical::SecondaryVerificationStatus::Pending
+    {
+        return verification_state_conflict(&prescription.secondary_verification.status);
+    }
+    if verifier_is_not_distinct(&prescription, &current_user.wallet_address) {
+        return HttpResponse::Forbidden().json(ErrorResponse {
+            success: false,
+            error: "A distinct second pharmacist is required".to_string(),
+            code: "SECOND_PHARMACIST_MUST_BE_DISTINCT".to_string(),
+        });
+    }
+    if !body.approve
+        && body
+            .reason
+            .as_deref()
+            .is_none_or(|value| value.trim().is_empty())
+    {
+        return HttpResponse::BadRequest().json(ErrorResponse {
+            success: false,
+            error: "A rejection reason is required".to_string(),
+            code: "VERIFICATION_REASON_REQUIRED".to_string(),
+        });
+    }
+    if prescription
+        .secondary_verification
+        .expires_at
+        .is_none_or(|expiry| expiry <= Utc::now().timestamp())
+    {
+        return expire_secondary_verification(&data, prescription, &current_user).await;
+    }
+    let request_id = match prescription.secondary_verification.request_id.clone() {
+        Some(value) => value,
+        None => return verification_policy_missing(),
+    };
+    let now = Utc::now();
+    let outcome = if body.approve { "approved" } else { "rejected" };
+    prescription.secondary_verification.status = if body.approve {
+        crate::clinical::SecondaryVerificationStatus::Verified
+    } else {
+        crate::clinical::SecondaryVerificationStatus::Rejected
+    };
+    prescription.secondary_verification.verified_by = Some(current_user.wallet_address.clone());
+    prescription.secondary_verification.verified_at = Some(now.timestamp());
+    prescription.secondary_verification.decision_reason =
+        body.reason.as_deref().map(str::trim).map(str::to_string);
+    let closed_request = match closed_verification_request(&data, &request_id, outcome).await {
+        Ok(value) => value,
+        Err(response) => return response,
+    };
+    let event_id = format!("RXV-DEC-{}", uuid::Uuid::new_v4());
+    let event = verification_event(
+        &prescription,
+        event_id,
+        if body.approve {
+            "verification_approved"
+        } else {
+            "verification_rejected"
+        },
+        &current_user.wallet_address,
+        body.reason.as_deref(),
+        true,
+    );
+    let audit_action = if body.approve {
+        "prescription_verification_approved"
+    } else {
+        "prescription_verification_rejected"
+    };
+    if let Err(response) = transition_verification(
+        &data,
+        &prescription,
+        &crate::clinical::SecondaryVerificationStatus::Pending,
+        vec![closed_request, event],
+        &current_user,
+        audit_action,
+    )
+    .await
+    {
+        return response;
+    }
+    HttpResponse::Ok().json(serde_json::json!({
+        "success": true,
+        "prescription_id": prescription_id,
+        "request_id": request_id,
+        "verification_status": verification_status_token(
+            &prescription.secondary_verification.status
+        ),
+    }))
+}
+
+fn verifier_is_not_distinct(prescription: &crate::clinical::EPrescription, verifier: &str) -> bool {
+    verifier == prescription.prescriber_id
+        || prescription
+            .secondary_verification
+            .first_pharmacist_id
+            .as_deref()
+            == Some(verifier)
+        || prescription.secondary_verification.requested_by.as_deref() == Some(verifier)
+}
+
+async fn expire_secondary_verification(
+    data: &web::Data<AppState>,
+    mut prescription: crate::clinical::EPrescription,
+    actor: &crate::User,
+) -> HttpResponse {
+    prescription.secondary_verification.status =
+        crate::clinical::SecondaryVerificationStatus::Expired;
+    let mut events = vec![verification_event(
+        &prescription,
+        format!("RXV-EXP-{}", uuid::Uuid::new_v4()),
+        "verification_expired",
+        &actor.wallet_address,
+        None,
+        true,
+    )];
+    if let Some(request_id) = prescription.secondary_verification.request_id.as_deref() {
+        match closed_verification_request(data, request_id, "expired").await {
+            Ok(request) => events.push(request),
+            Err(response) => return response,
+        }
+    }
+    if let Err(response) = transition_verification(
+        data,
+        &prescription,
+        &crate::clinical::SecondaryVerificationStatus::Pending,
+        events,
+        actor,
+        "prescription_verification_expired",
+    )
+    .await
+    {
+        return response;
+    }
+    HttpResponse::Conflict().json(ErrorResponse {
+        success: false,
+        error: "The secondary verification request expired".to_string(),
+        code: "VERIFICATION_EXPIRED".to_string(),
+    })
+}
+
+/// Revoke a pending/approved check without erasing its prior decision.
+#[post("/api/e-prescriptions/{prescription_id}/verification/revoke")]
+pub async fn revoke_secondary_verification(
+    data: web::Data<AppState>,
+    http_req: HttpRequest,
+    path: web::Path<String>,
+    body: web::Json<VerificationRevokeBody>,
+) -> impl Responder {
+    let current_user = match crate::support::require_clinical_staff(&data, &http_req) {
+        Ok(user) => user,
+        Err(response) => return response,
+    };
+    if !matches!(
+        current_user.role,
+        crate::Role::Pharmacist | crate::Role::Admin
+    ) {
+        return dispense_role_refused(&current_user.role);
+    }
+    if body.reason.trim().is_empty() {
+        return HttpResponse::BadRequest().json(ErrorResponse {
+            success: false,
+            error: "A revocation reason is required".to_string(),
+            code: "VERIFICATION_REASON_REQUIRED".to_string(),
+        });
+    }
+    let prescription_id = path.into_inner();
+    let mut prescription = match load_prescription(&data, &prescription_id).await {
+        Ok(value) => value,
+        Err(response) => return response,
+    };
+    let expected = prescription.secondary_verification.status.clone();
+    if !matches!(
+        expected,
+        crate::clinical::SecondaryVerificationStatus::Pending
+            | crate::clinical::SecondaryVerificationStatus::Verified
+    ) {
+        return verification_state_conflict(&expected);
+    }
+    let authorized_pharmacist = prescription.secondary_verification.requested_by.as_deref()
+        == Some(current_user.wallet_address.as_str())
+        || prescription.secondary_verification.verified_by.as_deref()
+            == Some(current_user.wallet_address.as_str());
+    if current_user.role != crate::Role::Admin && !authorized_pharmacist {
+        return HttpResponse::Forbidden().json(ErrorResponse {
+            success: false,
+            error: "Only a party to the verification or an administrator may revoke it".to_string(),
+            code: "VERIFICATION_REVOCATION_FORBIDDEN".to_string(),
+        });
+    }
+    prescription.secondary_verification.status =
+        crate::clinical::SecondaryVerificationStatus::Revoked;
+    prescription.secondary_verification.decision_reason = Some(body.reason.trim().to_string());
+    let mut events = Vec::new();
+    if let Some(request_id) = prescription.secondary_verification.request_id.as_deref() {
+        match closed_verification_request(&data, request_id, "revoked").await {
+            Ok(request) => events.push(request),
+            Err(response) => return response,
+        }
+    }
+    events.push(verification_event(
+        &prescription,
+        format!("RXV-REV-{}", uuid::Uuid::new_v4()),
+        "verification_revoked",
+        &current_user.wallet_address,
+        Some(body.reason.trim()),
+        true,
+    ));
+    if let Err(response) = transition_verification(
+        &data,
+        &prescription,
+        &expected,
+        events,
+        &current_user,
+        "prescription_verification_revoked",
+    )
+    .await
+    {
+        return response;
+    }
+    HttpResponse::Ok().json(serde_json::json!({
+        "success": true,
+        "prescription_id": prescription_id,
+        "verification_status": "Revoked",
     }))
 }
 
@@ -801,6 +1327,16 @@ pub async fn dispense_prescription(
         Ok(p) => p,
         Err(resp) => return resp,
     };
+    if prescription.secondary_verification.required
+        && prescription.secondary_verification.status
+            != crate::clinical::SecondaryVerificationStatus::Verified
+    {
+        return HttpResponse::Conflict().json(ErrorResponse {
+            success: false,
+            error: "Secondary pharmacist verification is required before dispensing".to_string(),
+            code: "SECONDARY_VERIFICATION_REQUIRED".to_string(),
+        });
+    }
 
     // Dispensing is only legal from a state a pharmacy has taken responsibility
     // for. A transmitted-but-unreceived prescription has not reached anybody,
@@ -847,42 +1383,6 @@ pub async fn dispense_prescription(
     prescription.dispensed_quantity = new_total;
     prescription.last_filled = Some(now.timestamp());
 
-    // Guarded on the QUANTITY, not the status: the status is unchanged across a
-    // partial fill, so guarding on it would let two concurrent fills both
-    // succeed and hand out more than was prescribed.
-    match data
-        .repositories
-        .e_prescriptions_v2
-        .replace_if_field_eq(
-            &prescription_id,
-            "dispensed_quantity",
-            &already.to_string(),
-            prescription_record(&prescription, &prescription_id),
-        )
-        .await
-    {
-        Ok(Some(_)) => {}
-        Ok(None) => {
-            return HttpResponse::Conflict().json(ErrorResponse {
-                success: false,
-                error: "Another fill was recorded while this one was being prepared; \
-                        re-read the prescription and dispense the remainder"
-                    .to_string(),
-                code: "DISPENSE_RACE_DETECTED".to_string(),
-            })
-        }
-        Err(e) => {
-            log::error!("Dispense failed for {prescription_id}: {e}");
-            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-                success: false,
-                error: "The dispense could not be recorded".to_string(),
-                code: "PRESCRIPTION_PERSISTENCE_FAILED".to_string(),
-            });
-        }
-    }
-
-    // The event history. Written after the quantity is committed, and never
-    // deleted -- a correction adds an entry rather than removing one.
     let event_id = format!("DISP-{}", uuid::Uuid::new_v4());
     let event = crate::repositories::traits::JsonRecordEntity {
         id: event_id.clone(),
@@ -903,36 +1403,49 @@ pub async fn dispense_prescription(
         created_at: now,
         updated_at: now,
     };
-    if let Err(e) = data.repositories.dispense_events.create(event).await {
-        log::error!("Dispense event history write failed for {prescription_id}: {e}");
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "The dispense was recorded but its history entry was not; \
-                    do not hand over further medicine until this is resolved"
-                .to_string(),
-            code: "DISPENSE_HISTORY_FAILED".to_string(),
-        });
-    }
-
-    if let Err(e) = audit_prescription_event(
-        &data,
-        &prescription,
-        &current_user.wallet_address,
-        &current_user.role.to_string(),
-        if new_total == prescribed {
-            "prescription_dispensed"
-        } else {
-            "prescription_partial_fill"
-        },
-    )
-    .await
+    let audit_action = if new_total == prescribed {
+        "prescription_dispensed"
+    } else {
+        "prescription_partial_fill"
+    };
+    match data
+        .repositories
+        .apply_prescription_mutation(crate::repositories::PrescriptionMutation {
+            prescription_id: prescription_id.clone(),
+            guard_field: "dispensed_quantity".to_string(),
+            expected_value: already.to_string(),
+            record: prescription_record(&prescription, &prescription_id),
+            events: vec![(
+                crate::repositories::PrescriptionEventTarget::Dispense,
+                event,
+            )],
+            audit: prescription_audit(
+                &prescription,
+                &current_user.wallet_address,
+                &current_user.role.to_string(),
+                audit_action,
+            ),
+        })
+        .await
     {
-        log::error!("Dispensing audit failed for {prescription_id}: {e}");
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "The dispensing step could not be audited".to_string(),
-            code: "AUDIT_UNAVAILABLE".to_string(),
-        });
+        Ok(Some(_)) => {}
+        Ok(None) => {
+            return HttpResponse::Conflict().json(ErrorResponse {
+                success: false,
+                error: "Another fill was recorded while this one was being prepared; \
+                        re-read the prescription and dispense the remainder"
+                    .to_string(),
+                code: "DISPENSE_RACE_DETECTED".to_string(),
+            })
+        }
+        Err(e) => {
+            log::error!("Dispense failed for {prescription_id}: {e}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The dispense could not be recorded".to_string(),
+                code: "PRESCRIPTION_PERSISTENCE_FAILED".to_string(),
+            });
+        }
     }
 
     HttpResponse::Ok().json(serde_json::json!({
@@ -1031,45 +1544,11 @@ pub async fn reverse_dispense(
         crate::clinical::PrescriptionStatus::PartialFill
     };
 
-    // Same quantity guard as dispensing, for the same reason.
-    match data
-        .repositories
-        .e_prescriptions_v2
-        .replace_if_field_eq(
-            &prescription_id,
-            "dispensed_quantity",
-            &already.to_string(),
-            prescription_record(&prescription, &prescription_id),
-        )
-        .await
-    {
-        Ok(Some(_)) => {}
-        Ok(None) => {
-            return HttpResponse::Conflict().json(ErrorResponse {
-                success: false,
-                error: "The dispensed total changed while this reversal was being prepared"
-                    .to_string(),
-                code: "DISPENSE_RACE_DETECTED".to_string(),
-            })
-        }
-        Err(e) => {
-            log::error!("Dispense reversal failed for {prescription_id}: {e}");
-            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-                success: false,
-                error: "The reversal could not be recorded".to_string(),
-                code: "PRESCRIPTION_PERSISTENCE_FAILED".to_string(),
-            });
-        }
-    }
-
     // Mark the original rather than deleting it, and add the correction.
     let now = Utc::now();
     let mut marked = original.clone();
     marked.data["reversed"] = serde_json::Value::Bool(true);
     marked.updated_at = now;
-    if let Err(e) = data.repositories.dispense_events.create(marked).await {
-        log::error!("Marking the reversed dispense failed: {e}");
-    }
     let correction_id = format!("DISP-REV-{}", uuid::Uuid::new_v4());
     let correction = crate::repositories::traits::JsonRecordEntity {
         id: correction_id.clone(),
@@ -1089,30 +1568,49 @@ pub async fn reverse_dispense(
         created_at: now,
         updated_at: now,
     };
-    if let Err(e) = data.repositories.dispense_events.create(correction).await {
-        log::error!("Dispense correction history write failed: {e}");
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "The reversal was applied but its history entry was not".to_string(),
-            code: "DISPENSE_HISTORY_FAILED".to_string(),
-        });
-    }
-
-    if let Err(e) = audit_prescription_event(
-        &data,
-        &prescription,
-        &current_user.wallet_address,
-        &current_user.role.to_string(),
-        "prescription_dispense_reversed",
-    )
-    .await
+    match data
+        .repositories
+        .apply_prescription_mutation(crate::repositories::PrescriptionMutation {
+            prescription_id: prescription_id.clone(),
+            guard_field: "dispensed_quantity".to_string(),
+            expected_value: already.to_string(),
+            record: prescription_record(&prescription, &prescription_id),
+            events: vec![
+                (
+                    crate::repositories::PrescriptionEventTarget::Dispense,
+                    marked,
+                ),
+                (
+                    crate::repositories::PrescriptionEventTarget::Dispense,
+                    correction,
+                ),
+            ],
+            audit: prescription_audit(
+                &prescription,
+                &current_user.wallet_address,
+                &current_user.role.to_string(),
+                "prescription_dispense_reversed",
+            ),
+        })
+        .await
     {
-        log::error!("Dispensing audit failed for {prescription_id}: {e}");
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "The dispensing step could not be audited".to_string(),
-            code: "AUDIT_UNAVAILABLE".to_string(),
-        });
+        Ok(Some(_)) => {}
+        Ok(None) => {
+            return HttpResponse::Conflict().json(ErrorResponse {
+                success: false,
+                error: "The dispensed total changed while this reversal was being prepared"
+                    .to_string(),
+                code: "DISPENSE_RACE_DETECTED".to_string(),
+            })
+        }
+        Err(e) => {
+            log::error!("Dispense reversal failed for {prescription_id}: {e}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The reversal and its audit history could not be recorded".to_string(),
+                code: "PRESCRIPTION_PERSISTENCE_FAILED".to_string(),
+            });
+        }
     }
 
     HttpResponse::Ok().json(serde_json::json!({
@@ -1297,6 +1795,25 @@ mod lifecycle_tests {
         }
     }
 
+    fn pharmacist(wallet: &str) -> crate::User {
+        crate::User {
+            wallet_address: wallet.to_string(),
+            username: None,
+            name: format!("Pharmacist {wallet}"),
+            role: crate::Role::Pharmacist,
+            created_at: chrono::Utc::now(),
+            created_by: None,
+            linked_patient_id: None,
+            email: None,
+            phone: None,
+            department: None,
+            specialty: None,
+            license_number: Some(format!("SAPC-{wallet}")),
+            status: "active".to_string(),
+            last_login: None,
+        }
+    }
+
     /// A prescription in a given state, stored the way the handlers read it.
     async fn state_with(id: &str, status: crate::clinical::PrescriptionStatus) -> crate::AppState {
         let state = crate::AppState::new();
@@ -1355,6 +1872,7 @@ mod lifecycle_tests {
             is_controlled: false,
             dea_schedule: None,
             dispensed_quantity: 0,
+            secondary_verification: Default::default(),
             refills_allowed: 0,
             refills_remaining: 0,
             last_filled: None,
@@ -1378,6 +1896,41 @@ mod lifecycle_tests {
             .await
             .expect("seed prescription");
         state
+    }
+
+    async fn require_secondary_verification(
+        state: &crate::AppState,
+        id: &str,
+        status: crate::clinical::SecondaryVerificationStatus,
+    ) {
+        let stored = state
+            .repositories
+            .e_prescriptions_v2
+            .get_by_id(id)
+            .await
+            .unwrap()
+            .unwrap();
+        let mut prescription: crate::clinical::EPrescription =
+            serde_json::from_value(stored.data).unwrap();
+        prescription.secondary_verification = crate::clinical::SecondaryDispensingVerification {
+            required: true,
+            status,
+            policy_version: Some("test-policy-1".into()),
+            policy_rule_id: Some("test-rule".into()),
+            verification_ttl_seconds: Some(900),
+            first_pharmacist_id: Some("pharmacist_a".into()),
+            ..Default::default()
+        };
+        state
+            .repositories
+            .e_prescriptions_v2
+            .create(prescription_record(&prescription, id))
+            .await
+            .unwrap();
+        let mut users = state.users.write().unwrap();
+        for wallet in ["pharmacist_a", "pharmacist_b", "pharmacist_c"] {
+            users.insert(wallet.to_string(), pharmacist(wallet));
+        }
     }
 
     async fn stored_status(state: &crate::AppState, id: &str) -> String {
@@ -1528,5 +2081,154 @@ mod lifecycle_tests {
         .await;
         assert_eq!(second.status(), 400);
         assert_eq!(stored_status(&app_state, "RX-3").await, "Transmitted");
+    }
+
+    #[actix_web::test]
+    async fn required_verification_blocks_direct_dispense_and_self_approval() {
+        let state = state_with("RX-V1", crate::clinical::PrescriptionStatus::InProgress).await;
+        require_secondary_verification(
+            &state,
+            "RX-V1",
+            crate::clinical::SecondaryVerificationStatus::Required,
+        )
+        .await;
+        let app_state = web::Data::new(state);
+        let app = test::init_service(
+            App::new()
+                .app_data(app_state)
+                .service(request_secondary_verification)
+                .service(decide_secondary_verification)
+                .service(dispense_prescription),
+        )
+        .await;
+
+        let blocked = test::call_service(
+            &app,
+            test::TestRequest::post()
+                .uri("/api/e-prescriptions/RX-V1/dispense")
+                .insert_header(("x-user-id", "pharmacist_a"))
+                .set_json(serde_json::json!({ "quantity": 1 }))
+                .to_request(),
+        )
+        .await;
+        assert_eq!(blocked.status(), 409);
+
+        let requested = test::call_service(
+            &app,
+            test::TestRequest::post()
+                .uri("/api/e-prescriptions/RX-V1/verification/request")
+                .insert_header(("x-user-id", "pharmacist_a"))
+                .to_request(),
+        )
+        .await;
+        assert_eq!(requested.status(), 200);
+
+        let self_decision = test::call_service(
+            &app,
+            test::TestRequest::post()
+                .uri("/api/e-prescriptions/RX-V1/verification/decide")
+                .insert_header(("x-user-id", "pharmacist_a"))
+                .set_json(serde_json::json!({ "approve": true }))
+                .to_request(),
+        )
+        .await;
+        assert_eq!(self_decision.status(), 403);
+    }
+
+    #[actix_web::test]
+    async fn distinct_pharmacist_approval_enables_exactly_this_prescription() {
+        let state = state_with("RX-V2", crate::clinical::PrescriptionStatus::InProgress).await;
+        require_secondary_verification(
+            &state,
+            "RX-V2",
+            crate::clinical::SecondaryVerificationStatus::Required,
+        )
+        .await;
+        let app_state = web::Data::new(state);
+        let app = test::init_service(
+            App::new()
+                .app_data(app_state.clone())
+                .service(request_secondary_verification)
+                .service(decide_secondary_verification)
+                .service(dispense_prescription),
+        )
+        .await;
+        let request = test::TestRequest::post()
+            .uri("/api/e-prescriptions/RX-V2/verification/request")
+            .insert_header(("x-user-id", "pharmacist_a"))
+            .to_request();
+        assert_eq!(test::call_service(&app, request).await.status(), 200);
+
+        let approve = test::TestRequest::post()
+            .uri("/api/e-prescriptions/RX-V2/verification/decide")
+            .insert_header(("x-user-id", "pharmacist_b"))
+            .set_json(serde_json::json!({ "approve": true }))
+            .to_request();
+        assert_eq!(test::call_service(&app, approve).await.status(), 200);
+
+        let replay = test::TestRequest::post()
+            .uri("/api/e-prescriptions/RX-V2/verification/decide")
+            .insert_header(("x-user-id", "pharmacist_c"))
+            .set_json(serde_json::json!({ "approve": true }))
+            .to_request();
+        assert_eq!(test::call_service(&app, replay).await.status(), 409);
+
+        let dispense = test::TestRequest::post()
+            .uri("/api/e-prescriptions/RX-V2/dispense")
+            .insert_header(("x-user-id", "pharmacist_a"))
+            .set_json(serde_json::json!({ "quantity": 1 }))
+            .to_request();
+        assert_eq!(test::call_service(&app, dispense).await.status(), 200);
+
+        let events = app_state
+            .repositories
+            .prescription_verification_events
+            .list_all()
+            .await
+            .unwrap();
+        assert_eq!(events.len(), 2);
+    }
+
+    #[actix_web::test]
+    async fn concurrent_second_pharmacists_cannot_both_approve() {
+        let state = state_with("RX-V3", crate::clinical::PrescriptionStatus::InProgress).await;
+        require_secondary_verification(
+            &state,
+            "RX-V3",
+            crate::clinical::SecondaryVerificationStatus::Pending,
+        )
+        .await;
+        let data = web::Data::new(state);
+        let stored = load_prescription(&data, "RX-V3").await.unwrap();
+        let mut first = stored.clone();
+        first.secondary_verification.status =
+            crate::clinical::SecondaryVerificationStatus::Verified;
+        first.secondary_verification.verified_by = Some("pharmacist_b".into());
+        let mut second = stored;
+        second.secondary_verification.status =
+            crate::clinical::SecondaryVerificationStatus::Verified;
+        second.secondary_verification.verified_by = Some("pharmacist_c".into());
+        let pharmacist_b = pharmacist("pharmacist_b");
+        let pharmacist_c = pharmacist("pharmacist_c");
+
+        let (left, right) = tokio::join!(
+            transition_verification(
+                &data,
+                &first,
+                &crate::clinical::SecondaryVerificationStatus::Pending,
+                Vec::new(),
+                &pharmacist_b,
+                "prescription_verification_approved",
+            ),
+            transition_verification(
+                &data,
+                &second,
+                &crate::clinical::SecondaryVerificationStatus::Pending,
+                Vec::new(),
+                &pharmacist_c,
+                "prescription_verification_approved",
+            )
+        );
+        assert_ne!(left.is_ok(), right.is_ok());
     }
 }

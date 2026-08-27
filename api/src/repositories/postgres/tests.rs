@@ -15,6 +15,160 @@ use std::sync::{
     OnceLock,
 };
 
+#[tokio::test]
+async fn test_pg_prescription_mutation_rolls_back_when_audit_insert_fails() {
+    use crate::repositories::traits::{AccessLogEntity, JsonRecordEntity};
+    use crate::repositories::{PrescriptionEventTarget, PrescriptionMutation, RepositoryContainer};
+
+    let pool = get_test_pool().await;
+    let repositories = RepositoryContainer::new_postgres(pool.clone())
+        .await
+        .unwrap();
+    let prescription_id = format!("RX-ROLLBACK-{}", uuid::Uuid::new_v4());
+    let event_id = format!("DISP-ROLLBACK-{}", uuid::Uuid::new_v4());
+    let now = Utc::now();
+    let original = JsonRecordEntity {
+        id: prescription_id.clone(),
+        owner_id: "PAT-ROLLBACK".into(),
+        data: serde_json::json!({"status": "InProgress", "dispensed_quantity": 0}),
+        created_at: now,
+        updated_at: now,
+    };
+    repositories
+        .e_prescriptions_v2
+        .create(original.clone())
+        .await
+        .unwrap();
+    let mut changed = original.clone();
+    changed.data = serde_json::json!({"status": "Dispensed", "dispensed_quantity": 1});
+    let event = JsonRecordEntity {
+        id: event_id.clone(),
+        owner_id: "PAT-ROLLBACK".into(),
+        data: serde_json::json!({"prescription_id": prescription_id}),
+        created_at: now,
+        updated_at: now,
+    };
+    let duplicate_audit = AccessLogEntity {
+        id: format!("AUD-ROLLBACK-{}", uuid::Uuid::new_v4()),
+        accessor_id: "PHARM-ROLLBACK".into(),
+        accessor_role: "Pharmacist".into(),
+        patient_id: None,
+        resource_type: "medical_record".into(),
+        resource_id: Some(prescription_id.clone()),
+        action: "prescription_dispensed".to_string(),
+        access_reason: None,
+        is_emergency_access: false,
+        ip_address: None,
+        user_agent: None,
+        blockchain_tx_hash: None,
+        accessed_at: now,
+        facility_id: None,
+    };
+    repositories
+        .access_logs
+        .create(duplicate_audit.clone())
+        .await
+        .unwrap();
+
+    let result = repositories
+        .apply_prescription_mutation(PrescriptionMutation {
+            prescription_id: prescription_id.clone(),
+            guard_field: "dispensed_quantity".into(),
+            expected_value: "0".into(),
+            record: changed,
+            events: vec![(PrescriptionEventTarget::Dispense, event)],
+            audit: duplicate_audit,
+        })
+        .await;
+
+    assert!(result.is_err(), "the duplicate audit ID must fail the unit");
+    let stored = repositories
+        .e_prescriptions_v2
+        .get_by_id(&prescription_id)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(stored.data["status"], "InProgress");
+    assert_eq!(stored.data["dispensed_quantity"], 0);
+    assert!(repositories
+        .dispense_events
+        .get_by_id(&event_id)
+        .await
+        .unwrap()
+        .is_none());
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn test_pg_nested_json_guard_matches_memory_semantics() {
+    use crate::repositories::traits::{JsonRecordEntity, JsonRecordRepository};
+    let pool = get_test_pool().await;
+    let repo = crate::repositories::postgres::PgEPrescriptionV2Repository::new(pool.clone());
+    let id = format!("RX-NESTED-{}", uuid::Uuid::new_v4());
+    let now = Utc::now();
+    let pending = JsonRecordEntity {
+        id: id.clone(),
+        owner_id: "PAT-NESTED".into(),
+        data: serde_json::json!({
+            "secondary_verification": { "status": "Pending" }
+        }),
+        created_at: now,
+        updated_at: now,
+    };
+    repo.create(pending.clone()).await.unwrap();
+    let mut verified = pending;
+    verified.data = serde_json::json!({
+        "secondary_verification": { "status": "Verified" }
+    });
+    assert!(repo
+        .replace_if_field_eq(
+            &id,
+            "secondary_verification.status",
+            "Pending",
+            verified.clone(),
+        )
+        .await
+        .unwrap()
+        .is_some());
+    assert!(repo
+        .replace_if_field_eq(&id, "secondary_verification.status", "Pending", verified,)
+        .await
+        .unwrap()
+        .is_none());
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn test_pg_allows_only_one_open_verification_request_per_prescription() {
+    use crate::repositories::traits::{JsonRecordEntity, JsonRecordRepository};
+    let pool = get_test_pool().await;
+    let repo =
+        crate::repositories::postgres::PgPrescriptionVerificationEventRepository::new(pool.clone());
+    let now = Utc::now();
+    let make_event = |id: String| JsonRecordEntity {
+        id,
+        owner_id: "PAT-VERIFY".into(),
+        data: serde_json::json!({
+            "event_type": "verification_requested",
+            "prescription_id": "RX-ONE-OPEN",
+            "closed": false
+        }),
+        created_at: now,
+        updated_at: now,
+    };
+    repo.create(make_event(format!("RXV-{}", uuid::Uuid::new_v4())))
+        .await
+        .unwrap();
+    let duplicate = repo
+        .create(make_event(format!("RXV-{}", uuid::Uuid::new_v4())))
+        .await;
+    assert!(
+        duplicate.is_err(),
+        "the database must reject a second open request"
+    );
+    pool.close().await;
+}
+
 static NEXT_SCHEMA_ID: AtomicU64 = AtomicU64::new(0);
 static MIGRATION_LOCK: OnceLock<tokio::sync::Mutex<()>> = OnceLock::new();
 

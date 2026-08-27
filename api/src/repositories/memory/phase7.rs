@@ -49,6 +49,12 @@ fn json_field_as_text(value: Option<&serde_json::Value>) -> Option<String> {
     }
 }
 
+fn json_path<'a>(value: &'a serde_json::Value, field: &str) -> Option<&'a serde_json::Value> {
+    field
+        .split('.')
+        .try_fold(value, |current, segment| current.get(segment))
+}
+
 #[async_trait]
 impl JsonRecordRepository for MemoryJsonRecordRepository {
     async fn create(&self, mut record: JsonRecordEntity) -> RepositoryResult<JsonRecordEntity> {
@@ -125,7 +131,7 @@ impl JsonRecordRepository for MemoryJsonRecordRepository {
         let Some(existing) = data.get(id) else {
             return Ok(None);
         };
-        if json_field_as_text(existing.data.get(field)).as_deref() != Some(expected) {
+        if json_field_as_text(json_path(&existing.data, field)).as_deref() != Some(expected) {
             return Ok(None);
         }
 
@@ -202,6 +208,25 @@ mod tests {
                 .is_some(),
             "booleans render as their literal, as `->>` does"
         );
+    }
+
+    #[tokio::test]
+    async fn the_field_guard_matches_nested_policy_state() {
+        let repo = MemoryJsonRecordRepository::new();
+        let mut pending = entity("rx-nested", "PAT-1");
+        pending.data = json!({ "secondary_verification": { "status": "Pending" } });
+        repo.create(pending.clone()).await.unwrap();
+        pending.data = json!({ "secondary_verification": { "status": "Verified" } });
+        assert!(repo
+            .replace_if_field_eq(
+                "rx-nested",
+                "secondary_verification.status",
+                "Pending",
+                pending,
+            )
+            .await
+            .unwrap()
+            .is_some());
     }
 
     fn entity(id: &str, owner: &str) -> JsonRecordEntity {

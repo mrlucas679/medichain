@@ -85,6 +85,12 @@ RESOLVED_EXPRESSIONS: dict[str, list[str]] = {
         "prescription_dispensed",
         "prescription_partial_fill",
         "prescription_dispense_reversed",
+        # Policy-driven secondary pharmacist verification.
+        "prescription_verification_requested",
+        "prescription_verification_approved",
+        "prescription_verification_rejected",
+        "prescription_verification_expired",
+        "prescription_verification_revoked",
     ],
     # The recording handler picks one of two literals immediately above the
     # struct literal.

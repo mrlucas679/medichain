@@ -111,7 +111,9 @@ macro_rules! pg_json_repo {
                 let result = sqlx::query_as::<_, JsonRecordEntity>(concat!(
                     "UPDATE ",
                     $table,
-                    " SET owner_id = $2, data = $3, updated_at = NOW()                      WHERE id = $1 AND data ->> $4 = $5                      RETURNING *"
+                    " SET owner_id = $2, data = $3, updated_at = NOW() \
+                     WHERE id = $1 AND data #>> string_to_array($4, '.') = $5 \
+                     RETURNING *"
                 ))
                 .bind(id)
                 .bind(&record.owner_id)
@@ -187,6 +189,10 @@ pg_json_repo!(
 );
 pg_json_repo!(PgEPrescriptionRecordRepository, "e_prescription_records");
 pg_json_repo!(PgDispenseEventRepository, "dispense_events");
+pg_json_repo!(
+    PgPrescriptionVerificationEventRepository,
+    "prescription_verification_events"
+);
 pg_json_repo!(
     PgDeathCertificateRecordRepository,
     "death_certificate_records"

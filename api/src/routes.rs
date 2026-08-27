@@ -498,6 +498,9 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         // Transmitted, leaving four declared states unreachable.
         .service(clinical_endpoints::receive_prescription)
         .service(clinical_endpoints::start_prescription_fill)
+        .service(clinical_endpoints::request_secondary_verification)
+        .service(clinical_endpoints::decide_secondary_verification)
+        .service(clinical_endpoints::revoke_secondary_verification)
         .service(clinical_endpoints::dispense_prescription)
         .service(clinical_endpoints::reverse_dispense)
         .service(clinical_endpoints::list_dispense_events)

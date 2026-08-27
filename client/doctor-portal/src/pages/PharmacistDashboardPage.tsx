@@ -24,7 +24,16 @@ import {
   receivePrescription,
   startPrescriptionFill,
   dispensePrescription,
+  requestPrescriptionVerification,
+  decidePrescriptionVerification,
 } from '@medichain/shared';
+
+interface SecondaryVerification {
+  required: boolean;
+  status: 'NotRequired' | 'Required' | 'Pending' | 'Verified' | 'Rejected' | 'Expired' | 'Revoked';
+  first_pharmacist_id?: string | null;
+  requested_by?: string | null;
+}
 import {
   StatCard,
   CriticalAlertsBanner,
@@ -44,6 +53,7 @@ interface Prescription {
   status: string;
   prescribed_by?: string;
   created_at?: string;
+  secondary_verification?: SecondaryVerification;
 }
 
 interface DrugInteraction {
@@ -68,6 +78,7 @@ interface AllergyAlert {
 
 interface PharmacistDashboardData {
   role: string;
+  pharmacist_id?: string;
   prescriptions: {
     pending_fill: number;
     in_progress: number;
@@ -163,9 +174,10 @@ export default function PharmacistDashboardPage() {
    */
   const handlePharmacyAction = async (
     prescriptionId: string,
-    action: 'receive' | 'start' | 'dispense'
+    action: 'receive' | 'start' | 'dispense' | 'requestVerification' | 'approve' | 'reject'
   ) => {
     let quantity = 0;
+    let rejectionReason: string | undefined;
     if (action === 'dispense') {
       const entered = window.prompt(t('docPharmDashboard.dispenseQuantityPrompt'));
       if (entered === null) return;
@@ -174,6 +186,15 @@ export default function PharmacistDashboardPage() {
       // the pharmacist did not ask for reads like a broken button.
       if (!Number.isFinite(quantity) || quantity <= 0) {
         setRxResult((p) => ({ ...p, [prescriptionId]: t('docPharmDashboard.quantityInvalid') }));
+        return;
+      }
+    }
+    if (action === 'reject') {
+      const entered = window.prompt(t('docPharmDashboard.rejectionReasonPrompt'));
+      if (entered === null) return;
+      rejectionReason = entered.trim();
+      if (!rejectionReason) {
+        setRxResult((p) => ({ ...p, [prescriptionId]: t('docPharmDashboard.reasonRequired') }));
         return;
       }
     }
@@ -188,6 +209,18 @@ export default function PharmacistDashboardPage() {
       } else if (action === 'start') {
         await startPrescriptionFill(prescriptionId);
         message = t('docPharmDashboard.fillStarted');
+      } else if (action === 'requestVerification') {
+        await requestPrescriptionVerification(prescriptionId);
+        message = t('docPharmDashboard.verificationRequested');
+      } else if (action === 'approve' || action === 'reject') {
+        await decidePrescriptionVerification(
+          prescriptionId,
+          action === 'approve',
+          rejectionReason
+        );
+        message = action === 'approve'
+          ? t('docPharmDashboard.verificationApproved')
+          : t('docPharmDashboard.verificationRejected');
       } else {
         const result = await dispensePrescription(prescriptionId, quantity);
         // `remaining` is optional on the response type; treat an absent value
@@ -348,6 +381,8 @@ export default function PharmacistDashboardPage() {
                             </button>
                           )}
                           {(rx.status === 'InProgress' || rx.status === 'PartialFill') && (
+                            rx.secondary_verification?.required &&
+                            rx.secondary_verification.status !== 'Verified' ? null :
                             <button
                               type="button"
                               onClick={() => void handlePharmacyAction(rx.prescription_id, 'dispense')}
@@ -356,6 +391,31 @@ export default function PharmacistDashboardPage() {
                             >
                               {t('docPharmDashboard.dispense')}
                             </button>
+                          )}
+                          {rx.secondary_verification?.required &&
+                            ['Required', 'Rejected', 'Expired', 'Revoked'].includes(rx.secondary_verification.status) &&
+                            rx.secondary_verification.first_pharmacist_id === data?.pharmacist_id && (
+                            <button
+                              type="button"
+                              onClick={() => void handlePharmacyAction(rx.prescription_id, 'requestVerification')}
+                              disabled={busyRx === rx.prescription_id}
+                              className="text-xs font-medium underline text-notice-subtle-fg disabled:no-underline disabled:opacity-60"
+                            >
+                              {t('docPharmDashboard.requestVerification')}
+                            </button>
+                          )}
+                          {rx.secondary_verification?.required &&
+                            rx.secondary_verification.status === 'Pending' &&
+                            rx.secondary_verification.first_pharmacist_id !== data?.pharmacist_id &&
+                            rx.secondary_verification.requested_by !== data?.pharmacist_id && (
+                            <>
+                              <button type="button" onClick={() => void handlePharmacyAction(rx.prescription_id, 'approve')} disabled={busyRx === rx.prescription_id} className="text-xs font-medium underline text-ok-subtle-fg disabled:opacity-60">
+                                {t('docPharmDashboard.approveVerification')}
+                              </button>
+                              <button type="button" onClick={() => void handlePharmacyAction(rx.prescription_id, 'reject')} disabled={busyRx === rx.prescription_id} className="text-xs font-medium underline text-critical-subtle-fg disabled:opacity-60">
+                                {t('docPharmDashboard.rejectVerification')}
+                              </button>
+                            </>
                           )}
                           {rx.status === 'Dispensed' && (
                             <span className="text-xs text-content-muted">{t('docPharmDashboard.completed')}</span>

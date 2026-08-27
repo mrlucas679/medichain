@@ -50,12 +50,18 @@ now carries the running total, and `dispense_events` carries the history.
 | Concurrent dispensing | Exactly one of six simultaneous whole-quantity attempts succeeds. |
 | Audit | Five new actions, added to the CHECK constraint and the source-derived gate. |
 
-**Still open, and deliberately not guessed:** controlled-substance handling
-beyond the existing `is_controlled` flag (additional identity checks, register
-entries, quantity limits, whether partial fills are permitted at all), and
-whether a second pharmacist must verify anything. Neither has a stated policy,
-and both are the kind of rule that must come from a pharmacy authority rather
-than from the shape of an enum.
+**Mechanism built; mapping still deliberately not guessed:** a deployment
+policy file can now match an approved medication code, organization category,
+or medication name and require distinct second-pharmacist verification. The
+request, approval, rejection, expiry and revocation states are retained as
+append-only events; the first pharmacist and prescriber cannot approve; a
+guarded transition admits one concurrent decision; direct dispensing is
+blocked until verified.
+
+The repository still contains no South African or other jurisdictional
+controlled-substance mapping. A pharmacy authority must approve the policy
+file, its version, selectors and verification timeout. The mechanism being
+present is not evidence that such a mapping is legally correct or deployed.
 
 ---
 

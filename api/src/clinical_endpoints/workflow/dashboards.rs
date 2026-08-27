@@ -789,6 +789,12 @@ pub async fn pharmacist_dashboard(
                     "Routine"
                 },
                 "is_controlled": v.get("is_controlled").and_then(|c| c.as_bool()).unwrap_or(false),
+                "secondary_verification": v.get("secondary_verification")
+                    .cloned()
+                    .unwrap_or_else(|| serde_json::json!({
+                        "required": false,
+                        "status": "NotRequired"
+                    })),
             })
         })
         .collect();
