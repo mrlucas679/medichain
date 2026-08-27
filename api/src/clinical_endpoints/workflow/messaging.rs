@@ -116,23 +116,24 @@ pub async fn log_symptom(
     }
 
     // Log access via repository (persists to memory or postgres backend)
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: patient_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: current_user.role.to_string(),
-                access_type: "log_symptom".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: patient_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: current_user.role.to_string(),
+            access_type: "log_symptom".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     HttpResponse::Created().json(serde_json::json!({
         "success": true,

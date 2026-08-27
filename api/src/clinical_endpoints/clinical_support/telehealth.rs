@@ -7,6 +7,41 @@
 
 use super::*;
 
+/// Persist a telehealth session or return a stable, non-disclosing response.
+async fn persist_session(
+    data: &crate::AppState,
+    session: &crate::clinical::TelehealthSession,
+) -> Result<(), HttpResponse> {
+    let now = chrono::Utc::now();
+    let payload = serde_json::to_value(session).map_err(|error| {
+        log::error!("Telehealth session serialization failed: {error}");
+        HttpResponse::InternalServerError().json(serde_json::json!({
+            "success": false,
+            "error": "Could not save the telehealth session",
+            "code": "TELEHEALTH_SERIALIZATION_FAILED"
+        }))
+    })?;
+    data.repositories
+        .telehealth_session_records
+        .create(crate::repositories::traits::JsonRecordEntity {
+            id: session.session_id.clone(),
+            owner_id: session.patient_id.clone(),
+            data: payload,
+            created_at: now,
+            updated_at: now,
+        })
+        .await
+        .map(|_| ())
+        .map_err(|error| {
+            log::error!("Telehealth session persistence failed: {error}");
+            HttpResponse::ServiceUnavailable().json(serde_json::json!({
+                "success": false,
+                "error": "Telehealth session storage is unavailable",
+                "code": "TELEHEALTH_PERSISTENCE_FAILED"
+            }))
+        })
+}
+
 // ============================================================================
 // PHASE 26: TELEHEALTH INTEGRATION
 // ============================================================================
@@ -126,12 +161,14 @@ pub(crate) async fn provision_session(
     };
 
     let now_dt = chrono::Utc::now();
+    let payload = serde_json::to_value(&session)
+        .map_err(|error| format!("Could not serialize telehealth session: {error}"))?;
     data.repositories
         .telehealth_session_records
         .create(crate::repositories::traits::JsonRecordEntity {
             id: session_id,
             owner_id: session.patient_id.clone(),
-            data: serde_json::to_value(&session).unwrap_or_default(),
+            data: payload,
             created_at: now_dt,
             updated_at: now_dt,
         })
@@ -373,19 +410,9 @@ pub async fn join_telehealth_session(
 
     // Persist the updated session (upsert preserves original created_at)
     {
-        let now_dt = chrono::Utc::now();
-        let entity = crate::repositories::traits::JsonRecordEntity {
-            id: session_id.clone(),
-            owner_id: session.patient_id.clone(),
-            data: serde_json::to_value(&session).unwrap_or_default(),
-            created_at: now_dt,
-            updated_at: now_dt,
-        };
-        let _ = data
-            .repositories
-            .telehealth_session_records
-            .create(entity)
-            .await;
+        if let Err(response) = persist_session(&data, &session).await {
+            return response;
+        }
     }
 
     // Entering a patient's live consultation is an access to their care, and
@@ -426,8 +453,8 @@ pub async fn join_telehealth_session(
             accessed_at: joined_at,
             facility_id: None,
         };
-        if let Err(e) = data.repositories.access_logs.create(log).await {
-            log::error!("telehealth join audit write failed: {e}");
+        if let Err(response) = crate::support::require_durable_audit(&data, log).await {
+            return response;
         }
     }
 
@@ -623,7 +650,9 @@ pub async fn telehealth_event(
         accessed_at: now,
         facility_id: None,
     };
-    let _ = data.repositories.access_logs.create(log).await;
+    if let Err(response) = crate::support::require_durable_audit(&data, log).await {
+        return response;
+    }
 
     HttpResponse::Ok().json(serde_json::json!({ "success": true }))
 }
@@ -712,18 +741,9 @@ pub async fn telehealth_recording(
     }
 
     let now = chrono::Utc::now();
-    let entity = crate::repositories::traits::JsonRecordEntity {
-        id: session_id.clone(),
-        owner_id: session.patient_id.clone(),
-        data: serde_json::to_value(&session).unwrap_or_default(),
-        created_at: now,
-        updated_at: now,
-    };
-    let _ = data
-        .repositories
-        .telehealth_session_records
-        .create(entity)
-        .await;
+    if let Err(response) = persist_session(&data, &session).await {
+        return response;
+    }
 
     // Audit + broadcast.
     let action = if starting {
@@ -752,8 +772,8 @@ pub async fn telehealth_recording(
         accessed_at: now,
         facility_id: None,
     };
-    if let Err(e) = data.repositories.access_logs.create(log).await {
-        log::error!("telehealth {action} audit write failed: {e}");
+    if let Err(response) = crate::support::require_durable_audit(&data, log).await {
+        return response;
     }
     data.ws_manager.push_event(crate::websocket::PushEvent {
         event_type: "telehealth".to_string(),
@@ -829,19 +849,9 @@ pub async fn end_telehealth_session(
 
     // Persist the completed session before the async teardown call
     {
-        let now_dt = chrono::Utc::now();
-        let entity = crate::repositories::traits::JsonRecordEntity {
-            id: session_id.clone(),
-            owner_id: session.patient_id.clone(),
-            data: serde_json::to_value(&session).unwrap_or_default(),
-            created_at: now_dt,
-            updated_at: now_dt,
-        };
-        let _ = data
-            .repositories
-            .telehealth_session_records
-            .create(entity)
-            .await;
+        if let Err(response) = persist_session(&data, &session).await {
+            return response;
+        }
     }
 
     // Notify the TelehealthService so the provider backend can tear down the room

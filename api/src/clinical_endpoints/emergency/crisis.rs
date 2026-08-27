@@ -20,16 +20,19 @@ pub async fn create_code_blue(
     let id = record.event_id.clone();
     let owner_id = record.patient_id.clone();
 
-    let _ = data
-        .repositories
-        .access_logs
-        .create(access_log_entity(
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        access_log_entity(
             current_user_id,
             "medical_team",
             "create_code_blue",
             Some(owner_id),
-        ))
-        .await;
+        ),
+    )
+    .await
+    {
+        return response;
+    }
 
     let entity = code_blue_entity(&record, json_value(&record));
     match data.repositories.code_blue.create(entity).await {
@@ -127,16 +130,19 @@ pub async fn create_cardiac(
     let event = req.into_inner();
     let id = event.event_id.clone();
 
-    let _ = data
-        .repositories
-        .access_logs
-        .create(access_log_entity(
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        access_log_entity(
             current_user_id,
             "medical_team",
             "create_cardiac_event",
             Some(event.patient_id.clone()),
-        ))
-        .await;
+        ),
+    )
+    .await
+    {
+        return response;
+    }
 
     let entity = cardiac_entity(&event, json_value(&event));
     match data.repositories.cardiac_events_repo.create(entity).await {

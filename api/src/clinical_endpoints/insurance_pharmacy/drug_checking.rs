@@ -241,18 +241,37 @@ async fn check_interactions_response(
     let check_id = result.result_id.clone();
     {
         let now_dt = chrono::Utc::now();
+        let payload = match serde_json::to_value(&result) {
+            Ok(value) => value,
+            Err(error) => {
+                log::error!("Drug interaction result serialization failed: {error}");
+                return HttpResponse::InternalServerError().json(ErrorResponse {
+                    success: false,
+                    error: "Could not save the drug interaction result".to_string(),
+                    code: "DRUG_CHECK_SERIALIZATION_FAILED".to_string(),
+                });
+            }
+        };
         let entity = crate::repositories::traits::JsonRecordEntity {
             id: check_id.clone(),
             owner_id: result.patient_id.clone(),
-            data: serde_json::to_value(&result).unwrap_or_default(),
+            data: payload,
             created_at: now_dt,
             updated_at: now_dt,
         };
-        let _ = data
+        if let Err(error) = data
             .repositories
             .drug_interaction_checks
             .create(entity)
-            .await;
+            .await
+        {
+            log::error!("Drug interaction result persistence failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "Drug interaction storage is unavailable".to_string(),
+                code: "DRUG_CHECK_PERSISTENCE_FAILED".to_string(),
+            });
+        }
     }
 
     HttpResponse::Ok().json(serde_json::json!({

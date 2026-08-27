@@ -1039,9 +1039,10 @@ pub async fn check_and_send_appointment_reminders(data: &crate::AppState) {
         })
         .filter(|a| matches!(a.scheduled_time, Some(t) if t > now && t <= window_end))
         .filter(|a| {
-            !a.reminders_sent
-                .iter()
-                .any(|r| r.reminder_type == crate::clinical::ReminderType::Push)
+            !a.reminders_sent.iter().any(|r| {
+                r.reminder_type == crate::clinical::ReminderType::Push
+                    && r.status != crate::clinical::ReminderStatus::Failed
+            })
         })
         .collect();
 
@@ -1059,34 +1060,41 @@ pub async fn check_and_send_appointment_reminders(data: &crate::AppState) {
             &format!("Appointment with {}", appointment.provider_name),
         );
 
-        let repos = data.repositories.clone();
         let patient_id = appointment.patient_id.clone();
         let provider_name = appointment.provider_name.clone();
-        tokio::spawn(async move {
-            let _ = crate::notifications::send_push_to_user(
-                &repos,
-                crate::notifications::PushNotification {
-                    user_id: patient_id,
-                    title: "Upcoming Appointment".to_string(),
-                    body: format!("You have an appointment with {} tomorrow.", provider_name),
-                    data: Some([("type".to_string(), "appointment_reminder".to_string())].into()),
-                },
-            )
-            .await;
-        });
+        let delivery_status = match crate::notifications::send_push_to_user(
+            &data.repositories,
+            crate::notifications::PushNotification {
+                user_id: patient_id,
+                title: "Upcoming Appointment".to_string(),
+                body: format!("You have an appointment with {} tomorrow.", provider_name),
+                data: Some([("type".to_string(), "appointment_reminder".to_string())].into()),
+            },
+        )
+        .await
+        {
+            Ok(()) => crate::clinical::ReminderStatus::Sent,
+            Err(error) => {
+                log::error!("Appointment reminder delivery failed: {error}");
+                crate::clinical::ReminderStatus::Failed
+            }
+        };
 
         appointment
             .reminders_sent
             .push(crate::clinical::AppointmentReminder {
                 reminder_type: crate::clinical::ReminderType::Push,
                 sent_at: now,
-                status: crate::clinical::ReminderStatus::Sent,
+                status: delivery_status,
             });
-        let _ = data
+        if let Err(error) = data
             .repositories
             .appointments
             .update(appointment.into())
-            .await;
+            .await
+        {
+            log::error!("Appointment reminder state persistence failed: {error}");
+        }
     }
 }
 

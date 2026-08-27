@@ -171,30 +171,23 @@ pub async fn submit_lab_results(
     // Audit is an obligation, not a side effect: a clinical result filed
     // against a patient with no record of who filed it is not auditable after
     // the fact, and the submission is already durable by this point.
-    if let Err(e) = data
-        .repositories
-        .access_logs
-        .create(
-            AccessLogEntry {
-                access_id: secure_tokens::generate_access_id(),
-                patient_id: req.patient_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: current_user.role.to_string(),
-                access_type: "lab_submission".to_string(),
-                location: None,
-                timestamp: Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        AccessLogEntry {
+            access_id: secure_tokens::generate_access_id(),
+            patient_id: req.patient_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: current_user.role.to_string(),
+            access_type: "lab_submission".to_string(),
+            location: None,
+            timestamp: Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
     {
-        log::error!("Lab submission audit failed for {submission_id}: {e}");
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "Lab submission could not be audited".to_string(),
-            code: "AUDIT_UNAVAILABLE".to_string(),
-        });
+        return response;
     }
 
     log::info!(
@@ -708,32 +701,23 @@ pub async fn review_lab_results_impl(
 
     // Audit is an obligation for the same reason: a clinical sign-off nobody
     // can later attribute is not a reviewed result.
-    if let Err(e) = data
-        .repositories
-        .access_logs
-        .create(
-            AccessLogEntry {
-                access_id: secure_tokens::generate_access_id(),
-                patient_id: patient_id.clone(),
-                accessor_id: current_user_id.clone(),
-                accessor_role: current_user.role.to_string(),
-                access_type: format!("lab_review_{}", action),
-                location: None,
-                timestamp: Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        AccessLogEntry {
+            access_id: secure_tokens::generate_access_id(),
+            patient_id: patient_id.clone(),
+            accessor_id: current_user_id.clone(),
+            accessor_role: current_user.role.to_string(),
+            access_type: format!("lab_review_{}", action),
+            location: None,
+            timestamp: Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
     {
-        log::error!("Lab review audit failed for {}: {}", submission_id, e);
-        revert_submission_to_pending(&data, &pending_snapshot, &status_token(&submission.status))
-            .await;
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "Lab review could not be audited".to_string(),
-            code: "AUDIT_UNAVAILABLE".to_string(),
-        });
+        return response;
     }
 
     log::info!(

@@ -17,12 +17,8 @@ the whole problem:
   * `/api/e-prescriptions/{id}/sign` and `/transmit` — a prescription reported
     as signed or transmitted to a pharmacy when neither had been persisted.
 
-This gate ratchets the remaining surface downward:
-
-  * a discarded write in a file NOT in BASELINE fails the build;
-  * a count that RISES above its baseline fails the build;
-  * a count that FALLS must have its baseline lowered in the same commit,
-    because a ratchet nobody tightens is not a ratchet.
+This gate now enforces a zero-discard invariant. A repository write may be
+best-effort, but its error still has to be handled and logged explicitly.
 
 Not every entry is a defect. Some discarded writes are genuinely best-effort
 (a cache refresh, a notification). Those belong in BEST_EFFORT with a reason,
@@ -42,7 +38,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent / "api" / "src"
 # `let _ = <expr>.repositories.<name>.<verb>(...)` — the receiver may be
 # `data`, `state` or `app_state`, and the call may be split across lines.
 DISCARDED = re.compile(
-    r"let\s+_\s*=\s*(?:data|state|app_state)\s*\.\s*repositories\s*\.\s*([a-z_0-9]+)\s*\.",
+    r"let\s+_\s*=\s*(?:[a-zA-Z_][a-zA-Z_0-9]*\s*\.\s*)?"
+    r"repositories\s*\.\s*([a-z_0-9]+)\s*\.",
     re.MULTILINE,
 )
 
@@ -97,31 +94,28 @@ def scan() -> dict[str, int]:
     return counts
 
 
+def self_test() -> None:
+    """Prove the scanner rejects every supported receiver spelling."""
+    bad = [
+        "let _ = data.repositories.records.create(row).await;",
+        "let _ = self.repositories.records.update(row).await;",
+        "let _ = repositories.records.delete(id).await;",
+    ]
+    for snippet in bad:
+        assert DISCARDED.search(snippet), f"gate failed to reject {snippet!r}"
+    assert not DISCARDED.search(
+        "repositories.records.create(row).await?;"
+    ), "gate rejected a propagated write"
+
+
 # ---------------------------------------------------------------------------
-# The remaining backlog: file -> discarded production repository writes.
-# Every entry is a write whose failure is currently invisible to the caller.
-# Numbers may only go down. Delete the entry when it reaches zero.
+# No production repository write may silently discard its result.
 # ---------------------------------------------------------------------------
-BASELINE: dict[str, int] = {
-    "api/src/clinical_endpoints/clinical_support/telehealth.rs": 4,
-    "api/src/clinical_endpoints/emergency/assessments.rs": 4,
-    "api/src/clinical_endpoints/emergency/crisis.rs": 2,
-    "api/src/clinical_endpoints/engagement/appointments.rs": 1,
-    "api/src/clinical_endpoints/insurance_pharmacy/drug_checking.rs": 1,
-    "api/src/clinical_endpoints/medical_id/core.rs": 1,
-    "api/src/clinical_endpoints/medical_id/preferences.rs": 1,
-    "api/src/clinical_endpoints/surgical/diagnostics.rs": 4,
-    "api/src/clinical_endpoints/surgical/perioperative.rs": 3,
-    "api/src/clinical_endpoints/surgical/public_health.rs": 5,
-    "api/src/clinical_endpoints/workflow/messaging.rs": 1,
-    "api/src/handlers/ipfs_records.rs": 3,
-    "api/src/handlers/nfc.rs": 3,
-    "api/src/handlers/soap.rs": 1,
-    "api/src/handlers/vitals.rs": 1,
-}
+BASELINE: dict[str, int] = {}
 
 
 def main() -> int:
+    self_test()
     found = scan()
 
     if "--list" in sys.argv:

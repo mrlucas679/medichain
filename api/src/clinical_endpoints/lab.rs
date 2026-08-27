@@ -1606,30 +1606,23 @@ pub async fn notify_rejection_ordering_provider(
     // Audit before delivery, and treat it as an obligation. Telling a clinician
     // their specimen was rejected is a clinical communication; one nobody can
     // later attribute is not one that happened.
-    if let Err(e) = data
-        .repositories
-        .access_logs
-        .create(
-            AccessLogEntry {
-                access_id: crate::middleware::secure_tokens::generate_access_id(),
-                patient_id: rejection.patient_id.clone(),
-                accessor_id: current_user.wallet_address.clone(),
-                accessor_role: current_user.role.to_string(),
-                access_type: "specimen_rejection_notified".to_string(),
-                location: None,
-                timestamp: now,
-                emergency: false,
-            }
-            .into(),
-        )
-        .await
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        AccessLogEntry {
+            access_id: crate::middleware::secure_tokens::generate_access_id(),
+            patient_id: rejection.patient_id.clone(),
+            accessor_id: current_user.wallet_address.clone(),
+            accessor_role: current_user.role.to_string(),
+            access_type: "specimen_rejection_notified".to_string(),
+            location: None,
+            timestamp: now,
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
     {
-        log::error!("Rejection notification audit failed for {rejection_id}: {e}");
-        return HttpResponse::ServiceUnavailable().json(ErrorResponse {
-            success: false,
-            error: "The notification could not be audited".to_string(),
-            code: "AUDIT_UNAVAILABLE".to_string(),
-        });
+        return response;
     }
 
     // Delivery last, and best-effort. The record says the provider was told

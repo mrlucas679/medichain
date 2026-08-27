@@ -189,24 +189,19 @@ pub async fn nfc_tap(
     };
 
     if tap_result.success {
-        // Log the access via repository
-        let _ = data
-            .repositories
-            .access_logs
-            .create(
-                AccessLogEntry {
-                    access_id: secure_tokens::generate_access_id(),
-                    patient_id: tap_result.patient_id.clone(),
-                    accessor_id: current_user_id.clone(),
-                    accessor_role: current_user.role.to_string(),
-                    access_type: "nfc_tap".to_string(),
-                    location: None,
-                    timestamp: Utc::now(),
-                    emergency: true,
-                }
-                .into(),
-            )
-            .await;
+        let audit = AccessLogEntry {
+            access_id: secure_tokens::generate_access_id(),
+            patient_id: tap_result.patient_id.clone(),
+            accessor_id: current_user_id.clone(),
+            accessor_role: current_user.role.to_string(),
+            access_type: "nfc_tap".to_string(),
+            location: None,
+            timestamp: Utc::now(),
+            emergency: true,
+        };
+        if let Err(response) = crate::support::require_durable_audit(&data, audit.into()).await {
+            return response;
+        }
 
         log::info!(
             "NFC tap successful for patient {} by {}",
@@ -314,23 +309,19 @@ pub async fn verify_my_nfc_card(
         });
     }
 
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            AccessLogEntry {
-                access_id: secure_tokens::generate_access_id(),
-                patient_id: current_user_id.clone(),
-                accessor_id: current_user_id.clone(),
-                accessor_role: current_user.role.to_string(),
-                access_type: "nfc_self_verify".to_string(),
-                location: None,
-                timestamp: Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    let audit = AccessLogEntry {
+        access_id: secure_tokens::generate_access_id(),
+        patient_id: current_user_id.clone(),
+        accessor_id: current_user_id.clone(),
+        accessor_role: current_user.role.to_string(),
+        access_type: "nfc_self_verify".to_string(),
+        location: None,
+        timestamp: Utc::now(),
+        emergency: false,
+    };
+    if let Err(response) = crate::support::require_durable_audit(&data, audit.into()).await {
+        return response;
+    }
 
     HttpResponse::Ok().json(VerifyMyCardResponse {
         success: true,
@@ -432,24 +423,19 @@ pub async fn verify_qr_code(
         });
     }
 
-    // Log the access via repository
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            AccessLogEntry {
-                access_id: secure_tokens::generate_access_id(),
-                patient_id: qr_data.patient_id.clone(),
-                accessor_id: current_user_id.clone(),
-                accessor_role: current_user.role.to_string(),
-                access_type: "qr_verification".to_string(),
-                location: None,
-                timestamp: Utc::now(),
-                emergency: true,
-            }
-            .into(),
-        )
-        .await;
+    let audit = AccessLogEntry {
+        access_id: secure_tokens::generate_access_id(),
+        patient_id: qr_data.patient_id.clone(),
+        accessor_id: current_user_id.clone(),
+        accessor_role: current_user.role.to_string(),
+        access_type: "qr_verification".to_string(),
+        location: None,
+        timestamp: Utc::now(),
+        emergency: true,
+    };
+    if let Err(response) = crate::support::require_durable_audit(&data, audit.into()).await {
+        return response;
+    }
 
     log::info!(
         "QR code verified for patient {} by {}",

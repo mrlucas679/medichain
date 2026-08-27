@@ -20,23 +20,24 @@ pub async fn create_anesthesia(
     let owner_id = record.patient_id.clone();
 
     // Log access
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: owner_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: "anesthesiologist".to_string(),
-                access_type: "create_anesthesia".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: owner_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: "anesthesiologist".to_string(),
+            access_type: "create_anesthesia".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     // Persisted through the repository, so the record survives a restart.
     match data
@@ -177,26 +178,27 @@ pub async fn create_radiology_order(
     let owner_id = order.patient_id.clone();
 
     // Log access
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: owner_id.clone(),
-                accessor_id: current_user_id,
-                // The caller's actual role. This was the literal "doctor",
-                // so a lab technician or pharmacist placing an order was
-                // recorded in the audit trail as a doctor.
-                accessor_role: caller.role.to_string(),
-                access_type: "create_radiology_order".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: owner_id.clone(),
+            accessor_id: current_user_id,
+            // The caller's actual role. This was the literal "doctor",
+            // so a lab technician or pharmacist placing an order was
+            // recorded in the audit trail as a doctor.
+            accessor_role: caller.role.to_string(),
+            access_type: "create_radiology_order".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     // Persisted through the repository, so it survives a restart.
     match data
@@ -270,23 +272,24 @@ pub async fn create_radiology_report(
     let owner_id = report.patient_id.clone();
 
     // Log access
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: owner_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: "radiologist".to_string(),
-                access_type: "create_radiology_report".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: owner_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: "radiologist".to_string(),
+            access_type: "create_radiology_report".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     // Persisted through the repository, so it survives a restart.
     match data
@@ -407,23 +410,24 @@ pub async fn create_pathology(
     let owner_id = body.patient_id.clone();
 
     // Log access
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: owner_id.clone(),
-                accessor_id: current_user_id.clone(),
-                accessor_role: "pathologist".to_string(),
-                access_type: "create_pathology".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: owner_id.clone(),
+            accessor_id: current_user_id.clone(),
+            accessor_role: "pathologist".to_string(),
+            access_type: "create_pathology".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     let now = chrono::Utc::now();
     let parse_date = |value: &Option<String>| {

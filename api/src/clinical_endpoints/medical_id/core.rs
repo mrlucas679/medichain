@@ -263,24 +263,19 @@ pub async fn get_medical_id(
         "last_updated": chrono::Utc::now().to_rfc3339(),
     });
 
-    // Log access via repository
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: patient_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: current_user.role.to_string(),
-                access_type: "view_medical_id".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    let audit = crate::AccessLogEntry {
+        access_id: uuid::Uuid::new_v4().to_string(),
+        patient_id: patient_id.clone(),
+        accessor_id: current_user_id,
+        accessor_role: current_user.role.to_string(),
+        access_type: "view_medical_id".to_string(),
+        location: None,
+        timestamp: chrono::Utc::now(),
+        emergency: false,
+    };
+    if let Err(response) = crate::support::require_durable_audit(&data, audit.into()).await {
+        return response;
+    }
 
     HttpResponse::Ok().json(medical_id)
 }

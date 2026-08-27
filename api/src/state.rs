@@ -988,8 +988,10 @@ impl AppState {
         ) {
             for (profile, tag) in to_repo {
                 let entity = patient_profile_to_entity(&profile, &self.encryption_keyring);
-                let _ = self.repositories.patients.create(entity).await;
-                let _ = self.repositories.nfc_tags.create(tag.into()).await;
+                self.repositories
+                    .create_patient_with_nfc(entity, tag.into())
+                    .await
+                    .map_err(|error| format!("load patient into memory repository: {error}"))?;
             }
         }
 

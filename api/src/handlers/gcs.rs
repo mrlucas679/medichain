@@ -200,8 +200,8 @@ pub async fn create_gcs_assessment(
         facility_id: None,
     };
 
-    if let Err(e) = data.repositories.access_logs.create(log_entity).await {
-        log::error!("Failed to store access log in repository: {}", e);
+    if let Err(response) = crate::support::require_durable_audit(&data, log_entity).await {
+        return response;
     }
 
     log::info!(

@@ -173,23 +173,24 @@ pub async fn add_vital_signs(
     }
 
     // Log access via repository
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            AccessLogEntry {
-                access_id: secure_tokens::generate_access_id(),
-                patient_id: req.patient_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: current_user.role.to_string(),
-                access_type: "add_vital_signs".to_string(),
-                location: None,
-                timestamp: Utc::now(),
-                emergency: has_critical,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        AccessLogEntry {
+            access_id: secure_tokens::generate_access_id(),
+            patient_id: req.patient_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: current_user.role.to_string(),
+            access_type: "add_vital_signs".to_string(),
+            location: None,
+            timestamp: Utc::now(),
+            emergency: has_critical,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     log::info!(
         "Vital signs {} added for patient {}{}",

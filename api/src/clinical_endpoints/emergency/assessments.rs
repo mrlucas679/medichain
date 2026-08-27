@@ -19,16 +19,19 @@ pub async fn create_trauma(
     let assessment = req.into_inner();
     let id = assessment.assessment_id.clone();
 
-    let _ = data
-        .repositories
-        .access_logs
-        .create(access_log_entity(
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        access_log_entity(
             current_user_id,
             "trauma_team",
             "create_trauma_assessment",
             Some(assessment.patient_id.clone()),
-        ))
-        .await;
+        ),
+    )
+    .await
+    {
+        return response;
+    }
 
     let entity = trauma_entity(&assessment, json_value(&assessment));
     match data
@@ -110,16 +113,19 @@ pub async fn create_stroke(
     let assessment = req.into_inner();
     let id = assessment.assessment_id.clone();
 
-    let _ = data
-        .repositories
-        .access_logs
-        .create(access_log_entity(
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        access_log_entity(
             current_user_id,
             "stroke_team",
             "create_stroke_assessment",
             Some(assessment.patient_id.clone()),
-        ))
-        .await;
+        ),
+    )
+    .await
+    {
+        return response;
+    }
 
     let entity = stroke_entity(&assessment, json_value(&assessment));
     match data
@@ -196,16 +202,19 @@ pub async fn create_sepsis(
     let assessment = req.into_inner();
     let id = assessment.assessment_id.clone();
 
-    let _ = data
-        .repositories
-        .access_logs
-        .create(access_log_entity(
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        access_log_entity(
             current_user_id,
             "sepsis_team",
             "create_sepsis_assessment",
             Some(assessment.patient_id.clone()),
-        ))
-        .await;
+        ),
+    )
+    .await
+    {
+        return response;
+    }
 
     let entity = sepsis_entity(&assessment, json_value(&assessment));
     match data
@@ -282,16 +291,19 @@ pub async fn create_ems_handoff(
     let handoff = req.into_inner();
     let id = handoff.report_id.clone();
 
-    let _ = data
-        .repositories
-        .access_logs
-        .create(access_log_entity(
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        access_log_entity(
             current_user_id,
             "ems",
             "create_ems_handoff",
             handoff.patient_id.clone(),
-        ))
-        .await;
+        ),
+    )
+    .await
+    {
+        return response;
+    }
 
     let entity = ems_handoff_entity(&handoff, json_value(&handoff));
     match data.repositories.ems_handoffs.create(entity).await {

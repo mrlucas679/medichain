@@ -68,6 +68,9 @@ jobs:
             - name: No new repository write discards its own failure
               run: python scripts/check-discarded-writes.py
 
+            - name: Required audit persistence results are never ignored
+              run: python scripts/check-required-audit-results.py
+
             # `access_logs.action` has a CHECK constraint. A handler writing a
             # value outside it fails on PostgreSQL and nowhere else, because the
             # in-memory repository enforces no constraints — which is how

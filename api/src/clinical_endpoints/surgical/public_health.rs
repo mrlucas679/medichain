@@ -258,23 +258,24 @@ pub async fn create_transfusion(
     let id = record.transfusion_id.clone();
 
     // Log access
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: record.patient_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: "nurse".to_string(),
-                access_type: "create_transfusion".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: record.patient_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: "nurse".to_string(),
+            access_type: "create_transfusion".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     // Persisted through the repository, so it survives a restart.
     let now = chrono::Utc::now();
@@ -376,24 +377,25 @@ pub async fn create_e_prescription(
     let id = prescription.rx_id.clone();
 
     // Log access
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: prescription.patient_id.clone(),
-                accessor_id: current_user_id,
-                // Was the literal "doctor" regardless of who called.
-                accessor_role: caller.role.to_string(),
-                access_type: "create_e_prescription".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: prescription.patient_id.clone(),
+            accessor_id: current_user_id,
+            // Was the literal "doctor" regardless of who called.
+            accessor_role: caller.role.to_string(),
+            access_type: "create_e_prescription".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     // Persisted through the repository, so it survives a restart.
     let now = chrono::Utc::now();
@@ -528,23 +530,24 @@ pub async fn create_death_certificate(
     let id = certificate.certificate_id.clone();
 
     // Log access
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: certificate.patient_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: "doctor".to_string(),
-                access_type: "create_death_certificate".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: certificate.patient_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: "doctor".to_string(),
+            access_type: "create_death_certificate".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     // Persisted through the repository, so it survives a restart.
     let now = chrono::Utc::now();
@@ -632,23 +635,24 @@ pub async fn create_autopsy_request(
     let id = request.request_id.clone();
 
     // Log access
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: request.patient_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: "doctor".to_string(),
-                access_type: "create_autopsy_request".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: request.patient_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: "doctor".to_string(),
+            access_type: "create_autopsy_request".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     let now = chrono::Utc::now();
     let entity = crate::repositories::traits::JsonRecordEntity {
@@ -707,23 +711,24 @@ pub async fn create_autopsy_report(
     let report = req.into_inner();
     let id = report.report_id.clone();
 
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: report.patient_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: "doctor".to_string(),
-                access_type: "create_autopsy_report".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: report.patient_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: "doctor".to_string(),
+            access_type: "create_autopsy_report".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     let now = chrono::Utc::now();
     let entity = crate::repositories::traits::JsonRecordEntity {

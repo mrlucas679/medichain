@@ -12,6 +12,27 @@ use sha3::{Digest, Sha3_256};
 // Helper Functions
 // ============================================================================
 
+/// Persist an audit record required before a handler may report success or
+/// release protected health information.
+///
+/// This is deliberately fail-closed. Callers must return the supplied response;
+/// logging the repository error and continuing would recreate the hidden
+/// `sensitive action -> lost audit -> HTTP success` failure mode.
+pub async fn require_durable_audit(
+    data: &web::Data<AppState>,
+    entry: crate::repositories::traits::AccessLogEntity,
+) -> Result<(), HttpResponse> {
+    if let Err(error) = data.repositories.access_logs.create(entry).await {
+        log::error!("required audit persistence failed: {error}");
+        return Err(HttpResponse::ServiceUnavailable().json(serde_json::json!({
+            "success": false,
+            "error": "Required audit persistence is unavailable",
+            "code": "AUDIT_PERSISTENCE_UNAVAILABLE"
+        })));
+    }
+    Ok(())
+}
+
 // ============================================================================
 // Utility Functions
 // ============================================================================

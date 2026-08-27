@@ -290,7 +290,9 @@ pub async fn trigger_emergency_notification(
         accessed_at: chrono::Utc::now(),
         facility_id: None,
     };
-    let _ = data.repositories.access_logs.create(log_entry).await;
+    if let Err(response) = crate::support::require_durable_audit(&data, log_entry).await {
+        return response;
+    }
 
     // `success` reflects whether anyone was actually reached, and
     // `notifications_sent` counts deliveries rather than attempts — the old

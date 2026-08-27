@@ -20,23 +20,24 @@ pub async fn create_pre_op(
     let owner_id = assessment.patient_id.clone();
 
     // Log access via repository
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: owner_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: "doctor".to_string(),
-                access_type: "create_pre_op".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: owner_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: "doctor".to_string(),
+            access_type: "create_pre_op".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     // Persisted through the repository, so the assessment survives a restart.
     // The full payload — including the WHO checklist's site_verified and
@@ -160,23 +161,24 @@ pub async fn create_operative_note(
     let owner_id = note.patient_id.clone();
 
     // Log access via repository
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: owner_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: "surgeon".to_string(),
-                access_type: "create_operative_note".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: owner_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: "surgeon".to_string(),
+            access_type: "create_operative_note".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     // Persisted through the repository, so the note survives a restart.
     match data.repositories.operative_notes.create(note.into()).await {
@@ -289,23 +291,24 @@ pub async fn create_post_op(
     let owner_id = note.patient_id.clone();
 
     // Log access
-    let _ = data
-        .repositories
-        .access_logs
-        .create(
-            crate::AccessLogEntry {
-                access_id: uuid::Uuid::new_v4().to_string(),
-                patient_id: owner_id.clone(),
-                accessor_id: current_user_id,
-                accessor_role: "doctor".to_string(),
-                access_type: "create_post_op".to_string(),
-                location: None,
-                timestamp: chrono::Utc::now(),
-                emergency: false,
-            }
-            .into(),
-        )
-        .await;
+    if let Err(response) = crate::support::require_durable_audit(
+        &data,
+        crate::AccessLogEntry {
+            access_id: uuid::Uuid::new_v4().to_string(),
+            patient_id: owner_id.clone(),
+            accessor_id: current_user_id,
+            accessor_role: "doctor".to_string(),
+            access_type: "create_post_op".to_string(),
+            location: None,
+            timestamp: chrono::Utc::now(),
+            emergency: false,
+        }
+        .into(),
+    )
+    .await
+    {
+        return response;
+    }
 
     // Persisted through the repository, so the note survives a restart.
     match data.repositories.post_op_notes.create(note.into()).await {
