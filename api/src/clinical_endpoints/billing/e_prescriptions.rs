@@ -322,23 +322,9 @@ pub async fn sign_e_prescription(
         Err(resp) => return resp,
     };
 
-    let mut prescription: crate::clinical::EPrescription = match data
-        .repositories
-        .e_prescriptions_v2
-        .get_by_id(&prescription_id)
-        .await
-        .ok()
-        .flatten()
-        .and_then(|rec| serde_json::from_value(rec.data).ok())
-    {
-        Some(p) => p,
-        None => {
-            return HttpResponse::NotFound().json(ErrorResponse {
-                success: false,
-                error: "Prescription not found".to_string(),
-                code: "NOT_FOUND".to_string(),
-            })
-        }
+    let mut prescription = match load_prescription(&data, &prescription_id).await {
+        Ok(prescription) => prescription,
+        Err(response) => return response,
     };
 
     // Only prescriber can sign
@@ -461,23 +447,9 @@ pub async fn transmit_e_prescription(
     };
     let current_user_id = current_user.wallet_address.clone();
 
-    let mut prescription: crate::clinical::EPrescription = match data
-        .repositories
-        .e_prescriptions_v2
-        .get_by_id(&prescription_id)
-        .await
-        .ok()
-        .flatten()
-        .and_then(|rec| serde_json::from_value(rec.data).ok())
-    {
-        Some(p) => p,
-        None => {
-            return HttpResponse::NotFound().json(ErrorResponse {
-                success: false,
-                error: "Prescription not found".to_string(),
-                code: "NOT_FOUND".to_string(),
-            })
-        }
+    let mut prescription = match load_prescription(&data, &prescription_id).await {
+        Ok(prescription) => prescription,
+        Err(response) => return response,
     };
 
     // Must be signed first
@@ -1678,23 +1650,9 @@ pub async fn get_esignature_prescription(
         Err(resp) => return resp,
     };
 
-    let prescription: crate::clinical::EPrescription = match data
-        .repositories
-        .e_prescriptions_v2
-        .get_by_id(&prescription_id)
-        .await
-        .ok()
-        .flatten()
-        .and_then(|rec| serde_json::from_value(rec.data).ok())
-    {
-        Some(p) => p,
-        None => {
-            return HttpResponse::NotFound().json(ErrorResponse {
-                success: false,
-                error: "Prescription not found".to_string(),
-                code: "NOT_FOUND".to_string(),
-            })
-        }
+    let prescription = match load_prescription(&data, &prescription_id).await {
+        Ok(prescription) => prescription,
+        Err(response) => return response,
     };
 
     // Patient or prescriber can view
@@ -1749,12 +1707,22 @@ pub async fn get_patient_e_prescriptions(
         });
     }
 
-    let records = data
+    let records = match data
         .repositories
         .e_prescriptions_v2
         .get_by_owner(&patient_id)
         .await
-        .unwrap_or_default();
+    {
+        Ok(records) => records,
+        Err(error) => {
+            log::error!("Patient prescription list failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "Prescriptions are temporarily unavailable".to_string(),
+                code: "PRESCRIPTIONS_UNAVAILABLE".to_string(),
+            });
+        }
+    };
     let (page, next_cursor) =
         crate::pagination::paginate_cursor(&records, query.cursor.as_deref(), query.limit);
     let patient_prescriptions: Vec<crate::clinical::EPrescription> = page
