@@ -44,6 +44,9 @@ pub mod postgres;
 
 pub mod memory;
 
+#[cfg(test)]
+mod parity_contract;
+
 // Re-export commonly used items
 pub use traits::*;
 

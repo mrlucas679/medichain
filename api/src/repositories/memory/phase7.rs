@@ -90,6 +90,7 @@ impl JsonRecordRepository for MemoryJsonRecordRepository {
             .cloned()
             .collect();
         items.sort_by_key(|b| std::cmp::Reverse(b.created_at));
+        items.truncate(1000);
         Ok(items)
     }
 
@@ -100,6 +101,7 @@ impl JsonRecordRepository for MemoryJsonRecordRepository {
             .map_err(|e| RepositoryError::Internal(e.to_string()))?;
         let mut items: Vec<_> = data.values().cloned().collect();
         items.sort_by_key(|b| std::cmp::Reverse(b.created_at));
+        items.truncate(1000);
         Ok(items)
     }
 
@@ -334,5 +336,17 @@ mod tests {
         assert_eq!(repo.get_by_owner("user1").await.unwrap().len(), 2);
         assert_eq!(repo.get_by_owner("user2").await.unwrap().len(), 1);
         assert_eq!(repo.list_all().await.unwrap().len(), 3);
+    }
+
+    #[tokio::test]
+    async fn shared_json_repository_contract_matches_postgres() {
+        let repo = MemoryJsonRecordRepository::new();
+        crate::repositories::parity_contract::run_json_record_contract(&repo, "memory").await;
+    }
+
+    #[tokio::test]
+    async fn generic_reads_obey_the_shared_thousand_row_bound() {
+        let repo = MemoryJsonRecordRepository::new();
+        crate::repositories::parity_contract::run_json_record_limit_contract(&repo, "memory").await;
     }
 }

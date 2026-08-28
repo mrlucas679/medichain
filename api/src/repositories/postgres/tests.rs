@@ -16,6 +16,22 @@ use std::sync::{
 };
 
 #[tokio::test]
+async fn test_pg_shared_json_repository_parity_contract() {
+    let pool = get_test_pool().await;
+    let repo = crate::repositories::postgres::PgEPrescriptionV2Repository::new(pool.clone());
+    crate::repositories::parity_contract::run_json_record_contract(&repo, "postgres").await;
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn test_pg_shared_json_repository_limit_contract() {
+    let pool = get_test_pool().await;
+    let repo = crate::repositories::postgres::PgEPrescriptionV2Repository::new(pool.clone());
+    crate::repositories::parity_contract::run_json_record_limit_contract(&repo, "postgres").await;
+    pool.close().await;
+}
+
+#[tokio::test]
 async fn test_pg_prescription_mutation_rolls_back_when_audit_insert_fails() {
     use crate::repositories::traits::{AccessLogEntity, JsonRecordEntity};
     use crate::repositories::{PrescriptionEventTarget, PrescriptionMutation, RepositoryContainer};
