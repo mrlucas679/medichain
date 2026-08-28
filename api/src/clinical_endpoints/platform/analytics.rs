@@ -226,7 +226,10 @@ pub async fn get_operational_metrics(
     let repos = &data.repositories;
 
     // Radiology work still queued, by the order's own status.
-    let radiology = repos.radiology_orders.list_all().await.unwrap_or_default();
+    let radiology = match repos.radiology_orders.list_all().await {
+        Ok(values) => values,
+        Err(error) => return operational_metrics_unavailable("radiology", &error),
+    };
     let radiology_queue = radiology
         .iter()
         .filter(|o| {
@@ -240,11 +243,10 @@ pub async fn get_operational_metrics(
     // Lab turnaround: order to result, in whole minutes, over completed work
     // only. The median rather than the mean, because one specimen stuck for a
     // week should not move the number a clinician plans around.
-    let submissions = repos
-        .lab_submissions
-        .get_pending_by_priority()
-        .await
-        .unwrap_or_default();
+    let submissions = match repos.lab_submissions.get_pending_by_priority().await {
+        Ok(values) => values,
+        Err(error) => return operational_metrics_unavailable("laboratory", &error),
+    };
     let lab_pending = submissions
         .iter()
         .filter(|s| s.status.eq_ignore_ascii_case("pending"))
@@ -264,20 +266,17 @@ pub async fn get_operational_metrics(
 
     // Critical values a clinician has not yet acknowledged: the one number on
     // this page that is genuinely time-critical.
-    let unacknowledged_critical_values = repos
-        .critical_values
-        .get_unacknowledged()
-        .await
-        .map(|values| values.len())
-        .unwrap_or(0);
+    let unacknowledged_critical_values = match repos.critical_values.get_unacknowledged().await {
+        Ok(values) => values.len(),
+        Err(error) => return operational_metrics_unavailable("critical-value", &error),
+    };
 
     // Patient satisfaction, averaged over submitted surveys. `None` when nobody
     // has answered — an average over zero responses is not 100%, it is nothing.
-    let surveys = repos
-        .satisfaction_surveys
-        .list_all()
-        .await
-        .unwrap_or_default();
+    let surveys = match repos.satisfaction_surveys.list_all().await {
+        Ok(values) => values,
+        Err(error) => return operational_metrics_unavailable("satisfaction", &error),
+    };
     let ratings: Vec<f64> = surveys
         .iter()
         .filter_map(|s| {
@@ -311,6 +310,15 @@ pub async fn get_operational_metrics(
             "medication_stock",
         ],
     }))
+}
+
+fn operational_metrics_unavailable(source: &str, error: &dyn std::fmt::Display) -> HttpResponse {
+    log::error!("Operational metrics {source} read failed: {error}");
+    HttpResponse::ServiceUnavailable().json(ErrorResponse {
+        success: false,
+        error: "Operational metrics are temporarily unavailable".to_string(),
+        code: "METRICS_UNAVAILABLE".to_string(),
+    })
 }
 
 /// Get quality and compliance metrics

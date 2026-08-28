@@ -7,6 +7,18 @@
 
 use super::*;
 
+fn insurance_repository_unavailable(
+    operation: &str,
+    error: &dyn std::fmt::Display,
+) -> HttpResponse {
+    log::error!("Insurance {operation} repository failure: {error}");
+    HttpResponse::ServiceUnavailable().json(ErrorResponse {
+        success: false,
+        error: "Insurance information is temporarily unavailable".to_string(),
+        code: "INSURANCE_DATA_UNAVAILABLE".to_string(),
+    })
+}
+
 // ============================================================================
 // Insurance Verification API
 // ============================================================================
@@ -60,17 +72,18 @@ pub async fn verify_insurance(
     };
 
     // Get patient from repository
-    let patient = data.repositories.patients.get_by_id(&patient_id).await.ok();
-
-    match patient {
-        Some(_patient) => {
+    match data.repositories.patients.get_by_id(&patient_id).await {
+        Ok(_patient) => {
             // Get insurance from repository
             let insurance_list = data
                 .repositories
                 .insurance_records
                 .get_by_patient(&patient_id)
-                .await
-                .unwrap_or_default();
+                .await;
+            let insurance_list = match insurance_list {
+                Ok(records) => records,
+                Err(error) => return insurance_repository_unavailable("verification", &error),
+            };
 
             match insurance_list.first() {
                 Some(insurance) => {
@@ -137,11 +150,14 @@ pub async fn verify_insurance(
                 })),
             }
         }
-        None => HttpResponse::NotFound().json(ErrorResponse {
-            success: false,
-            error: "Patient not found".to_string(),
-            code: "PATIENT_NOT_FOUND".to_string(),
-        }),
+        Err(crate::repositories::RepositoryError::NotFound(_)) => {
+            HttpResponse::NotFound().json(ErrorResponse {
+                success: false,
+                error: "Patient not found".to_string(),
+                code: "PATIENT_NOT_FOUND".to_string(),
+            })
+        }
+        Err(error) => insurance_repository_unavailable("patient lookup", &error),
     }
 }
 
@@ -197,17 +213,18 @@ pub async fn check_eligibility(
         .unwrap_or("");
 
     // Get patient from repository
-    let patient = data.repositories.patients.get_by_id(patient_id).await.ok();
-
-    match patient {
-        Some(_patient) => {
+    match data.repositories.patients.get_by_id(patient_id).await {
+        Ok(_patient) => {
             // Get insurance from repository
             let insurance_list = data
                 .repositories
                 .insurance_records
                 .get_by_patient(patient_id)
-                .await
-                .unwrap_or_default();
+                .await;
+            let insurance_list = match insurance_list {
+                Ok(records) => records,
+                Err(error) => return insurance_repository_unavailable("eligibility", &error),
+            };
             let has_insurance = !insurance_list.is_empty();
 
             HttpResponse::Ok().json(serde_json::json!({
@@ -233,10 +250,13 @@ pub async fn check_eligibility(
                 }
             }))
         }
-        None => HttpResponse::NotFound().json(ErrorResponse {
-            success: false,
-            error: "Patient not found".to_string(),
-            code: "PATIENT_NOT_FOUND".to_string(),
-        }),
+        Err(crate::repositories::RepositoryError::NotFound(_)) => {
+            HttpResponse::NotFound().json(ErrorResponse {
+                success: false,
+                error: "Patient not found".to_string(),
+                code: "PATIENT_NOT_FOUND".to_string(),
+            })
+        }
+        Err(error) => insurance_repository_unavailable("patient lookup", &error),
     }
 }

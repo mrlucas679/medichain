@@ -490,22 +490,45 @@ pub async fn download_offline_data(
     }
 
     // Bundle patient data
-    let patient = data.repositories.patients.get_by_id(&patient_id).await.ok();
+    let patient = match data.repositories.patients.get_by_id(&patient_id).await {
+        Ok(value) => value,
+        Err(crate::repositories::RepositoryError::NotFound(_)) => {
+            return HttpResponse::NotFound().json(crate::ErrorResponse {
+                success: false,
+                error: "Patient not found".to_string(),
+                code: "PATIENT_NOT_FOUND".to_string(),
+            });
+        }
+        Err(error) => {
+            log::error!("Offline download patient lookup failed: {error}");
+            return sync_download_unavailable();
+        }
+    };
     let pagination = Pagination::new(0, 100);
     let records = data
         .repositories
         .medical_records
         .get_by_patient(&patient_id, pagination.clone())
-        .await
-        .map(|result| result.items)
-        .unwrap_or_default();
+        .await;
+    let records = match records {
+        Ok(result) => result.items,
+        Err(error) => {
+            log::error!("Offline download medical record read failed: {error}");
+            return sync_download_unavailable();
+        }
+    };
     let vitals = data
         .repositories
         .vital_signs
         .get_by_patient(&patient_id, pagination)
-        .await
-        .map(|result| result.items)
-        .unwrap_or_default();
+        .await;
+    let vitals = match vitals {
+        Ok(result) => result.items,
+        Err(error) => {
+            log::error!("Offline download vital-sign read failed: {error}");
+            return sync_download_unavailable();
+        }
+    };
 
     HttpResponse::Ok().json(serde_json::json!({
         "patient": patient,
@@ -513,6 +536,14 @@ pub async fn download_offline_data(
         "vitals": vitals,
         "downloaded_at": chrono::Utc::now().timestamp()
     }))
+}
+
+fn sync_download_unavailable() -> HttpResponse {
+    HttpResponse::ServiceUnavailable().json(crate::ErrorResponse {
+        success: false,
+        error: "Offline patient data is temporarily unavailable".to_string(),
+        code: "SYNC_DATA_UNAVAILABLE".to_string(),
+    })
 }
 
 #[cfg(test)]
