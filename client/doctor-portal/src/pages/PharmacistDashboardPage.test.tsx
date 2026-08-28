@@ -254,3 +254,87 @@ describe('PharmacistDashboardPage secondary verification actions', () => {
     expect(screen.queryByRole('button', { name: /reject verification/i })).toBeNull();
   });
 });
+
+describe('PharmacistDashboardPage dispense correction history', () => {
+  const prescription = {
+    prescription_id: 'RX-HISTORY', patient_id: 'PAT-9', medication_name: 'Insulin',
+    dosage: '10 units', status: 'PartialFill', priority: 'Routine',
+    prescribed_quantity: 20, dispensed_quantity: 10,
+  };
+  const dashboard = {
+    pharmacist_id: 'pharmacist-one',
+    prescriptions: { pending_fill: 0, in_progress: 1, completed_today: 1, list: [prescription] },
+    drug_interactions: [], allergy_alerts: [],
+  };
+  const jsonResponse = (body: unknown) => Promise.resolve({
+    ok: true,
+    headers: new Headers({ 'content-type': 'application/json' }),
+    json: () => Promise.resolve(body),
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (useAuthStore as any).mockReturnValue({
+      user: { walletAddress: 'pharmacist-one', role: 'Pharmacist' },
+      isAuthenticated: true,
+    });
+    mockFetch.mockImplementation((request: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(request);
+      if (url.endsWith('/dispense-events')) {
+        return jsonResponse({ dispense_events: [
+          { dispense_event_id: 'DISP-1', prescription_id: 'RX-HISTORY', quantity: 10, reversed: false },
+        ] });
+      }
+      if (url.endsWith('/dispense/reverse') && init?.method === 'POST') {
+        return jsonResponse({ success: true, status: 'InProgress', dispensed_total: 0 });
+      }
+      return jsonResponse(dashboard);
+    });
+  });
+
+  it('shows persisted quantity progress and loads immutable history', async () => {
+    render(<MemoryRouter><PharmacistDashboardPage /></MemoryRouter>);
+
+    expect(await screen.findByText(/10 of 20 units dispensed/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^history$/i }));
+
+    expect(await screen.findByText(/dispensed 10 units/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^reverse$/i })).toBeTruthy();
+  });
+
+  it('posts a reason and reloads retained original plus correction history', async () => {
+    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('Wrong patient selected');
+    let historyReads = 0;
+    mockFetch.mockImplementation((request: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(request);
+      if (url.endsWith('/dispense-events')) {
+        historyReads += 1;
+        return jsonResponse({ dispense_events: historyReads === 1 ? [
+          { dispense_event_id: 'DISP-1', prescription_id: 'RX-HISTORY', quantity: 10, reversed: false },
+        ] : [
+          { dispense_event_id: 'DISP-1', prescription_id: 'RX-HISTORY', quantity: 10, reversed: true },
+          { dispense_event_id: 'DISP-REV-1', prescription_id: 'RX-HISTORY', quantity: 10, correction: true, reason: 'Wrong patient selected' },
+        ] });
+      }
+      if (url.endsWith('/dispense/reverse') && init?.method === 'POST') {
+        return jsonResponse({ success: true, status: 'InProgress', dispensed_total: 0 });
+      }
+      return jsonResponse(dashboard);
+    });
+    render(<MemoryRouter><PharmacistDashboardPage /></MemoryRouter>);
+
+    fireEvent.click(await screen.findByRole('button', { name: /^history$/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /^reverse$/i }));
+
+    await screen.findByText(/correction for 10 units: wrong patient selected/i);
+    expect(screen.getByText(/dispensed 10 units.*reversed/i)).toBeTruthy();
+    const reverseCall = mockFetch.mock.calls.find(([request, init]) =>
+      String(request).endsWith('/dispense/reverse') && init?.method === 'POST'
+    );
+    expect(reverseCall).toBeTruthy();
+    expect(JSON.parse(String(reverseCall?.[1]?.body))).toEqual({
+      dispense_event_id: 'DISP-1', reason: 'Wrong patient selected',
+    });
+    promptSpy.mockRestore();
+  });
+});

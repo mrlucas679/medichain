@@ -515,6 +515,17 @@ pub async fn lab_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -> 
         .get_unacknowledged()
         .await
         .unwrap_or_default();
+    let open_recollections = match data.repositories.specimen_recollections.list_open().await {
+        Ok(values) => values,
+        Err(error) => {
+            log::error!("Laboratory dashboard recollection read failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The recollection queue is temporarily unavailable".to_string(),
+                code: "LAB_DASHBOARD_UNAVAILABLE".to_string(),
+            });
+        }
+    };
 
     HttpResponse::Ok().json(serde_json::json!({
         "lab_tech_id": current_user_id,
@@ -525,6 +536,7 @@ pub async fn lab_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -> 
         },
         "qc_records": qc_records,
         "rejections": rejections,
+        "open_recollections": open_recollections,
         "critical_notifications": critical_notifications,
     }))
 }
@@ -783,6 +795,8 @@ pub async fn pharmacist_dashboard(
                 "dosage": text(&med, "strength"),
                 "directions": text(&med, "directions"),
                 "status": text(v, "status"),
+                "prescribed_quantity": v.get("quantity").and_then(|q| q.as_u64()).unwrap_or(0),
+                "dispensed_quantity": v.get("dispensed_quantity").and_then(|q| q.as_u64()).unwrap_or(0),
                 "priority": if v.get("is_controlled").and_then(|c| c.as_bool()).unwrap_or(false) {
                     "STAT"
                 } else {

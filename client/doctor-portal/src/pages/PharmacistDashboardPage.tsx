@@ -26,6 +26,8 @@ import {
   dispensePrescription,
   requestPrescriptionVerification,
   decidePrescriptionVerification,
+  getDispenseEvents,
+  reverseDispense,
 } from '@medichain/shared';
 
 interface SecondaryVerification {
@@ -51,9 +53,21 @@ interface Prescription {
   frequency?: string;
   priority?: 'STAT' | 'Urgent' | 'Routine';
   status: string;
+  prescribed_quantity?: number;
+  dispensed_quantity?: number;
   prescribed_by?: string;
   created_at?: string;
   secondary_verification?: SecondaryVerification;
+}
+
+interface DispenseEvent {
+  dispense_event_id: string;
+  quantity: number;
+  pharmacist_id?: string;
+  reversed?: boolean;
+  correction?: boolean;
+  reverses_event_id?: string;
+  reason?: string;
 }
 
 interface DrugInteraction {
@@ -162,6 +176,7 @@ export default function PharmacistDashboardPage() {
   /** Which prescription has an action in flight, so its buttons disable. */
   const [busyRx, setBusyRx] = useState<string | null>(null);
   const [rxResult, setRxResult] = useState<Record<string, string>>({});
+  const [dispenseHistory, setDispenseHistory] = useState<Record<string, DispenseEvent[]>>({});
 
   /**
    * Drive one pharmacy transition.
@@ -248,6 +263,49 @@ export default function PharmacistDashboardPage() {
       setRxResult((p) => ({ ...p, [prescriptionId]: friendly }));
       // The row's state is no longer trustworthy after a conflict; reload it.
       await loadDashboard();
+    } finally {
+      setBusyRx(null);
+    }
+  };
+
+  /** Load the append-only dispense and correction trail for one prescription. */
+  const loadDispenseHistory = async (prescriptionId: string) => {
+    setBusyRx(prescriptionId);
+    try {
+      const response = await getDispenseEvents(prescriptionId);
+      setDispenseHistory((previous) => ({
+        ...previous,
+        [prescriptionId]: response.dispense_events as unknown as DispenseEvent[],
+      }));
+    } catch (error: any) {
+      setRxResult((previous) => ({
+        ...previous,
+        [prescriptionId]: error?.message ?? t('docPharmDashboard.historyFailed'),
+      }));
+    } finally {
+      setBusyRx(null);
+    }
+  };
+
+  /** Reverse one event while retaining both the original and its correction. */
+  const handleReverse = async (prescriptionId: string, eventId: string) => {
+    const entered = window.prompt(t('docPharmDashboard.reversalReasonPrompt'));
+    if (entered === null) return;
+    const reason = entered.trim();
+    if (!reason) {
+      setRxResult((previous) => ({ ...previous, [prescriptionId]: t('docPharmDashboard.reasonRequired') }));
+      return;
+    }
+    setBusyRx(prescriptionId);
+    try {
+      await reverseDispense(prescriptionId, eventId, reason);
+      setRxResult((previous) => ({ ...previous, [prescriptionId]: t('docPharmDashboard.reversed') }));
+      await Promise.all([loadDashboard(), loadDispenseHistory(prescriptionId)]);
+    } catch (error: any) {
+      setRxResult((previous) => ({
+        ...previous,
+        [prescriptionId]: error?.message ?? t('docPharmDashboard.actionFailed'),
+      }));
     } finally {
       setBusyRx(null);
     }
@@ -350,7 +408,17 @@ export default function PharmacistDashboardPage() {
                       <td className="px-3 py-2 text-content-muted">{rx.patient_name || rx.patient_id}</td>
                       <td className="px-3 py-2 font-medium text-content">{rx.medication_name}</td>
                       <td className="px-3 py-2 text-content-muted">{rx.dosage}</td>
-                      <td className="px-3 py-2 text-content-muted">{rx.status}</td>
+                      <td className="px-3 py-2 text-content-muted">
+                        <span>{rx.status}</span>
+                        {(rx.prescribed_quantity ?? 0) > 0 && (
+                          <span className="block text-xs">
+                            {t('docPharmDashboard.quantityProgress', {
+                              dispensed: rx.dispensed_quantity ?? 0,
+                              prescribed: rx.prescribed_quantity ?? 0,
+                            })}
+                          </span>
+                        )}
+                      </td>
                       <td className="px-3 py-2">
                         {/*
                           The action offered is the one the prescription's state
@@ -420,11 +488,43 @@ export default function PharmacistDashboardPage() {
                           {rx.status === 'Dispensed' && (
                             <span className="text-xs text-content-muted">{t('docPharmDashboard.completed')}</span>
                           )}
+                          {(rx.dispensed_quantity ?? 0) > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => void loadDispenseHistory(rx.prescription_id)}
+                              disabled={busyRx === rx.prescription_id}
+                              className="text-xs font-medium underline text-notice-subtle-fg disabled:opacity-60"
+                            >
+                              {t('docPharmDashboard.history')}
+                            </button>
+                          )}
                         </div>
                         {rxResult[rx.prescription_id] && (
                           <p role="status" className="mt-1 text-xs text-content-muted">
                             {rxResult[rx.prescription_id]}
                           </p>
+                        )}
+                        {dispenseHistory[rx.prescription_id] && (
+                          <ul aria-label={t('docPharmDashboard.historyFor', { medication: rx.medication_name })} className="mt-2 space-y-1 text-xs text-content-muted">
+                            {dispenseHistory[rx.prescription_id].map((event) => (
+                              <li key={event.dispense_event_id}>
+                                {event.correction
+                                  ? t('docPharmDashboard.correctionEntry', { quantity: event.quantity, reason: event.reason ?? '' })
+                                  : t('docPharmDashboard.dispenseEntry', { quantity: event.quantity })}
+                                {event.reversed && ` ${t('docPharmDashboard.reversedMarker')}`}
+                                {!event.correction && !event.reversed && (
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleReverse(rx.prescription_id, event.dispense_event_id)}
+                                    disabled={busyRx === rx.prescription_id}
+                                    className="ml-2 font-medium underline text-critical-subtle-fg disabled:opacity-60"
+                                  >
+                                    {t('docPharmDashboard.reverse')}
+                                  </button>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
                         )}
                       </td>
                     </tr>

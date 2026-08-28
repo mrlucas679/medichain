@@ -765,6 +765,7 @@ jobs:
                   MEDICHAIN_DEV_MODE: "true"
                   REQUIRE_SIGNATURES: "false"
                   BLOCKCHAIN_ENABLED: "false"
+                  DISPENSING_POLICY_PATH: api/data/dispensing_policy.example.json
                   MEDICHAIN_BOOTSTRAP_KEY: synthetic-test-bootstrap-key-2026
                   PORT: "8090"
                   HOST: 127.0.0.1
@@ -782,6 +783,7 @@ jobs:
                   MEDICHAIN_DEV_MODE: "true"
                   REQUIRE_SIGNATURES: "false"
                   BLOCKCHAIN_ENABLED: "false"
+                  DISPENSING_POLICY_PATH: api/data/dispensing_policy.example.json
                   MEDICHAIN_BOOTSTRAP_KEY: synthetic-test-bootstrap-key-2026
                   PORT: "8090"
                   HOST: 127.0.0.1

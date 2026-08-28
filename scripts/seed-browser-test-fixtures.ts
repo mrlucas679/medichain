@@ -98,7 +98,7 @@ const FORCE = process.argv.includes('--i-understand-this-writes-accounts');
 const PASSWORD = 'BrowserTest!2026';
 
 interface StaffFixture {
-  key: 'doctor' | 'doctor2' | 'nurse' | 'admin' | 'pharmacist' | 'labtech';
+  key: 'doctor' | 'doctor2' | 'nurse' | 'admin' | 'pharmacist' | 'pharmacist2' | 'labtech';
   loginId: string;
   name: string;
   username: string;
@@ -134,6 +134,7 @@ const STAFF: StaffFixture[] = [
   // had no fixture, so neither role had ever been exercised — the 2026-08-26
   // campaign recorded both as untestable for exactly this reason.
   { key: 'pharmacist', loginId: sfx('bt.pharm'), name: 'Pharm Browser Test', username: sfx('btpharm'), role: 'Pharmacist' },
+  { key: 'pharmacist2', loginId: sfx('bt.pharm2'), name: 'Pharm Browser Test Two', username: sfx('btpharm2'), role: 'Pharmacist' },
   { key: 'labtech', loginId: sfx('bt.lab'), name: 'Lab Browser Test', username: sfx('btlab'), role: 'LabTechnician' },
 ];
 
@@ -240,6 +241,57 @@ function okOrExisting(status: number, json: Json): boolean {
 function fail(what: string, status: number, json: Json): never {
   console.error(`\n  FAILED: ${what}\n    HTTP ${status}\n    ${JSON.stringify(json)}\n`);
   process.exit(1);
+}
+
+/** Create real server state used by the lab and pharmacy browser journeys. */
+async function seedClinicalWorkflows(
+  patientId: string,
+  doctorWallet: string,
+  labWallet: string,
+  pharmacistWallet: string
+): Promise<Json> {
+  const collect = async (label: string): Promise<string> => {
+    const result = await call('POST', '/clinical/specimen', {
+      patient_id: patientId, specimen_type: 'whole blood', tests_ordered: 'HbA1c',
+      collection_site: 'browser test clinic', notes: label,
+      checklist: ['identity confirmed', 'label applied'],
+    }, labWallet);
+    if (!ok(result.status)) fail(`collect ${label}`, result.status, result.json);
+    return String(result.json.collection_id ?? '');
+  };
+  const originalSpecimenId = await collect('Original specimen for recollection journey');
+  const replacementSpecimenId = await collect('Replacement specimen for recollection journey');
+  const rejected = await call('POST', '/clinical/specimen-rejection', {
+    specimen_id: originalSpecimenId, patient_id: patientId,
+    rejection_reason: 'Haemolysed synthetic sample', rejection_category: 'collection_error',
+    detailed_notes: 'Browser fixture: recollection must remain visible after completion',
+    rejected_by: labWallet, recollection_required: true,
+  }, labWallet);
+  if (!ok(rejected.status)) fail('reject original specimen', rejected.status, rejected.json);
+
+  const prescription = await call('POST', '/e-prescriptions', {
+    patient_id: patientId, medication_name: 'Synthetic Dual Check', strength: '1mg',
+    form: 'tablet', quantity: 20, days_supply: 10, directions: 'Synthetic test only',
+    refills_allowed: 0, is_controlled: false,
+    policy_category: 'organization-approved-category', force_secondary_verification: true,
+    pharmacy_ncpdp: 'BROWSER-001', pharmacy_name: 'Browser Test Pharmacy',
+    diagnosis_codes: ['Z00.0'], patient_instructions: 'Synthetic test only',
+  }, doctorWallet);
+  if (!ok(prescription.status)) fail('create dual-check prescription', prescription.status, prescription.json);
+  const prescriptionId = String(prescription.json.prescription_id ?? '');
+  for (const [path, body, actor, label] of [
+    [`/e-prescriptions/${prescriptionId}/sign`, { signature_method: 'electronic', attestation: 'Browser workflow fixture' }, doctorWallet, 'sign'],
+    [`/e-prescriptions/${prescriptionId}/transmit`, {}, doctorWallet, 'transmit'],
+    [`/e-prescriptions/${prescriptionId}/receive`, {}, pharmacistWallet, 'receive'],
+    [`/e-prescriptions/${prescriptionId}/start`, {}, pharmacistWallet, 'start'],
+  ] as const) {
+    const result = await call('POST', path, body, actor);
+    if (!ok(result.status)) fail(`${label} dual-check prescription`, result.status, result.json);
+  }
+  return {
+    lab: { rejection_id: String(rejected.json.rejection_id ?? ''), original_specimen_id: originalSpecimenId, replacement_specimen_id: replacementSpecimenId },
+    pharmacy: { prescription_id: prescriptionId, prescribed_quantity: 20 },
+  };
 }
 
 async function assertLocalDemoDeployment(): Promise<void> {
@@ -536,6 +588,13 @@ async function main(): Promise<void> {
 
   console.log(`  · Patient B ${patientBIdentity.address} -> ${patientBId}`);
 
+  const labWallet = staffOut.find((s) => s.login_id === sfx('bt.lab'))!.wallet;
+  const pharmacistWallet = staffOut.find((s) => s.login_id === sfx('bt.pharm'))!.wallet;
+  const workflows = await seedClinicalWorkflows(
+    patientId, doctorWallet, labWallet, pharmacistWallet
+  );
+  console.log('  ✓ seeded lab recollection and dual-pharmacist browser workflows');
+
   // ---- Fixture contract ---------------------------------------------------
   const manifest = {
     generated_at: new Date().toISOString(),
@@ -547,6 +606,7 @@ async function main(): Promise<void> {
       ? 'created'
       : 'unavailable — deployment was already bootstrapped, so this run does not hold the administrator key. Admin Dashboard, User Management and administrator Analytics cannot be browser-tested against this database.',
     staff: staffOut,
+    workflows,
     patient_b: {
       role: 'Patient',
       wallet: patientBIdentity.address,

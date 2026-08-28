@@ -144,4 +144,41 @@ describe('LabTechDashboardPage recollection control (SCR-009b)', () => {
     expect(mockFetch.mock.calls.length).toBe(callsBefore);
     promptSpy.mockRestore();
   });
+
+  it('completes an open recollection and reloads while preserving the rejection', async () => {
+    const open = {
+      ...dashboardWithRejection,
+      open_recollections: [{
+        id: 'RECOLLECT-1', rejection_id: 'REJ-1', original_specimen_id: 'SPEC-OLD',
+        reason: 'Haemolysed', status: 'requested',
+      }],
+    };
+    const completed = { ...dashboardWithRejection, open_recollections: [] };
+    mockFetch
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true, headers: new Headers({ 'content-type': 'application/json' }),
+        json: () => Promise.resolve(open),
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true, headers: new Headers({ 'content-type': 'application/json' }),
+        json: () => Promise.resolve({ success: true }),
+      }))
+      .mockImplementationOnce(() => Promise.resolve({
+        ok: true, headers: new Headers({ 'content-type': 'application/json' }),
+        json: () => Promise.resolve(completed),
+      }));
+    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('SPEC-NEW');
+    render(<MemoryRouter><LabTechDashboardPage /></MemoryRouter>);
+
+    fireEvent.click(await screen.findByRole('button', { name: /complete recollection/i }));
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(3));
+    const completionCall = mockFetch.mock.calls[1];
+    expect(String(completionCall[0])).toContain('/api/clinical/specimen-recollection/RECOLLECT-1/complete');
+    expect(String(completionCall[1]?.body)).toContain('SPEC-NEW');
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /complete recollection/i })).toBeNull();
+    });
+    expect(screen.getByText(/ACC-1 - Haemolysed/i)).toBeTruthy();
+    promptSpy.mockRestore();
+  });
 });

@@ -15,6 +15,7 @@ export IS_DEMO=true
 export MEDICHAIN_DEV_MODE=true
 export REQUIRE_SIGNATURES=false
 export BLOCKCHAIN_ENABLED=false
+export DISPENSING_POLICY_PATH="$(pwd)/api/data/dispensing_policy.example.json"
 
 export MEDICHAIN_STORAGE=postgres
 export DATABASE_URL=${DATABASE_URL:-postgres://medichain_horizon:horizon-isolated-synthetic-only@127.0.0.1:55432/medichain_horizon}

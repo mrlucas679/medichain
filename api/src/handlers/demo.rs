@@ -221,7 +221,14 @@ const DEMO_FIXTURE_PASSWORD: &str = "BrowserTest!2026";
 /// the credential table and handing back whatever it finds would turn a demo
 /// convenience into a credential oracle the first time a real account was
 /// enrolled on the same database.
-const DEMO_FIXTURE_LOGIN_IDS: &[&str] = &["bt.doctor", "bt.nurse", "bt.admin"];
+const DEMO_FIXTURE_LOGIN_IDS: &[&str] = &[
+    "bt.doctor",
+    "bt.nurse",
+    "bt.admin",
+    "bt.pharm",
+    "bt.pharm2",
+    "bt.lab",
+];
 
 /// Return the seeded demo staff credentials, so the demo shortcut can drive the
 /// ordinary employee-ID/password sign-in rather than a bypass of its own.

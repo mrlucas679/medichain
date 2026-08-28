@@ -18,6 +18,7 @@ import {
   getLabDashboard,
   notifyRejectionOrderingProvider,
   requestSpecimenRecollection,
+  completeSpecimenRecollection,
   useTranslation,
 } from '@medichain/shared';
 import {
@@ -38,6 +39,13 @@ interface LabDashboardData {
   };
   specimens: any[];
   rejections: any[];
+  open_recollections: Array<{
+    id: string;
+    rejection_id: string;
+    original_specimen_id: string;
+    reason: string;
+    status: string;
+  }>;
   qc_records: any[];
   critical_notifications: any[];
   chain_of_custody: any[];
@@ -59,6 +67,8 @@ export default function LabTechDashboardPage() {
   /** Which rejection has a recollection in flight, so its button can be disabled. */
   const [recollectingId, setRecollectingId] = useState<string | null>(null);
   const [recollectResult, setRecollectResult] = useState<Record<string, string>>({});
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  const [completionResult, setCompletionResult] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -166,6 +176,30 @@ export default function LabTechDashboardPage() {
       setNotifyResult((p) => ({ ...p, [rejectionId]: friendly }));
     } finally {
       setNotifyingId(null);
+    }
+  };
+
+  /** Link a newly collected specimen as the immutable successor. */
+  const handleCompleteRecollection = async (recollectionId: string) => {
+    const replacementId = window.prompt(t('docLabDashboard.replacementSpecimenPrompt'));
+    if (replacementId === null || replacementId.trim() === '') return;
+    setCompletingId(recollectionId);
+    setCompletionResult((previous) => ({ ...previous, [recollectionId]: '' }));
+    try {
+      await completeSpecimenRecollection(recollectionId, replacementId.trim());
+      setCompletionResult((previous) => ({
+        ...previous,
+        [recollectionId]: t('docLabDashboard.recollectionCompleted'),
+      }));
+      await loadDashboard();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setCompletionResult((previous) => ({
+        ...previous,
+        [recollectionId]: `${t('docLabDashboard.recollectionCompletionFailed')} — ${message}`,
+      }));
+    } finally {
+      setCompletingId(null);
     }
   };
 
@@ -351,6 +385,38 @@ export default function LabTechDashboardPage() {
           <p className="text-sm text-content-muted text-center py-4">{t('docLabDashboard.noPending')}</p>
         )}
       </div>
+
+      {data?.open_recollections && data.open_recollections.length > 0 && (
+        <div className="bg-surface rounded-lg shadow p-4 border border-border">
+          <h3 className="text-sm font-semibold text-content-secondary mb-3">
+            {t('docLabDashboard.openRecollections')}
+          </h3>
+          <div className="space-y-2">
+            {data.open_recollections.map((request) => (
+              <div key={request.id} className="p-3 border border-caution rounded bg-caution-subtle">
+                <p className="text-sm font-medium text-content">
+                  {request.original_specimen_id} — {request.reason}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void handleCompleteRecollection(request.id)}
+                  disabled={completingId === request.id}
+                  className="mt-2 text-xs font-medium underline text-notice-subtle-fg disabled:no-underline disabled:opacity-60"
+                >
+                  {completingId === request.id
+                    ? t('docLabDashboard.completingRecollection')
+                    : t('docLabDashboard.completeRecollection')}
+                </button>
+                {completionResult[request.id] && (
+                  <p role="status" className="mt-1 text-xs text-content-muted">
+                    {completionResult[request.id]}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -46,6 +46,8 @@ PARAMEDIC=5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy
 # Dispensing is the pharmacist's act, so the pharmacy section needs one of its
 # own rather than borrowing a clinician's identity.
 PHARMACIST=5Ew3MyB15VprZrjQVkpQFj8okmc9xLDSEdNhqMMS5cXsqxoW
+PHARMACIST_2=5PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+PHARMACIST_3=5QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ
 PATIENT_ADULT_WALLET=5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw
 # A wallet that is registered NOWHERE. PATIENT_ADULT_WALLET cannot serve this
 # purpose: it is one of the seeded demo accounts on the PostgreSQL backend (a
@@ -252,6 +254,12 @@ check_setup "admin registers paramedic" "$c" "$(body)"
 c=$(code POST /api/auth/register "{\"wallet_address\":\"$PHARMACIST\",\"name\":\"Pharm Synthetic\",\"username\":\"pharm\",\"role\":\"Pharmacist\"}" "$ADMIN")
 check_setup "admin registers pharmacist" "$c" "$(body)"
 
+c=$(code POST /api/auth/register "{\"wallet_address\":\"$PHARMACIST_2\",\"name\":\"Second Pharm Synthetic\",\"username\":\"pharm2\",\"role\":\"Pharmacist\"}" "$ADMIN")
+check_setup "admin registers second pharmacist" "$c" "$(body)"
+
+c=$(code POST /api/auth/register "{\"wallet_address\":\"$PHARMACIST_3\",\"name\":\"Third Pharm Synthetic\",\"username\":\"pharm3\",\"role\":\"Pharmacist\"}" "$ADMIN")
+check_setup "admin registers third pharmacist" "$c" "$(body)"
+
 # Accounts created by an admin start `pending`, and `support::get_user` only
 # resolves users whose status is "active" — so a freshly registered doctor is
 # refused with 401 USER_NOT_FOUND until an admin activates them. That approval
@@ -259,7 +267,7 @@ check_setup "admin registers pharmacist" "$c" "$(body)"
 # MFA-gated); the harness predated it and drove every later section with
 # accounts that could not act, which is why a single missing call cascaded into
 # ~100 failures that all looked like authorization bugs.
-for w in "$DOCTOR" "$PARAMEDIC" "$PHARMACIST"; do
+for w in "$DOCTOR" "$PARAMEDIC" "$PHARMACIST" "$PHARMACIST_2" "$PHARMACIST_3"; do
   c=$(code PUT "/api/users/$w" '{"status":"active"}' "$ADMIN")
   check "admin activates $w" 200 "$c" "$(body)"
 done
@@ -1248,6 +1256,73 @@ except Exception:
     print(0); raise SystemExit
 print(len(d.get("dispense_events", [])))' 2>/dev/null || echo 0)
 check "the history retains the corrected dispense" "3" "$EVENT_COUNT"
+
+# -- Policy-driven second pharmacist ----------------------------------------
+#
+# The example policy is test configuration, not a claim about any country's
+# controlled-substance schedule. It proves the enforcement mechanism using an
+# organization-owned category that exists only in this synthetic environment.
+DUAL_RX=$(code POST /api/e-prescriptions "$(python -c '
+import json, sys
+print(json.dumps({"patient_id": sys.argv[1], "medication_name": "Synthetic Dual Check",
+                  "strength": "1mg", "form": "tablet", "quantity": 2,
+                  "days_supply": 1, "directions": "Synthetic test only",
+                  "refills_allowed": 0, "is_controlled": False,
+                  "policy_category": "organization-approved-category",
+                  "force_secondary_verification": True,
+                  "pharmacy_ncpdp": "SYN-001", "pharmacy_name": "Synthetic Pharmacy",
+                  "diagnosis_codes": ["Z00.0"], "patient_instructions": "Synthetic"}))' \
+  "$PAT_ADULT")" "$DOCTOR" >/dev/null; jget prescription_id)
+check "policy-matched prescription is created" "true" \
+  "$([ -n "$DUAL_RX" ] && echo true || echo false)"
+code POST "/api/e-prescriptions/$DUAL_RX/sign" \
+  '{"signature_method":"electronic","attestation":"Synthetic dual-check test"}' "$DOCTOR" >/dev/null
+code POST "/api/e-prescriptions/$DUAL_RX/transmit" '{}' "$DOCTOR" >/dev/null
+code POST "/api/e-prescriptions/$DUAL_RX/receive" '{}' "$PHARMACIST" >/dev/null
+code POST "/api/e-prescriptions/$DUAL_RX/start" '{}' "$PHARMACIST" >/dev/null
+
+check "direct API dispense cannot bypass second verification" 409 \
+  "$(code POST "/api/e-prescriptions/$DUAL_RX/dispense" '{"quantity":2}' "$PHARMACIST")" "$(body)"
+check "  bypass is refused for the exact verification reason" "SECONDARY_VERIFICATION_REQUIRED" \
+  "$(jget error code)"
+check "first pharmacist requests a second verifier" 200 \
+  "$(code POST "/api/e-prescriptions/$DUAL_RX/verification/request" '{}' "$PHARMACIST")" "$(body)"
+check "first pharmacist cannot approve their own request" 403 \
+  "$(code POST "/api/e-prescriptions/$DUAL_RX/verification/decide" '{"approve":true}' "$PHARMACIST")" "$(body)"
+check "prescriber cannot satisfy the pharmacist requirement" 403 \
+  "$(code POST "/api/e-prescriptions/$DUAL_RX/verification/decide" '{"approve":true}' "$DOCTOR")" "$(body)"
+
+# Two eligible second pharmacists race on the same Pending state. The nested
+# optimistic guard and open-request constraint must admit exactly one decision.
+VERIFY_RACE_DIR=$(mktemp -d)
+for actor in "$PHARMACIST_2" "$PHARMACIST_3"; do
+  (
+    curl -s -o /dev/null -w '%{http_code}\n' -m 30 -X POST \
+      "$BASE/api/e-prescriptions/$DUAL_RX/verification/decide" \
+      -H 'Content-Type: application/json' \
+      -H "X-User-Id: $actor" \
+      -H "Idempotency-Key: $(python -c 'import uuid;print(uuid.uuid4())')" \
+      -d '{"approve":true}' > "$VERIFY_RACE_DIR/${actor:0:8}"
+  ) &
+done
+wait
+VERIFY_OK=$(cat "$VERIFY_RACE_DIR"/* 2>/dev/null | grep -c '^200$' || true)
+rm -rf "$VERIFY_RACE_DIR"
+check "exactly one concurrent second pharmacist approves" "1" "$VERIFY_OK"
+
+check "verified prescription can now dispense" 200 \
+  "$(code POST "/api/e-prescriptions/$DUAL_RX/dispense" '{"quantity":2}' "$PHARMACIST")" "$(body)"
+check "  verified dispense reaches the terminal state" "Dispensed" "$(jget status)"
+code GET /api/dashboard/pharmacist '' "$PHARMACIST" >/dev/null
+DUAL_DASHBOARD_STATE=$(body | python -c '
+import json, sys
+d=json.load(sys.stdin)
+rx=next((r for r in d.get("prescriptions",{}).get("list",[])
+         if r.get("prescription_id")==sys.argv[1]), {})
+print("%s/%s" % (rx.get("status"), rx.get("secondary_verification",{}).get("status")))' \
+  "$DUAL_RX" 2>/dev/null || echo missing)
+check "dashboard reload preserves dispense and verification state" "Dispensed/Verified" \
+  "$DUAL_DASHBOARD_STATE"
 
 # -- Concurrency ------------------------------------------------------------
 #

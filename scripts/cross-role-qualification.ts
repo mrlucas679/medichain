@@ -278,6 +278,7 @@ async function qualifySessions(m: Manifest): Promise<Record<string, Session>> {
     ['doctorB', 'bt.doctor2'],
     ['nurse', 'bt.nurse'],
     ['pharmacist', 'bt.pharm'],
+    ['pharmacist2', 'bt.pharm2'],
     ['labtech', 'bt.lab'],
     ['admin', 'bt.admin'],
   ];

@@ -9,6 +9,7 @@ cd "C:/Users/Admin/RustroverProjects/medichain"
 export IS_DEMO=true                 # demo secrets permitted; signature verification off
 export REQUIRE_SIGNATURES=false
 export BLOCKCHAIN_ENABLED=false     # no training chain attached yet; placeholder hashes
+export DISPENSING_POLICY_PATH="C:/Users/Admin/RustroverProjects/medichain/api/data/dispensing_policy.example.json"
 unset MEDICHAIN_STORAGE             # in-memory repositories
 unset DATABASE_URL
 
