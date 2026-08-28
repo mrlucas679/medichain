@@ -190,12 +190,22 @@ async fn check_interactions_response(
     // Check allergies if requested (via repository)
     let mut allergy_alerts: Vec<serde_json::Value> = Vec::new();
     if req.include_allergies.unwrap_or(true) {
-        let patient_allergies = data
+        let patient_allergies = match data
             .repositories
             .allergies
             .get_active_by_patient(&req.patient_id)
             .await
-            .unwrap_or_default();
+        {
+            Ok(allergies) => allergies,
+            Err(error) => {
+                log::error!("Drug check allergy read failed: {error}");
+                return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                    success: false,
+                    error: "Allergy safety data is temporarily unavailable".to_string(),
+                    code: "ALLERGY_DATA_UNAVAILABLE".to_string(),
+                });
+            }
+        };
         for allergy in &patient_allergies {
             let allergen_lower = allergy.allergen.to_lowercase();
             for med in &medications_lower {
@@ -325,12 +335,22 @@ pub async fn get_interaction_history(
         });
     }
 
-    let records = data
+    let records = match data
         .repositories
         .drug_interaction_checks
         .get_by_owner(&patient_id)
         .await
-        .unwrap_or_default();
+    {
+        Ok(records) => records,
+        Err(error) => {
+            log::error!("Drug interaction history read failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "Drug interaction history is temporarily unavailable".to_string(),
+                code: "DRUG_CHECK_HISTORY_UNAVAILABLE".to_string(),
+            });
+        }
+    };
     let (page, next_cursor) =
         crate::pagination::paginate_cursor(&records, query.cursor.as_deref(), query.limit);
     let history: Vec<crate::clinical::DrugInteractionResult> = page

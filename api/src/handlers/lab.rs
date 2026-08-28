@@ -246,12 +246,18 @@ pub async fn get_pending_lab_results(
     }
 
     // Get all pending submissions via repository
-    let pending: Vec<LabResultSubmission> = data
-        .repositories
-        .lab_result_submissions
-        .list_all()
-        .await
-        .unwrap_or_default()
+    let records = match data.repositories.lab_result_submissions.list_all().await {
+        Ok(records) => records,
+        Err(error) => {
+            log::error!("Pending lab submission read failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "Pending lab results are temporarily unavailable".to_string(),
+                code: "LAB_SUBMISSIONS_UNAVAILABLE".to_string(),
+            });
+        }
+    };
+    let pending: Vec<LabResultSubmission> = records
         .into_iter()
         .filter_map(|r| serde_json::from_value::<LabResultSubmission>(r.data).ok())
         .filter(|s| s.status == LabResultStatus::Pending)
@@ -318,12 +324,18 @@ pub async fn get_all_lab_submissions(
         .unwrap_or(20);
 
     // Get submissions with optional filter via repository
-    let filtered: Vec<LabResultSubmission> = data
-        .repositories
-        .lab_result_submissions
-        .list_all()
-        .await
-        .unwrap_or_default()
+    let records = match data.repositories.lab_result_submissions.list_all().await {
+        Ok(records) => records,
+        Err(error) => {
+            log::error!("Lab submission list failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "Lab submissions are temporarily unavailable".to_string(),
+                code: "LAB_SUBMISSIONS_UNAVAILABLE".to_string(),
+            });
+        }
+    };
+    let filtered: Vec<LabResultSubmission> = records
         .into_iter()
         .filter_map(|r| serde_json::from_value::<LabResultSubmission>(r.data).ok())
         .filter(|s| match &status_filter {
@@ -373,21 +385,37 @@ pub async fn get_lab_submission(
         }
     };
 
-    let submission: crate::LabResultSubmission = match data
+    let record = match data
         .repositories
         .lab_result_submissions
         .get_by_id(&submission_id)
         .await
-        .ok()
-        .flatten()
-        .and_then(|rec| serde_json::from_value(rec.data).ok())
     {
-        Some(s) => s,
-        None => {
+        Ok(Some(record)) => record,
+        Ok(None) => {
             return HttpResponse::NotFound().json(ErrorResponse {
                 success: false,
                 error: format!("Lab submission '{}' not found", submission_id),
                 code: "SUBMISSION_NOT_FOUND".to_string(),
+            });
+        }
+        Err(error) => {
+            log::error!("Lab submission read failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The lab submission is temporarily unavailable".to_string(),
+                code: "LAB_SUBMISSION_UNAVAILABLE".to_string(),
+            });
+        }
+    };
+    let submission: crate::LabResultSubmission = match serde_json::from_value(record.data) {
+        Ok(submission) => submission,
+        Err(error) => {
+            log::error!("Lab submission decode failed: {error}");
+            return HttpResponse::InternalServerError().json(ErrorResponse {
+                success: false,
+                error: "The stored lab submission could not be decoded".to_string(),
+                code: "LAB_SUBMISSION_DECODE_FAILED".to_string(),
             });
         }
     };
@@ -563,21 +591,37 @@ pub async fn review_lab_results_impl(
     }
 
     // Get and update submission (via repository)
-    let mut submission: crate::LabResultSubmission = match data
+    let record = match data
         .repositories
         .lab_result_submissions
         .get_by_id(&req.submission_id)
         .await
-        .ok()
-        .flatten()
-        .and_then(|rec| serde_json::from_value(rec.data).ok())
     {
-        Some(s) => s,
-        None => {
+        Ok(Some(record)) => record,
+        Ok(None) => {
             return HttpResponse::NotFound().json(ErrorResponse {
                 success: false,
                 error: format!("Lab submission '{}' not found", req.submission_id),
                 code: "SUBMISSION_NOT_FOUND".to_string(),
+            });
+        }
+        Err(error) => {
+            log::error!("Lab submission review read failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The lab submission is temporarily unavailable".to_string(),
+                code: "LAB_SUBMISSION_UNAVAILABLE".to_string(),
+            });
+        }
+    };
+    let mut submission: crate::LabResultSubmission = match serde_json::from_value(record.data) {
+        Ok(submission) => submission,
+        Err(error) => {
+            log::error!("Lab submission review decode failed: {error}");
+            return HttpResponse::InternalServerError().json(ErrorResponse {
+                success: false,
+                error: "The stored lab submission could not be decoded".to_string(),
+                code: "LAB_SUBMISSION_DECODE_FAILED".to_string(),
             });
         }
     };
@@ -855,12 +899,23 @@ pub async fn get_patient_lab_submissions(
     }
 
     // Get patient's lab submissions
-    let patient_submissions: Vec<LabResultSubmission> = data
+    let records = match data
         .repositories
         .lab_result_submissions
         .get_by_owner(&patient_id)
         .await
-        .unwrap_or_default()
+    {
+        Ok(records) => records,
+        Err(error) => {
+            log::error!("Patient lab submission read failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "Patient lab results are temporarily unavailable".to_string(),
+                code: "LAB_SUBMISSIONS_UNAVAILABLE".to_string(),
+            });
+        }
+    };
+    let patient_submissions: Vec<LabResultSubmission> = records
         .into_iter()
         .filter_map(|r| serde_json::from_value::<LabResultSubmission>(r.data).ok())
         // Patients only see approved results

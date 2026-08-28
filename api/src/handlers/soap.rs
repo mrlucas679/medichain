@@ -215,15 +215,21 @@ pub async fn get_soap_note(
         .soap_note_records
         .get_by_id(&note_id)
         .await
-        .ok()
-        .flatten()
     {
-        Some(e) => e,
-        None => {
+        Ok(Some(entity)) => entity,
+        Ok(None) => {
             return HttpResponse::NotFound().json(ErrorResponse {
                 success: false,
                 error: format!("SOAP note '{}' not found", note_id),
                 code: "NOTE_NOT_FOUND".to_string(),
+            });
+        }
+        Err(error) => {
+            log::error!("SOAP note read failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The SOAP note is temporarily unavailable".to_string(),
+                code: "SOAP_NOTE_UNAVAILABLE".to_string(),
             });
         }
     };
@@ -292,12 +298,22 @@ pub async fn get_patient_soap_notes(
         });
     }
 
-    let entities = data
+    let entities = match data
         .repositories
         .soap_note_records
         .get_by_owner(&patient_id)
         .await
-        .unwrap_or_default();
+    {
+        Ok(entities) => entities,
+        Err(error) => {
+            log::error!("Patient SOAP note list failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "SOAP notes are temporarily unavailable".to_string(),
+                code: "SOAP_NOTES_UNAVAILABLE".to_string(),
+            });
+        }
+    };
     let (page, next_cursor) =
         crate::pagination::paginate_cursor(&entities, query.cursor.as_deref(), query.limit);
     let patient_notes: Vec<SOAPNote> = page
@@ -369,15 +385,21 @@ pub async fn add_soap_addendum(
         .soap_note_records
         .get_by_id(&note_id)
         .await
-        .ok()
-        .flatten()
     {
-        Some(e) => e,
-        None => {
+        Ok(Some(entity)) => entity,
+        Ok(None) => {
             return HttpResponse::NotFound().json(ErrorResponse {
                 success: false,
                 error: format!("SOAP note '{}' not found", note_id),
                 code: "NOTE_NOT_FOUND".to_string(),
+            });
+        }
+        Err(error) => {
+            log::error!("SOAP note read for addendum failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The SOAP note is temporarily unavailable".to_string(),
+                code: "SOAP_NOTE_UNAVAILABLE".to_string(),
             });
         }
     };

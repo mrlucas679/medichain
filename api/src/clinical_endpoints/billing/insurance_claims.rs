@@ -202,22 +202,38 @@ pub async fn submit_insurance_claim(
         Err(resp) => return resp,
     };
 
-    let mut claim: crate::clinical::InsuranceClaim = match data
+    let record = match data
         .repositories
         .insurance_claims
         .get_by_id(&claim_id)
         .await
-        .ok()
-        .flatten()
-        .and_then(|rec| serde_json::from_value(rec.data).ok())
     {
-        Some(c) => c,
-        None => {
+        Ok(Some(record)) => record,
+        Ok(None) => {
             return HttpResponse::NotFound().json(ErrorResponse {
                 success: false,
                 error: "Claim not found".to_string(),
                 code: "NOT_FOUND".to_string(),
             })
+        }
+        Err(error) => {
+            log::error!("Insurance claim read failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The claim is temporarily unavailable".to_string(),
+                code: "INSURANCE_CLAIM_UNAVAILABLE".to_string(),
+            });
+        }
+    };
+    let mut claim: crate::clinical::InsuranceClaim = match serde_json::from_value(record.data) {
+        Ok(claim) => claim,
+        Err(error) => {
+            log::error!("Insurance claim decode failed: {error}");
+            return HttpResponse::InternalServerError().json(ErrorResponse {
+                success: false,
+                error: "The stored claim could not be decoded".to_string(),
+                code: "INSURANCE_CLAIM_DECODE_FAILED".to_string(),
+            });
         }
     };
 
@@ -285,22 +301,38 @@ pub async fn get_insurance_claim(
         Err(resp) => return resp,
     };
 
-    let claim: crate::clinical::InsuranceClaim = match data
+    let record = match data
         .repositories
         .insurance_claims
         .get_by_id(&claim_id)
         .await
-        .ok()
-        .flatten()
-        .and_then(|rec| serde_json::from_value(rec.data).ok())
     {
-        Some(c) => c,
-        None => {
+        Ok(Some(record)) => record,
+        Ok(None) => {
             return HttpResponse::NotFound().json(ErrorResponse {
                 success: false,
                 error: "Claim not found".to_string(),
                 code: "NOT_FOUND".to_string(),
             })
+        }
+        Err(error) => {
+            log::error!("Insurance claim read failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "The claim is temporarily unavailable".to_string(),
+                code: "INSURANCE_CLAIM_UNAVAILABLE".to_string(),
+            });
+        }
+    };
+    let claim: crate::clinical::InsuranceClaim = match serde_json::from_value(record.data) {
+        Ok(claim) => claim,
+        Err(error) => {
+            log::error!("Insurance claim decode failed: {error}");
+            return HttpResponse::InternalServerError().json(ErrorResponse {
+                success: false,
+                error: "The stored claim could not be decoded".to_string(),
+                code: "INSURANCE_CLAIM_DECODE_FAILED".to_string(),
+            });
         }
     };
 
@@ -345,12 +377,22 @@ pub async fn get_patient_insurance_claims(
         });
     }
 
-    let records = data
+    let records = match data
         .repositories
         .insurance_claims
         .get_by_owner(&patient_id)
         .await
-        .unwrap_or_default();
+    {
+        Ok(records) => records,
+        Err(error) => {
+            log::error!("Patient insurance claim list failed: {error}");
+            return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                success: false,
+                error: "Insurance claims are temporarily unavailable".to_string(),
+                code: "INSURANCE_CLAIMS_UNAVAILABLE".to_string(),
+            });
+        }
+    };
     let (page, next_cursor) =
         crate::pagination::paginate_cursor(&records, query.cursor.as_deref(), query.limit);
     let patient_claims: Vec<crate::clinical::InsuranceClaim> = page
