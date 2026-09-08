@@ -415,11 +415,11 @@ const UserManagementPage: React.FC = () => {
                           {t(`docUserManagement.status_${systemUser.status}`).toUpperCase()}
                         </span>
                       </div>
-                      <p className="text-sm text-content-muted flex items-center gap-1">
+                      <p className="text-sm text-content-muted flex items-center gap-1 min-h-[24px] py-1">
                         <Mail className="w-4 h-4" />
                         {systemUser.email}
                       </p>
-                      <p className="text-sm text-content-muted flex items-center gap-1">
+                      <p className="text-sm text-content-muted flex items-center gap-1 min-h-[24px] py-1">
                         <Phone className="w-4 h-4" />
                         {systemUser.phone}
                       </p>
@@ -504,7 +504,7 @@ const UserManagementPage: React.FC = () => {
                 </div>
 
                 <div className="bg-surface-sunken border border-border rounded-lg p-4 mb-4">
-                  <p className="text-sm font-semibold text-content mb-2 flex items-center gap-2">
+                  <p className="text-sm font-semibold text-content mb-2 flex items-center gap-2 min-h-[24px] py-1">
                     <Shield className="w-4 h-4" />
                     {t('docUserManagement.permissionsCount', { count: systemUser.permissions.length })}
                   </p>

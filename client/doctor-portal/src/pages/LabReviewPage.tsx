@@ -174,7 +174,7 @@ function LabReviewPage() {
       )}
 
       {!isLoading && submissions.length > 0 && flaggedCount > 0 && (
-        <div className="mb-4 p-3 rounded-lg bg-amber-900/30 border border-amber-700 text-amber-200 text-sm flex items-center gap-2">
+        <div className="mb-4 p-3 rounded-lg bg-amber-900/30 border border-amber-700 text-amber-200 text-sm flex items-center gap-2 min-h-[24px] py-1">
           <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
           {t('lab.review.flaggedCount', { count: flaggedCount })}
         </div>
@@ -267,7 +267,7 @@ function LabReviewPage() {
                 {s.notes && <p className="mt-2 text-slate-400 text-sm">{s.notes}</p>}
 
                 {isOwnSubmission && (
-                  <p className="mt-3 text-amber-300 text-sm flex items-center gap-2">
+                  <p className="mt-3 text-amber-300 text-sm flex items-center gap-2 min-h-[24px] py-1">
                     <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
                     {t('lab.review.selfReview')}
                   </p>

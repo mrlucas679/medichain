@@ -419,7 +419,7 @@ function TriagePage() {
               )}
             </div>
             {selectedPatientId && (
-              <p className="mt-2 text-sm text-ok-subtle-fg flex items-center gap-1">
+              <p className="mt-2 text-sm text-ok-subtle-fg flex items-center gap-1 min-h-[24px] py-1">
                 <CheckCircle size={16} />
                 {t('docTriage.patientSelected', { id: selectedPatientId })}
               </p>

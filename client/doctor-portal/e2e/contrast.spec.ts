@@ -2,6 +2,32 @@ import { test, expect, type Page } from '@playwright/test';
 import { signIn, settle } from './support';
 
 /**
+ * One sign-in per spec file, on a page shared by every test in it.
+ *
+ * Playwright's `page` fixture is per-test, so a `beforeEach` sign-in meant 24
+ * sign-ins in a run. Each is several requests against an API that rate-limits
+ * at 60/minute, so the suite collapsed into RATE_LIMIT_EXCEEDED — surfacing as
+ * navigation timeouts that look like application faults and are not.
+ *
+ * Serial mode is required, not incidental: the tests share one page, so they
+ * cannot run in parallel against it. That is an acceptable trade here because
+ * the audit is read-only — it measures what is painted and changes nothing.
+ */
+test.describe.configure({ mode: 'serial' });
+
+let page: Page;
+
+test.beforeAll(async ({ browser }) => {
+  page = await browser.newPage();
+  await signIn(page);
+});
+
+test.afterAll(async () => {
+  await page?.close();
+});
+
+
+/**
  * Measured contrast audit of the rendered application, in both themes.
  *
  * Why this is an end-to-end test and not a unit test
@@ -51,9 +77,6 @@ const ROUTES = [
   { path: '/settings', name: 'Settings' },
 ];
 
-test.beforeEach(async ({ page }) => {
-  await signIn(page);
-});
 
 interface Failure {
   ratio: number;
@@ -197,22 +220,13 @@ function report(route: string, theme: string, result: { sampled: number; failure
  */
 for (const route of ROUTES) {
   for (const theme of ['light', 'dark'] as const) {
-    test(`${route.name} meets WCAG AA in ${theme} mode`, async ({ page }) => {
-      await page.goto(route.path);
-      // NOT `waitForLoadState('networkidle')`. This app holds an SSE stream
-      // open on /api/events for real-time push, so the network is never idle
-      // and that wait can only ever time out — it failed all ten tests at 30s
-      // before anything was measured.
-      //
-      // Wait for rendered content instead, which is what the audit actually
-      // needs: measuring a loading skeleton proves nothing.
-      // `main`, not `h1`: the first `h1` in the DOM belongs to the mobile
-      // header, which is `lg:hidden` at desktop width. Waiting on it waits
-      // forever for something deliberately invisible.
-      await page.locator('main').first().waitFor({ state: 'visible', timeout: 15000 });
-      // Let late-arriving data paint before sampling; a table that fills in
-      // after the audit runs is a table the audit never checked.
-      await page.waitForTimeout(1200);
+    test(`${route.name} meets WCAG AA in ${theme} mode`, async () => {
+      // `settle`, not `page.goto`. A goto is a full document load, and this
+      // app deliberately persists nothing that can re-authenticate — so every
+      // goto landed on /login and rendered an empty page. `settle` navigates
+      // client-side, which keeps the in-memory session and is what a clinician
+      // actually does.
+      await settle(page, route.path);
       // Guard against a silent redirect back to /login leaving the audit
       // measuring the wrong screen.
       expect(page.url(), `${route.name} redirected away from ${route.path}`).toContain(route.path);

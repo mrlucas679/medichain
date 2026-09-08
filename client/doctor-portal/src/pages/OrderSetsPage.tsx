@@ -367,7 +367,7 @@ const OrderSetsPage: React.FC = () => {
                           )}
                         </div>
                         <p className="text-content-secondary mb-2">{set.description}</p>
-                        <div className="flex items-center gap-4 text-sm text-content-muted">
+                        <div className="flex items-center gap-4 text-sm text-content-muted min-h-[24px] py-1">
                           <span className="flex items-center gap-1">
                             <Brain className="w-4 h-4" />
                             {set.specialty}

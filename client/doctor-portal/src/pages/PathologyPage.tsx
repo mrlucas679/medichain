@@ -619,7 +619,7 @@ const PathologyPage: React.FC = () => {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center text-sm text-content-muted">
+                        <div className="flex items-center text-sm text-content-muted min-h-[24px] py-1">
                           <Calendar className="h-4 w-4 mr-1" />
                           {specimen.collectionDate}
                         </div>
@@ -633,7 +633,7 @@ const PathologyPage: React.FC = () => {
                       <td className="px-4 py-3">
                         <button
                           onClick={() => handleOpenReport(specimen)}
-                          className="text-caution-subtle-fg hover:text-caution-subtle-fg text-sm font-medium flex items-center"
+                          className="text-caution-subtle-fg hover:text-caution-subtle-fg text-sm font-medium flex items-center min-h-[24px] py-1"
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           {t('docPathology.viewReportButton')}

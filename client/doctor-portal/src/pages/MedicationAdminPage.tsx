@@ -520,27 +520,27 @@ const MedicationAdminPage: React.FC = () => {
           <div className="bg-ok-subtle border-2 border-ok rounded-lg p-4 mb-6">
             <h3 className="font-bold text-ok-subtle-fg mb-3">{t('docMedicationAdmin.fiveRightsHeading')}</h3>
             <div className="space-y-2">
-              <label className="flex items-center text-sm">
+              <label className="flex items-center text-sm min-h-[24px] py-1">
                 <input type="checkbox" className="mr-2" disabled checked />
                 <span className="font-medium">{t('docMedicationAdmin.rightPatientLabel')}</span>
                 <span className="ml-2 text-content-secondary">{selectedMed.patientName} ({selectedMed.patientId})</span>
               </label>
-              <label className="flex items-center text-sm">
+              <label className="flex items-center text-sm min-h-[24px] py-1">
                 <input type="checkbox" className="mr-2" disabled checked />
                 <span className="font-medium">{t('docMedicationAdmin.rightDrugLabel')}</span>
                 <span className="ml-2 text-content-secondary">{selectedMed.medicationName}</span>
               </label>
-              <label className="flex items-center text-sm">
+              <label className="flex items-center text-sm min-h-[24px] py-1">
                 <input type="checkbox" className="mr-2" disabled checked />
                 <span className="font-medium">{t('docMedicationAdmin.rightDoseLabel')}</span>
                 <span className="ml-2 text-content-secondary">{selectedMed.dose}</span>
               </label>
-              <label className="flex items-center text-sm">
+              <label className="flex items-center text-sm min-h-[24px] py-1">
                 <input type="checkbox" className="mr-2" disabled checked />
                 <span className="font-medium">{t('docMedicationAdmin.rightRouteLabel')}</span>
                 <span className="ml-2 text-content-secondary">{selectedMed.route}</span>
               </label>
-              <label className="flex items-center text-sm">
+              <label className="flex items-center text-sm min-h-[24px] py-1">
                 <input type="checkbox" className="mr-2" disabled checked />
                 <span className="font-medium">{t('docMedicationAdmin.rightTimeLabel')}</span>
                 <span className="ml-2 text-content-secondary">{selectedTime}</span>

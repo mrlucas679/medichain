@@ -295,7 +295,7 @@ export default function AdminDashboardPage() {
       {/* System Status Banner */}
       <div className="bg-surface rounded-lg shadow p-4 border border-border">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-content-secondary flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-content-secondary flex items-center gap-2 min-h-[24px] py-1">
             <Server size={16} />
             {t('docAdmin.systemStatus')}
           </h3>
@@ -385,7 +385,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Users by Role */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
-          <h3 className="text-sm font-semibold text-content-secondary mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-content-secondary mb-4 flex items-center gap-2 min-h-[24px] py-1">
             <Users size={16} />
             {t('docAdmin.usersByRole')}
           </h3>
@@ -399,7 +399,7 @@ export default function AdminDashboardPage() {
             ].map((item) => (
               <div key={item.role} className="flex items-center gap-3">
                 <div className="flex-1">
-                  <div className="flex items-center justify-between text-sm mb-1">
+                  <div className="flex items-center justify-between text-sm mb-1 min-h-[24px] py-1">
                     <span className="text-content-secondary">{item.role}</span>
                     <span className="font-medium">{item.count}</span>
                   </div>
@@ -423,7 +423,7 @@ export default function AdminDashboardPage() {
 
         {/* Emergency Events */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
-          <h3 className="text-sm font-semibold text-content-secondary mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-content-secondary mb-4 flex items-center gap-2 min-h-[24px] py-1">
             <Siren size={16} />
             {t('docAdmin.emergencyEventsHeader')}
           </h3>
@@ -452,7 +452,7 @@ export default function AdminDashboardPage() {
       {/* Access Logs Table */}
       <div className="bg-surface rounded-lg shadow border border-border">
         <div className="px-4 py-3 border-b flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-content-secondary flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-content-secondary flex items-center gap-2 min-h-[24px] py-1">
             <FileText size={16} />
             {t('docAdmin.recentAccessLogs')}
           </h3>
@@ -536,7 +536,7 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* NFC Card Status */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
-          <h3 className="text-sm font-semibold text-content-secondary mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-content-secondary mb-4 flex items-center gap-2 min-h-[24px] py-1">
             <CreditCard size={16} />
             {t('docAdmin.nfcCardStatus')}
           </h3>
@@ -576,7 +576,7 @@ export default function AdminDashboardPage() {
 
         {/* Lab Submission Stats */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
-          <h3 className="text-sm font-semibold text-content-secondary mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-content-secondary mb-4 flex items-center gap-2 min-h-[24px] py-1">
             <Database size={16} />
             {t('docAdmin.labSubmissionStats')}
           </h3>

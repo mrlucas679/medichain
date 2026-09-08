@@ -469,7 +469,7 @@ const SpecimenPage: React.FC = () => {
                 <p className="text-sm text-content-secondary font-medium mb-2">{t('docSpecimen.checklist')}</p>
                 <div className="space-y-1">
                   {[t('docSpecimen.chkVerifyId'), t('docSpecimen.chkRequirements'), t('docSpecimen.chkLabel'), t('docSpecimen.chkTime')].map((item, idx) => (
-                    <label key={idx} className="flex items-center gap-2 text-sm">
+                    <label key={idx} className="flex items-center gap-2 text-sm min-h-[24px] py-1">
                       <input type="checkbox" className="w-4 h-4"
                         checked={form.checklist.includes(CHECKS[idx])} onChange={() => toggleCheck(CHECKS[idx])} />
                       <span>{item}</span>

@@ -309,7 +309,7 @@ export default function CardiacPage() {
                 )}
                 {selectedPatient && (
                   <div className="mt-4">
-                    <h4 className="font-medium text-sm text-content-secondary mb-2 flex items-center gap-1">
+                    <h4 className="font-medium text-sm text-content-secondary mb-2 flex items-center gap-1 min-h-[24px] py-1">
                       <History className="h-4 w-4 text-red-500" /> {t('docCardiac.pastEmergencyEventsTitle')}
                     </h4>
                     {historyLoading ? (
@@ -585,7 +585,7 @@ export default function CardiacPage() {
                   <button
                     type="button"
                     onClick={() => setShowECGForm(!showECGForm)}
-                    className="flex items-center text-sm text-critical-subtle-fg hover:text-critical-subtle-fg"
+                    className="flex items-center text-sm text-critical-subtle-fg hover:text-critical-subtle-fg min-h-[24px] py-1"
                   >
                     <Plus className="h-4 w-4 mr-1" /> {t('docCardiac.addECGBtn')}
                   </button>

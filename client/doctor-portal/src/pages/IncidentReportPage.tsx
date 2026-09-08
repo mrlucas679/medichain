@@ -412,7 +412,7 @@ const IncidentReportPage: React.FC = () => {
                       {getSeverityBadge(incident.severity)}
                       {getStatusBadge(incident.status)}
                     </div>
-                    <p className="text-sm text-content-muted mt-1 flex items-center gap-2">
+                    <p className="text-sm text-content-muted mt-1 flex items-center gap-2 min-h-[24px] py-1">
                       <Calendar className="w-4 h-4" />
                       {incident.dateTime.toLocaleString()}
                       <MapPin className="w-4 h-4 ml-2" />

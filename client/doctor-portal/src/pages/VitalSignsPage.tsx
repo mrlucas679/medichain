@@ -506,7 +506,7 @@ function VitalSignsPage() {
         <div className="bg-surface rounded-xl shadow-sm border border-border p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-content">{t('docVitalSigns.latestVitalSignsTitle')}</h2>
-            <span className="text-sm text-content-muted flex items-center gap-1">
+            <span className="text-sm text-content-muted flex items-center gap-1 min-h-[24px] py-1">
               <Clock size={14} />
               {new Date(lastReading.recorded_at).toLocaleString()}
             </span>

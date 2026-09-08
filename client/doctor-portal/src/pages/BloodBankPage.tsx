@@ -474,7 +474,7 @@ const BloodBankPage: React.FC = () => {
                         {(order.status === 'ready' || order.status === 'issued' || order.status === 'transfusing') && (
                           <button
                             onClick={() => handleOpenTransfusion(order)}
-                            className="text-critical-subtle-fg hover:text-critical-subtle-fg text-sm font-medium flex items-center"
+                            className="text-critical-subtle-fg hover:text-critical-subtle-fg text-sm font-medium flex items-center min-h-[24px] py-1"
                           >
                             <Activity className="h-4 w-4 mr-1" />
                             {order.status === 'transfusing' ? t('docBloodBank.updateAction') : t('docBloodBank.startTransfusionBtn')}
@@ -879,7 +879,7 @@ const BloodBankPage: React.FC = () => {
               </div>
               {reactions.length > 0 && reactions[0] !== 'None' && (
                 <div className="mt-4 bg-critical-subtle border border-critical rounded p-3">
-                  <p className="text-sm text-critical-subtle-fg font-medium flex items-center">
+                  <p className="text-sm text-critical-subtle-fg font-medium flex items-center min-h-[24px] py-1">
                     <AlertTriangle className="h-4 w-4 mr-2" />
                     {t('docBloodBank.reactionWarning')}
                   </p>

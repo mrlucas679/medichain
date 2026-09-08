@@ -669,7 +669,7 @@ export default function MCIPage() {
                     </select>
                   </div>
                   <div className="md:col-span-2">
-                    <label htmlFor="mci-location" className="flex items-center text-sm font-medium text-content-secondary mb-1">
+                    <label htmlFor="mci-location" className="flex items-center text-sm font-medium text-content-secondary mb-1 min-h-[24px] py-1">
                       <MapPin className="h-4 w-4 mr-1" /> {t('docMCI.locationLabel')}
                     </label>
                     <input

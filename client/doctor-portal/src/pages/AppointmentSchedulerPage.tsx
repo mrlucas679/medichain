@@ -487,7 +487,7 @@ export default function AppointmentSchedulerPage() {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 text-sm text-content-muted dark:text-gray-300 flex-wrap">
+                      <div className="flex items-center gap-3 text-sm text-content-muted dark:text-gray-300 flex-wrap min-h-[24px] py-1">
                         <span className="inline-flex items-center gap-1">
                           <Calendar size={13} aria-hidden="true" />{a.scheduled_date}
                         </span>

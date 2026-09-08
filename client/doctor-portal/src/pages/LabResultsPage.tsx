@@ -354,7 +354,7 @@ function LabResultsPage() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-content">{submission.test_name}</h3>
-                        <div className="flex items-center gap-2 text-sm text-content-muted mt-1">
+                        <div className="flex items-center gap-2 text-sm text-content-muted mt-1 min-h-[24px] py-1">
                           <User size={14} />
                           <span>{submission.patient_name}</span>
                           <span className="text-gray-300">•</span>

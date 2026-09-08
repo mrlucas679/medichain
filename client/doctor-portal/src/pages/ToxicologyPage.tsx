@@ -377,7 +377,7 @@ const ToxicologyPage: React.FC = () => {
               </h2>
               <div className="space-y-2 mb-4">
                 {antidotes.map(a => (
-                  <div key={a.antidote} className="flex items-center gap-2 text-sm">
+                  <div key={a.antidote} className="flex items-center gap-2 text-sm min-h-[24px] py-1">
                     <span className="w-40 font-medium">{a.substance}:</span>
                     <span className="w-40 text-content-muted">{a.antidote}</span>
                     {a.doses.map(d => (
@@ -396,7 +396,7 @@ const ToxicologyPage: React.FC = () => {
                 <div className="border rounded p-3 bg-ok-subtle">
                   <h3 className="font-medium text-ok-subtle-fg mb-2">{t('docToxicology.antidotesGiven')}</h3>
                   {givenAntidotes.map((a, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm">
+                    <div key={i} className="flex items-center gap-2 text-sm min-h-[24px] py-1">
                       <Clock className="w-4 h-4 text-content-muted" />
                       <span>{a.time}</span>
                       <span className="font-medium">{a.name}</span>

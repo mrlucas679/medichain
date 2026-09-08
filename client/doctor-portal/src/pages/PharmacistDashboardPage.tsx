@@ -378,7 +378,7 @@ export default function PharmacistDashboardPage() {
         {/* Prescription Verification Queue */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary min-h-[24px] py-1">
               <FileCheck size={16} aria-hidden="true" /> {t('docPharmDashboard.ordersToVerify')}
             </h3>
             <button
@@ -540,7 +540,7 @@ export default function PharmacistDashboardPage() {
         {/* Drug Interactions Panel */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-content-secondary flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-content-secondary flex items-center gap-2 min-h-[24px] py-1">
               <ShieldAlert className="text-red-500" size={18} />
               {t('docPharmDashboard.interactionAlerts')}
             </h3>
@@ -602,7 +602,7 @@ export default function PharmacistDashboardPage() {
         {/* Allergy Alerts Panel */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-content-secondary flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-content-secondary flex items-center gap-2 min-h-[24px] py-1">
               <AlertCircle className="text-orange-500" size={18} />
               {t('docPharmDashboard.allergyAlerts')}
             </h3>
@@ -617,7 +617,7 @@ export default function PharmacistDashboardPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-content">{alert.patient_name}</p>
-                      <p className="flex items-center gap-1.5 text-sm text-content-secondary">
+                      <p className="flex items-center gap-1.5 text-sm text-content-secondary min-h-[24px] py-1">
                         <AlertTriangle size={14} aria-hidden="true" /> {t('docPharmDashboard.allergicTo')} <strong>{alert.allergen}</strong>
                       </p>
                       <p className="text-sm text-content-muted">
@@ -650,7 +650,7 @@ export default function PharmacistDashboardPage() {
       {/* Controlled Substance Log Section */}
       <div className="bg-surface rounded-lg shadow p-4 border border-border">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-content-secondary flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-content-secondary flex items-center gap-2 min-h-[24px] py-1">
             <Clock className="text-purple-500" size={18} />
             {t('docPharmDashboard.controlledLog')}
           </h3>
@@ -716,7 +716,7 @@ export default function PharmacistDashboardPage() {
 
       {/* Today's Metrics */}
       <div className="bg-surface rounded-lg shadow p-4 border border-border">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary mb-3">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary mb-3 min-h-[24px] py-1">
           <BarChart3 size={16} aria-hidden="true" /> {t('docPharmDashboard.todaysMetrics')}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

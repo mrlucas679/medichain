@@ -484,16 +484,16 @@ function DashboardPage() {
               >
                 <div>
                   <p className="font-medium text-content">{lab.patient_name}</p>
-                  <p className="text-sm text-content-muted">{lab.test_name}</p>
+                  <p className="text-sm text-caution-subtle-fg">{lab.test_name}</p>
                 </div>
-                <span className="text-xs text-content-muted">
+                <span className="text-xs text-caution-subtle-fg">
                   {new Date(lab.submitted_at).toLocaleDateString()}
                 </span>
               </Link>
             ))}
           </div>
           <div className="p-3 bg-caution-subtle rounded-b-xl">
-            <Link to="/lab-review" className="text-caution-subtle-fg text-sm font-medium flex items-center gap-1 justify-center">
+            <Link to="/lab-review" className="text-caution-subtle-fg text-sm font-medium flex items-center gap-1 justify-center min-h-[24px] py-1">
               {t('docDashboard.viewAllPendingLabs')} <ArrowRight size={14} />
             </Link>
           </div>
@@ -671,7 +671,7 @@ function DashboardPage() {
                     <p className="text-sm text-content-muted">{patient.patientId}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-content-muted">
+                <div className="flex items-center gap-2 text-sm text-content-muted min-h-[24px] py-1">
                   <Clock size={14} />
                   <span>{patient.lastAccessed ? new Date(patient.lastAccessed).toLocaleDateString() : t('docDashboard.naLabel')}</span>
                 </div>

@@ -474,7 +474,7 @@ const HistoryAndPhysicalPage: React.FC = () => {
                   </div>
 
                   {record.status === 'signed' && record.signedAt && (
-                    <div className="mt-4 pt-4 border-t flex items-center text-sm text-ok-subtle-fg">
+                    <div className="mt-4 pt-4 border-t flex items-center text-sm text-ok-subtle-fg min-h-[24px] py-1">
                       <CheckCircle className="w-4 h-4 mr-2" />
                       {t('docHistoryPhysical.signedByLine', { provider: record.provider, credentials: record.providerCredentials, date: record.signedAt.toLocaleString() })}
                     </div>
@@ -1013,7 +1013,7 @@ const HistoryAndPhysicalPage: React.FC = () => {
                   </div>
                   {getExamTypeBadge(template.type as HistoryAndPhysical['examType'])}
                 </div>
-                <button className="mt-4 text-sm text-content-secondary font-medium flex items-center gap-1">
+                <button className="mt-4 text-sm text-content-secondary font-medium flex items-center gap-1 min-h-[24px] py-1">
                   {t('docHistoryPhysical.useTemplate')}
                   <ChevronRight className="w-4 h-4" />
                 </button>

@@ -930,7 +930,7 @@ const FamilyHistoryPage: React.FC = () => {
 
                     {assessment.riskLevel === 'high' && (
                       <div className="bg-critical-subtle border border-critical rounded-lg p-3">
-                        <p className="text-sm font-semibold text-critical-subtle-fg mb-1 flex items-center gap-2">
+                        <p className="text-sm font-semibold text-critical-subtle-fg mb-1 flex items-center gap-2 min-h-[24px] py-1">
                           <AlertTriangle className="w-4 h-4" />
                           {t('docFamilyHistory.recommendationsLabel')}
                         </p>
@@ -941,7 +941,7 @@ const FamilyHistoryPage: React.FC = () => {
                     )}
                     {assessment.riskLevel === 'moderate' && (
                       <div className="bg-caution-subtle border border-caution rounded-lg p-3">
-                        <p className="text-sm font-semibold text-caution-subtle-fg mb-1 flex items-center gap-2">
+                        <p className="text-sm font-semibold text-caution-subtle-fg mb-1 flex items-center gap-2 min-h-[24px] py-1">
                           <AlertCircle className="w-4 h-4" />
                           {t('docFamilyHistory.recommendationsLabel')}
                         </p>

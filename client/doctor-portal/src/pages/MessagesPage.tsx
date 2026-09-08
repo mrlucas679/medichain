@@ -177,7 +177,7 @@ export default function MessagesPage() {
                         <p className={`font-medium text-content truncate ${!msg.read ? 'font-semibold' : ''}`}>
                           {msg.subject || t('docMessages.noSubject')}
                         </p>
-                        <p className="text-sm text-content-muted flex items-center gap-1">
+                        <p className="text-sm text-content-muted flex items-center gap-1 min-h-[24px] py-1">
                           <User size={12} />
                           {t('docMessages.fromLabel')} {msg.sender_id === user?.walletAddress ? t('docMessages.you') : msg.sender_id}
                         </p>

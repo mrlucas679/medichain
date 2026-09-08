@@ -324,7 +324,7 @@ const LacerationRepairPage: React.FC = () => {
                 </div>
 
                 <div className="bg-surface-sunken rounded p-3 mb-3">
-                  <div className="flex items-center gap-2 text-sm mb-1">
+                  <div className="flex items-center gap-2 text-sm mb-1 min-h-[24px] py-1">
                     <MapPin className="w-4 h-4 text-content-muted" />
                     <span className="font-medium">{repair.location}</span>
                   </div>

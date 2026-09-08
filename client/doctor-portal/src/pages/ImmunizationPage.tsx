@@ -509,7 +509,7 @@ const ImmunizationPage: React.FC = () => {
                         {t(`docImmunization.status_${admin.status}`).toUpperCase()}
                       </span>
                       {admin.consentObtained && (
-                        <span className="text-ok-subtle-fg flex items-center gap-1 text-sm">
+                        <span className="text-ok-subtle-fg flex items-center gap-1 text-sm min-h-[24px] py-1">
                           <Shield className="w-4 h-4" />
                           {t('docImmunization.consentBadge')}
                         </span>

@@ -257,7 +257,7 @@ export default function LabTechDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* STAT Queue */}
         <div className="bg-surface rounded-lg shadow p-4 border border-critical">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-critical-subtle-fg mb-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-critical-subtle-fg mb-3 min-h-[24px] py-1">
             <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" aria-hidden="true" /> {t('docLabDashboard.statQueue')}
           </h3>
           {statQueue.length > 0 ? (
@@ -292,7 +292,7 @@ export default function LabTechDashboardPage() {
 
         {/* QC Status */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary mb-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary mb-3 min-h-[24px] py-1">
             <AlertTriangle size={16} aria-hidden="true" /> {t('docLabDashboard.qcStatus')}
           </h3>
           {data?.qc_records && data.qc_records.length > 0 ? (
@@ -338,7 +338,7 @@ export default function LabTechDashboardPage() {
       {/* Pending Specimens Queue Table */}
       <div className="bg-surface rounded-lg shadow p-4 border border-border">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary min-h-[24px] py-1">
             <BarChart3 size={16} aria-hidden="true" /> {t('docLabDashboard.pendingSpecimens')}
           </h3>
           <button
@@ -425,7 +425,7 @@ export default function LabTechDashboardPage() {
 
         {/* Rejected Specimens */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary mb-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary mb-3 min-h-[24px] py-1">
             <XCircle size={16} aria-hidden="true" /> {t('docLabDashboard.rejectedSpecimens')}
           </h3>
           {data?.rejections && data.rejections.length > 0 ? (

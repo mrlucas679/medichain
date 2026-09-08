@@ -65,7 +65,7 @@ const RecentPatientsList: React.FC<RecentPatientsListProps> = ({ loading, patien
               </span>
             )}
             {patient.lastAccessed ? (
-                <div className="flex items-center gap-2 text-sm text-content-muted">
+                <div className="flex items-center gap-2 text-sm text-content-muted min-h-[24px] py-1">
                     <Clock size={14} />
                     <span>{new Date(patient.lastAccessed).toLocaleDateString()}</span>
                 </div>

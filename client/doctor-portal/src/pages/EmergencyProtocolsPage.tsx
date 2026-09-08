@@ -219,11 +219,11 @@ function EmergencyProtocolsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-2 text-sm text-content-muted">
+                  <div className="flex items-center gap-2 text-sm text-content-muted min-h-[24px] py-1">
                     <Clock size={16} />
                     {formatTimestamp(record.initiated_at)}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-content-muted mt-1">
+                  <div className="flex items-center gap-2 text-sm text-content-muted mt-1 min-h-[24px] py-1">
                     <User size={16} />
                     {record.initiated_by}
                   </div>
@@ -299,11 +299,11 @@ function EmergencyProtocolsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-2 text-sm text-content-muted">
+                  <div className="flex items-center gap-2 text-sm text-content-muted min-h-[24px] py-1">
                     <Clock size={16} />
                     {formatTimestamp(record.assessed_at)}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-content-muted mt-1">
+                  <div className="flex items-center gap-2 text-sm text-content-muted mt-1 min-h-[24px] py-1">
                     <User size={16} />
                     {record.assessed_by}
                   </div>
@@ -367,11 +367,11 @@ function EmergencyProtocolsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-2 text-sm text-content-muted">
+                  <div className="flex items-center gap-2 text-sm text-content-muted min-h-[24px] py-1">
                     <Clock size={16} />
                     {formatTimestamp(record.assessed_at)}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-content-muted mt-1">
+                  <div className="flex items-center gap-2 text-sm text-content-muted mt-1 min-h-[24px] py-1">
                     <User size={16} />
                     {record.assessed_by}
                   </div>
@@ -425,7 +425,7 @@ function EmergencyProtocolsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-2 text-sm text-content-muted">
+                  <div className="flex items-center gap-2 text-sm text-content-muted min-h-[24px] py-1">
                     <Clock size={16} />
                     {formatTimestamp(record.started_at)}
                   </div>
@@ -494,11 +494,11 @@ function EmergencyProtocolsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="flex items-center gap-2 text-sm text-content-muted">
+                  <div className="flex items-center gap-2 text-sm text-content-muted min-h-[24px] py-1">
                     <Clock size={16} />
                     {formatTimestamp(record.assessed_at)}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-content-muted mt-1">
+                  <div className="flex items-center gap-2 text-sm text-content-muted mt-1 min-h-[24px] py-1">
                     <User size={16} />
                     {record.assessed_by}
                   </div>

@@ -850,7 +850,7 @@ const ConsultPage: React.FC = () => {
             </div>
 
             <div className="bg-notice-subtle border border-notice rounded-lg p-4">
-              <p className="text-sm font-semibold text-notice-subtle-fg mb-2 flex items-center gap-2">
+              <p className="text-sm font-semibold text-notice-subtle-fg mb-2 flex items-center gap-2 min-h-[24px] py-1">
                 <AlertTriangle className="w-4 h-4" />
                 {t('docConsult.guidelinesTitle')}
               </p>

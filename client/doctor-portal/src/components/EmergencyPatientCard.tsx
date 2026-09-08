@@ -139,7 +139,7 @@ function EmergencyPatientCard({ patient, accessId, showFullDetails = true }: Eme
           {patient.currentMedications.length > 0 ? (
             <ul className="space-y-1">
               {patient.currentMedications.map((med, idx) => (
-                <li key={idx} className="text-sm text-content-secondary flex items-center gap-2">
+                <li key={idx} className="text-sm text-content-secondary flex items-center gap-2 min-h-[24px] py-1">
                   <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
                   {med}
                 </li>

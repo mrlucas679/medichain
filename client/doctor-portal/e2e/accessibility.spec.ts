@@ -1,5 +1,31 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { signIn, settle } from './support';
+
+/**
+ * One sign-in per spec file, on a page shared by every test in it.
+ *
+ * Playwright's `page` fixture is per-test, so a `beforeEach` sign-in meant 24
+ * sign-ins in a run. Each is several requests against an API that rate-limits
+ * at 60/minute, so the suite collapsed into RATE_LIMIT_EXCEEDED — surfacing as
+ * navigation timeouts that look like application faults and are not.
+ *
+ * Serial mode is required, not incidental: the tests share one page, so they
+ * cannot run in parallel against it. That is an acceptable trade here because
+ * the audit is read-only — it measures what is painted and changes nothing.
+ */
+test.describe.configure({ mode: 'serial' });
+
+let page: Page;
+
+test.beforeAll(async ({ browser }) => {
+  page = await browser.newPage();
+  await signIn(page);
+});
+
+test.afterAll(async () => {
+  await page?.close();
+});
+
 
 /**
  * WCAG 2.2 Level AA criteria other than text contrast.
@@ -39,15 +65,12 @@ const ROUTES = [
   { path: '/settings', name: 'Settings' },
 ];
 
-test.beforeEach(async ({ page }) => {
-  await signIn(page);
-});
 
 
 // ---------------------------------------------------------------------------
 // 3.1.1 Language of Page (A)
 // ---------------------------------------------------------------------------
-test('the page declares its language', async ({ page }) => {
+test('the page declares its language', async () => {
   await settle(page, '/dashboard');
   const lang = await page.getAttribute('html', 'lang');
   expect(lang, 'a screen reader picks its pronunciation rules from <html lang>').toBeTruthy();
@@ -58,9 +81,15 @@ test('the page declares its language', async ({ page }) => {
 // 1.4.10 Reflow (AA) — 320 CSS px with no horizontal scrolling
 // ---------------------------------------------------------------------------
 for (const route of ROUTES) {
-  test(`${route.name} reflows at 320px without horizontal scrolling`, async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 640 });
+  test(`${route.name} reflows at 320px without horizontal scrolling`, async () => {
+    // Navigate first, resize second. At 320px the sidebar sits off-screen, and
+    // Playwright reports its links "visible" while refusing to click something
+    // outside the viewport — so resizing first stalled every navigation until
+    // the test timed out and took the shared page down with it.
+    await page.setViewportSize({ width: 1280, height: 800 });
     await settle(page, route.path);
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.waitForTimeout(600);
 
     const overflow = await page.evaluate(() => {
       const doc = document.documentElement;
@@ -101,7 +130,7 @@ for (const route of ROUTES) {
 // ---------------------------------------------------------------------------
 // 2.5.8 Target Size (Minimum) (AA) — 24 x 24 CSS px
 // ---------------------------------------------------------------------------
-test('interactive targets are at least 24x24 CSS pixels', async ({ page }) => {
+test('interactive targets are at least 24x24 CSS pixels', async () => {
   await settle(page, '/dashboard');
 
   const undersized = await page.evaluate(() => {
@@ -154,13 +183,27 @@ test('interactive targets are at least 24x24 CSS pixels', async ({ page }) => {
  * bypass the whole navigation — if it is unreachable or too small to activate,
  * every subsequent page costs them 30 tab presses.
  */
-test('the skip link is reachable and large enough once focused', async ({ page }) => {
+test('the skip link is reachable and large enough once focused', async () => {
   await settle(page, '/dashboard');
-  // No click first. Clicking to "reset" focus actually SETS it: a click at
-  // (5,5) lands inside the sidebar, so Tab resumes from there and the skip
-  // link -- which precedes the sidebar -- is already behind the cursor. After a
-  // navigation focus sits on the document, which is where a keyboard user
-  // genuinely starts.
+  // Reset focus to the top of the document before tabbing.
+  //
+  // The page is shared across this file (one sign-in instead of 24), so focus
+  // persists from whatever the previous test left behind and Tab resumes from
+  // there — putting the skip link, which is the first focusable element,
+  // already behind the cursor.
+  //
+  // Note this is NOT done with a click. Clicking to "reset" focus actually sets
+  // it: a click at (5,5) lands inside the sidebar and makes the problem worse.
+  await page.evaluate(() => {
+    // `blur()` alone is not enough: Chromium keeps the sequential-navigation
+    // starting point where it was, so Tab resumes mid-sidebar. Focusing the
+    // body moves that starting point to the top of the document, which is
+    // where a keyboard user actually begins.
+    (document.activeElement as HTMLElement | null)?.blur();
+    document.body.setAttribute('tabindex', '-1');
+    document.body.focus();
+    window.scrollTo(0, 0);
+  });
 
   // Within the first few stops, not strictly first: a browser may place focus
   // on the document or an skip-adjacent control before it. What matters is that
@@ -206,7 +249,7 @@ test('the skip link is reachable and large enough once focused', async ({ page }
 // ---------------------------------------------------------------------------
 // 2.1.1 Keyboard (A) + 2.4.7 Focus Visible (AA)
 // ---------------------------------------------------------------------------
-test('tabbing reaches controls and every focused control is visibly indicated', async ({ page }) => {
+test('tabbing reaches controls and every focused control is visibly indicated', async () => {
   await settle(page, '/dashboard');
   await page.locator('body').click({ position: { x: 5, y: 5 } });
 
@@ -248,7 +291,7 @@ test('tabbing reaches controls and every focused control is visibly indicated', 
 // ---------------------------------------------------------------------------
 // 2.4.11 Focus Not Obscured (Minimum) (AA)
 // ---------------------------------------------------------------------------
-test('a focused control is never hidden behind the sticky header', async ({ page }) => {
+test('a focused control is never hidden behind the sticky header', async () => {
   await settle(page, '/patients');
   await page.locator('body').click({ position: { x: 5, y: 5 } });
 
@@ -293,7 +336,7 @@ test('a focused control is never hidden behind the sticky header', async ({ page
 // ---------------------------------------------------------------------------
 // 1.4.11 Non-text Contrast (AA) — 3:1 for the boundary that identifies a control
 // ---------------------------------------------------------------------------
-test('form control boundaries meet 3:1 against their surroundings', async ({ page }) => {
+test('form control boundaries meet 3:1 against their surroundings', async () => {
   await settle(page, '/settings');
 
   const weak = await page.evaluate(() => {

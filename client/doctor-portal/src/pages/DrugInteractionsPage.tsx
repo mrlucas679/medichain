@@ -713,7 +713,7 @@ const DrugInteractionsPage: React.FC = () => {
                               </span>
                             </div>
                             <p className="text-content-secondary mb-2">{interaction.description}</p>
-                            <div className="flex items-center gap-4 text-sm text-content-muted">
+                            <div className="flex items-center gap-4 text-sm text-content-muted min-h-[24px] py-1">
                               <span className="flex items-center gap-1">
                                 <Activity className="w-4 h-4" />
                                 {t('docDrugInteractions.onsetLabel', { value: interaction.onset })}
@@ -853,11 +853,11 @@ const DrugInteractionsPage: React.FC = () => {
                     <h3 className="text-lg font-bold text-content mb-2">
                       {t('docDrugInteractions.checkIdLabel', { id: check.checkId })}
                     </h3>
-                    <div className="flex items-center gap-2 text-sm text-content-muted mb-2">
+                    <div className="flex items-center gap-2 text-sm text-content-muted mb-2 min-h-[24px] py-1">
                       <Calendar className="w-4 h-4" />
                       {formatDate(check.timestamp)}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-content-muted">
+                    <div className="flex items-center gap-2 text-sm text-content-muted min-h-[24px] py-1">
                       <User className="w-4 h-4" />
                       {t('docDrugInteractions.checkedByLabel', { value: check.checkedBy })}
                     </div>

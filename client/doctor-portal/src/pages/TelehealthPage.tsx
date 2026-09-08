@@ -324,7 +324,7 @@ export default function TelehealthPage() {
                       {statusLabel(session.status)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-content-muted">
+                  <div className="flex items-center gap-3 text-sm text-content-muted min-h-[24px] py-1">
                     <span className="flex items-center gap-1">
                       <User size={13} />
                       {t('docTelehealth.patientLabel', { id: session.patient_id })}

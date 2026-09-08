@@ -373,7 +373,7 @@ const ChainOfCustodyPage: React.FC = () => {
                           {t(`docChainOfCustody.status_${record.status}`)}
                         </span>
                         {record.integrityVerified && (
-                          <span className="text-ok-subtle-fg flex items-center gap-1 text-sm">
+                          <span className="text-ok-subtle-fg flex items-center gap-1 text-sm min-h-[24px] py-1">
                             <Shield className="w-4 h-4" />
                             {t('docChainOfCustody.verifiedBadge')}
                           </span>

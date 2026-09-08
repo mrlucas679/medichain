@@ -231,7 +231,7 @@ export default function NurseDashboardPage() {
 
         {/* Tasks Due Timeline */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary mb-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary mb-3 min-h-[24px] py-1">
             <ClipboardList size={16} aria-hidden="true" /> {t('docNurseDashboard.tasksDue')}
           </h3>
           <div className="space-y-2">
@@ -264,7 +264,7 @@ export default function NurseDashboardPage() {
 
         {/* I/O Summary */}
         <div className="bg-surface rounded-lg shadow p-4 border border-border">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary mb-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-content-secondary mb-3 min-h-[24px] py-1">
             <FileText size={16} aria-hidden="true" /> {t('docNurseDashboard.ioSummaryToday')}
           </h3>
           {data?.io_records && data.io_records.length > 0 ? (

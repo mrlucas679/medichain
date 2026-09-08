@@ -365,7 +365,7 @@ const NoteTemplatesPage: React.FC = () => {
 
                   <p className="text-content-muted mb-4">{template.description}</p>
 
-                  <div className="flex items-center gap-4 text-sm text-content-muted mb-4">
+                  <div className="flex items-center gap-4 text-sm text-content-muted mb-4 min-h-[24px] py-1">
                     <div className="flex items-center gap-1">
                       <Clipboard className="w-4 h-4" />
                       <span>{t('docNoteTemplates.sectionsCount', { count: template.sections.length })}</span>

@@ -64,10 +64,36 @@ export async function settle(page: Page, path: string) {
   // in-app link keeps the React Router history and the in-memory session
   // intact, which is also what a real clinician does.
   if (!page.url().includes(path)) {
+    // Expand any collapsed navigation sections first. The sidebar groups routes
+    // under collapsible headers, so a link like /emergency is simply absent
+    // from the DOM until its section is open — and the history-push fallback
+    // below does not help, because React Router does not respond to a
+    // programmatic pushState.
+    const sections = page.locator('nav button[aria-expanded="false"]');
+    const count = await sections.count();
+    for (let i = 0; i < count; i++) {
+      await sections
+        .nth(i)
+        .click({ timeout: 2000 })
+        .catch(() => undefined);
+    }
+
     const link = page.locator(`a[href="${path}"]`).first();
-    if (await link.count()) {
-      await link.click();
-    } else {
+    // VISIBLE, not merely present. At 320px the sidebar is collapsed, so the
+    // link exists in the DOM and cannot be clicked — the reflow tests resize to
+    // 320 and every navigation after that stalled on an invisible target.
+    const clickable = (await link.count()) > 0 && (await link.isVisible());
+    // A short timeout, then fall back. "Visible" is not the same as "inside the
+    // viewport", and a click on an off-screen element retries until the whole
+    // test times out — which closes the shared page and fails every test after
+    // it, for a reason none of their messages mention.
+    const clicked = clickable
+      ? await link
+          .click({ timeout: 4000 })
+          .then(() => true)
+          .catch(() => false)
+      : false;
+    if (!clicked) {
       // Not in the navigation (a deep route). Push through the router rather
       // than reloading the document.
       await page.evaluate(p => {
@@ -77,6 +103,27 @@ export async function settle(page: Page, path: string) {
     }
   }
 
-  await page.locator('main').first().waitFor({ state: 'visible', timeout: 15000 });
+  const reached = await page
+    .locator('main')
+    .first()
+    .waitFor({ state: 'visible', timeout: 15000 })
+    .then(() => true)
+    .catch(() => false);
+
+  if (!reached) {
+    // Say what actually happened. A bare "waiting for main" timeout is the same
+    // message whether the route redirected, the role was refused, or the nav
+    // link was never found — and those need different fixes.
+    const url = page.url();
+    const body = (await page.locator('body').innerText().catch(() => '')).slice(0, 200);
+    throw new Error(
+      `Never reached ${path}.
+` +
+        `  URL now: ${url}
+` +
+        `  Page text: ${body.replace(/\s+/g, ' ')}`
+    );
+  }
+
   await page.waitForTimeout(1200);
 }

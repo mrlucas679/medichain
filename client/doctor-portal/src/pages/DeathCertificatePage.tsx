@@ -387,7 +387,7 @@ const DeathCertificatePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm">
+                <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm min-h-[24px] py-1">
                   <div>
                     <p className="text-content-muted">{t('docDeathCertificate.lblCertifyingPhysician')}</p>
                     <p className="font-medium">{cert.certifyingPhysician}</p>

@@ -596,7 +596,7 @@ const CDSAlertsPage: React.FC = () => {
                             )}
                           </div>
                           <p className="text-content-muted text-sm mb-3">{rule.description}</p>
-                          <div className="flex items-center gap-4 text-sm text-content-muted">
+                          <div className="flex items-center gap-4 text-sm text-content-muted min-h-[24px] py-1">
                             <span className="flex items-center gap-1">
                               <Code className="w-4 h-4" />
                               {rule.ruleId}
@@ -673,7 +673,7 @@ const CDSAlertsPage: React.FC = () => {
                             </h4>
                             <div className="space-y-2">
                               {rule.conditions.map((condition, idx) => (
-                                <div key={condition.conditionId} className="flex items-center gap-2 text-sm">
+                                <div key={condition.conditionId} className="flex items-center gap-2 text-sm min-h-[24px] py-1">
                                   <span className="bg-blue-200 text-notice-subtle-fg px-2 py-1 rounded font-medium">
                                     {condition.field}
                                   </span>
@@ -1028,7 +1028,7 @@ const CDSAlertsPage: React.FC = () => {
                 <h3 className="font-semibold text-content mb-2">{t('docCDS.currentConditionsTitle', { count: newRule.conditions.length })}</h3>
                 {newRule.conditions.map((condition, idx) => (
                   <div key={condition.conditionId} className="flex items-center justify-between bg-surface-sunken border border-border rounded p-3">
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm min-h-[24px] py-1">
                       <span className="bg-blue-200 text-notice-subtle-fg px-2 py-1 rounded font-medium">
                         {condition.field}
                       </span>

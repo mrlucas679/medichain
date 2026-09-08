@@ -511,7 +511,7 @@ const IntubationPage: React.FC = () => {
                   <div className="border rounded p-2">
                     <h3 className="text-sm font-medium mb-2">{t('docIntubation.medicationsGivenLabel')}</h3>
                     {medications.map((med, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
+                      <div key={i} className="flex items-center gap-2 text-sm min-h-[24px] py-1">
                         <Clock className="w-4 h-4 text-content-muted" />
                         <span>{med.time}</span>
                         <span className="font-medium">{med.name}</span>

@@ -892,7 +892,7 @@ export default function CarePlanPage() {
                                   {t('docCarePlan.forPrefix', { value: relatedGoal?.description.slice(0, 40) || t('docCarePlan.unknownGoal') })}...
                                 </p>
                                 <p className="font-medium text-content">{int.description}</p>
-                                <div className="flex items-center space-x-4 mt-2 text-sm text-content-muted">
+                                <div className="flex items-center space-x-4 mt-2 text-sm text-content-muted min-h-[24px] py-1">
                                   <span><Clock className="h-4 w-4 inline mr-1" />{int.frequency}</span>
                                   <span><User className="h-4 w-4 inline mr-1" />{int.responsibleParty}</span>
                                 </div>
@@ -953,7 +953,7 @@ export default function CarePlanPage() {
                                   </div>
                                   <div className="ml-6 space-y-1">
                                     {goalInts.map(int => (
-                                      <div key={int.id} className="flex items-center text-sm text-content-muted">
+                                      <div key={int.id} className="flex items-center text-sm text-content-muted min-h-[24px] py-1">
                                         <CheckCircle2 className="h-4 w-4 mr-2 text-teal-400" />
                                         {int.description} ({int.frequency})
                                       </div>
