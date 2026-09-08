@@ -209,7 +209,7 @@ function TriagePage() {
       }
     };
     fetchTriageQueue();
-  }, [activeTab, user?.userId]);
+  }, [activeTab, user?.userId, user]);
 
   // Filter patients based on search
   const filteredPatients = patients.filter(p =>

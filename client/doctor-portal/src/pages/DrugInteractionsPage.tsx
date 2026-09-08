@@ -154,7 +154,7 @@ const DrugInteractionsPage: React.FC = () => {
     };
     
     fetchDrugs();
-  }, [user?.walletAddress, user?.role]);
+  }, [user?.walletAddress, user?.role, t]);
 
   // Interaction Database - fetched from API
   const [interactionDatabase, setInteractionDatabase] = useState<Interaction[]>([]);

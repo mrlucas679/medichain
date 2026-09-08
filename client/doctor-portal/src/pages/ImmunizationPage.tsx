@@ -194,7 +194,7 @@ const ImmunizationPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const loadData = async () => {

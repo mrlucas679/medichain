@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
@@ -70,13 +70,7 @@ function OrdersPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchOrders();
-    }
-  }, [isAuthenticated, user]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     if (!user) return;
     try {
       setLoading(true);
@@ -110,7 +104,13 @@ function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t, user]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchOrders();
+    }
+  }, [isAuthenticated, user, fetchOrders]);
 
   const handleCreateOrder = async (e: React.FormEvent) => {
     e.preventDefault();

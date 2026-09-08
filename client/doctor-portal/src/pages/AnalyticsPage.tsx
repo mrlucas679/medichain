@@ -361,7 +361,7 @@ const AnalyticsPage: React.FC = () => {
     };
 
     fetchAnalytics();
-  }, [user, selectedPeriod]);
+  }, [user, selectedPeriod, isAdministrator, t]);
 
   const getColorClasses = (color: string) => {
     switch (color) {

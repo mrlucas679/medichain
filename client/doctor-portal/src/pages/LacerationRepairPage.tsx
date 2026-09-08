@@ -185,7 +185,7 @@ const LacerationRepairPage: React.FC = () => {
     };
     
     fetchRepairs();
-  }, [user]);
+  }, [user, t]);
 
   const getStatusBadge = (status: RepairStatus) => {
     const styles: Record<RepairStatus, { bg: string; text: string; icon: React.ReactNode }> = {

@@ -105,7 +105,7 @@ function PatientDetailPage() {
     };
 
     fetchPatient();
-  }, [patientId, user]);
+  }, [patientId, user, t]);
 
   if (loading) {
     // role="status" + a text label: a bare spinner announces nothing to a

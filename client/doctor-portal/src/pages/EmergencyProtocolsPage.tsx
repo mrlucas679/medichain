@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
@@ -92,13 +92,7 @@ function EmergencyProtocolsPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  useEffect(() => {
-    if (user) {
-      fetchEmergencyRecords();
-    }
-  }, [patientId, activeTab, user]);
-
-  const fetchEmergencyRecords = async () => {
+  const fetchEmergencyRecords = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -144,7 +138,13 @@ function EmergencyProtocolsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab, patientId, user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchEmergencyRecords();
+    }
+  }, [patientId, activeTab, user, fetchEmergencyRecords]);
 
   const formatTimestamp = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleString();

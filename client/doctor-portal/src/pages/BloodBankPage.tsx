@@ -133,7 +133,7 @@ const BloodBankPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const loadPatients = async () => {

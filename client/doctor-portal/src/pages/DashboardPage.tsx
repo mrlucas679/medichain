@@ -271,7 +271,7 @@ function DashboardPage() {
     // Refresh dashboard every 30 seconds
     const interval = setInterval(fetchDashboard, 30000);
     return () => clearInterval(interval);
-  }, [user, setRecentPatients]);
+  }, [user, setRecentPatients, logout, navigate, restoreSession, t]);
 
   return (
     <div className="p-8">

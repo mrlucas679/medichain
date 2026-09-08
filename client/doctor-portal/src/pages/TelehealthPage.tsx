@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { apiUrl, getApiClient, getApiErrorMessage, joinTelehealthSession, useTranslation } from '@medichain/shared';
 import { Video, Plus, ExternalLink, Square, Calendar, Clock, User, Loader2 } from 'lucide-react';
@@ -56,29 +56,7 @@ export default function TelehealthPage() {
     duration_minutes: 30,
   });
 
-  useEffect(() => {
-    if (patientId) {
-      fetchSessions(patientId);
-    } else {
-      setLoading(false);
-    }
-  }, [patientId]);
-
-  /**
-   * Deep-link auto-join (Phase 4): when the page is opened via the in-app QR /
-   * redirect (`/telehealth?session=...&join=1`), join straight into the call —
-   * no native app, no extra taps. Runs once on mount.
-   */
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const sid = params.get('session');
-    if (sid && params.get('join') === '1') {
-      void joinBySessionId(sid);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchSessions = async (pid: string) => {
+  const fetchSessions = useCallback(async (pid: string) => {
     if (!user || !pid) return;
     setLoading(true);
     try {
@@ -97,7 +75,29 @@ export default function TelehealthPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (patientId) {
+      fetchSessions(patientId);
+    } else {
+      setLoading(false);
+    }
+  }, [patientId, fetchSessions]);
+
+  /**
+   * Deep-link auto-join (Phase 4): when the page is opened via the in-app QR /
+   * redirect (`/telehealth?session=...&join=1`), join straight into the call —
+   * no native app, no extra taps. Runs once on mount.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sid = params.get('session');
+    if (sid && params.get('join') === '1') {
+      void joinBySessionId(sid);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

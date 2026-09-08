@@ -269,7 +269,7 @@ const WoundCarePage: React.FC = () => {
     };
 
     fetchWounds();
-  }, [user]);
+  }, [user, t]);
 
   // Fetch wound detail when selected
   useEffect(() => {
@@ -301,7 +301,7 @@ const WoundCarePage: React.FC = () => {
       }
     };
     fetchWoundDetail();
-  }, [selectedWound?.id, user]);
+  }, [selectedWound?.id, user, selectedWound]);
 
   const getStatusBadge = (status: WoundStatus) => {
     const styles: Record<WoundStatus, { bg: string; text: string; icon: React.ReactNode }> = {

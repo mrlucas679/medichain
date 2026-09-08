@@ -81,7 +81,7 @@ const NoteTemplatesPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchTemplates();

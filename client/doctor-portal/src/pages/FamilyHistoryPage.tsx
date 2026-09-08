@@ -159,7 +159,7 @@ const FamilyHistoryPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Load family history when patient is selected
   useEffect(() => {

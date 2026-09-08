@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store';
 import { apiUrl, exportDocumentToPdf, getApiClient, useTranslation, clickable } from '@medichain/shared';
 import {
@@ -54,11 +54,7 @@ function LabResultsPage() {
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSubmissions();
-  }, [filterStatus]);
-
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     setIsLoading(true);
     try {
       const statusParam = filterStatus === 'all' ? '' : `?status=${filterStatus}`;
@@ -82,7 +78,11 @@ function LabResultsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filterStatus, user?.userId]);
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, [filterStatus, fetchSubmissions]);
 
   const handleApprove = async (submissionId: string) => {
     setIsReviewing(submissionId);

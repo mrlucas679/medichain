@@ -161,7 +161,7 @@ const IntakeOutputPage: React.FC = () => {
     };
     
     fetchIntakeOutput();
-  }, [user]);
+  }, [user, t]);
 
   // Fetch detailed I/O for selected patient/date
   useEffect(() => {
@@ -202,7 +202,7 @@ const IntakeOutputPage: React.FC = () => {
       }
     };
     fetchDetailedIO();
-  }, [selectedPatient?.patientId, selectedDate, user]);
+  }, [selectedPatient?.patientId, selectedDate, user, selectedPatient]);
 
   const getIntakeCategories = (): IntakeType[] => ['oral', 'iv', 'tube-feeding', 'blood-products', 'other-intake'];
   const getOutputCategories = (): OutputType[] => ['urine', 'stool', 'emesis', 'drainage', 'blood-loss', 'other-output'];

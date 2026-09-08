@@ -149,7 +149,7 @@ const CDSAlertsPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Load CDS rules on mount
   useEffect(() => {
@@ -284,17 +284,23 @@ const CDSAlertsPage: React.FC = () => {
     });
   };
 
+  // Server first, then the switch.
+  //
+  // This used to flip the rule in local state and *then* call the API, logging
+  // any failure to the console. A clinician disabling a drug-allergy alert — or
+  // enabling one — saw the switch move and had no way to learn the server still
+  // disagreed. A clinical decision-support rule that is off when the screen says
+  // on is the failure mode this page exists to prevent.
+  //
+  // `fetch` also does not throw on 4xx/5xx, so a 403 from the role check landed
+  // in the success path and the catch never ran.
   const handleToggleRule = async (ruleId: string) => {
-    setRules(rules.map(r =>
-      r.ruleId === ruleId
-        ? { ...r, isEnabled: !r.isEnabled, lastModified: new Date().toISOString() }
-        : r
-    ));
-    // Also call the API to respond/update the alert status
+    const rule = rules.find(r => r.ruleId === ruleId);
+    if (!rule) return;
+
     if (user) {
       try {
-        const rule = rules.find(r => r.ruleId === ruleId);
-        await fetch(apiUrl(`/api/cds/alerts/${ruleId}/respond`), {
+        const response = await fetch(apiUrl(`/api/cds/alerts/${ruleId}/respond`), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -303,15 +309,26 @@ const CDSAlertsPage: React.FC = () => {
             'X-Provider-Role': user.role,
           },
           body: JSON.stringify({
-            action: rule?.isEnabled ? 'deactivate' : 'activate',
+            action: rule.isEnabled ? 'deactivate' : 'activate',
             responded_by: user.userId,
             responded_at: new Date().toISOString(),
           }),
         });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
       } catch (e) {
         console.error('Failed to respond to CDS alert:', e);
+        showError(t('docCDS.errorToggleFailed'));
+        return;
       }
     }
+
+    setRules(rules.map(r =>
+      r.ruleId === ruleId
+        ? { ...r, isEnabled: !r.isEnabled, lastModified: new Date().toISOString() }
+        : r
+    ));
   };
 
   const handleDuplicateRule = (rule: CDSRule) => {

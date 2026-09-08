@@ -175,7 +175,7 @@ function VitalSignsPage() {
     };
 
     fetchFlowsheet();
-  }, [selectedPatientId, user]);
+  }, [selectedPatientId, user, t]);
 
   const handleSubmitVitals = async (e: React.FormEvent) => {
     e.preventDefault();

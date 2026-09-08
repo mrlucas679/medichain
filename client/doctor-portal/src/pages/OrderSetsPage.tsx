@@ -99,7 +99,7 @@ const OrderSetsPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchOrderSets();

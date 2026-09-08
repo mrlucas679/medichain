@@ -180,7 +180,7 @@ const HistoryAndPhysicalPage: React.FC = () => {
     };
     
     loadData();
-  }, [user]);
+  }, [user, t]);
 
   /** One history entry per line; blank lines are dropped. */
   const toLines = (text: string) =>

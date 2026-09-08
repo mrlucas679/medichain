@@ -335,7 +335,7 @@ function Layout() {
         refetchBadges();
       }
     }
-  }, [events, showInfo, showWarning, showSuccess, showInfo, refetchBadges]);
+  }, [events, showInfo, showWarning, showSuccess, refetchBadges]);
 
   // Get role-specific configuration
   const theme = useMemo(() => getThemeForRole(userRole), [userRole]);

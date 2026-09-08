@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { apiUrl, getApiClient, getApiErrorMessage, useTranslation } from '@medichain/shared';
 import { MessageSquare, Send, Loader2, RefreshCw, User } from 'lucide-react';
@@ -31,11 +31,7 @@ export default function MessagesPage() {
     body: '',
   });
 
-  useEffect(() => {
-    fetchMessages();
-  }, [user]);
-
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -57,7 +53,11 @@ export default function MessagesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t, user]);
+
+  useEffect(() => {
+    fetchMessages();
+  }, [user, fetchMessages]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   LogOut,
   FileText,
@@ -126,14 +126,7 @@ function DischargePage() {
     }
   }, [isAuthenticated, navigate]);
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchPatients();
-      fetchDischarges();
-    }
-  }, [isAuthenticated, user]);
-
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     if (!user) return;
     try {
       const response = await fetch(apiUrl('/api/patients'), {
@@ -153,9 +146,9 @@ function DischargePage() {
     } catch {
       setApiConnected(false);
     }
-  };
+  }, [user]);
 
-  const fetchDischarges = async () => {
+  const fetchDischarges = useCallback(async () => {
     if (!user) return;
     try {
       setLoading(true);
@@ -179,7 +172,14 @@ function DischargePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t, user]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchPatients();
+      fetchDischarges();
+    }
+  }, [isAuthenticated, user, fetchDischarges, fetchPatients]);
 
   const addMedication = () => {
     setMedications([...medications, {

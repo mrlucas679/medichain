@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { apiUrl, createMar, getApiClient, getPatients, IS_DEMO, listMar, useTranslation } from '@medichain/shared';
@@ -129,28 +129,7 @@ export default function MARPage() {
     { name: 'Pantoprazole', dose: '40mg', route: 'IV' as MedicationRoute, frequency: 'Daily', highAlert: false }
   ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const patientData = await getPatients();
-        setPatients(patientData || []);
-        
-        const patientId = searchParams.get('patientId');
-        if (patientId) {
-          const patient = patientData?.find((p: PatientProfile) => p.patient_id === patientId);
-          if (patient) {
-            setSelectedPatient(patient);
-            loadMedicationsForPatient(patientId);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch patients', err);
-      }
-    };
-    fetchData();
-  }, [searchParams]);
-
-  const loadMedicationsForPatient = async (patientId: string) => {
+  const loadMedicationsForPatient = useCallback(async (patientId: string) => {
     // Try to load medications from API first
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -310,7 +289,28 @@ export default function MARPage() {
     });
 
     setScheduledMeds(scheduled);
-  };
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const patientData = await getPatients();
+        setPatients(patientData || []);
+        
+        const patientId = searchParams.get('patientId');
+        if (patientId) {
+          const patient = patientData?.find((p: PatientProfile) => p.patient_id === patientId);
+          if (patient) {
+            setSelectedPatient(patient);
+            loadMedicationsForPatient(patientId);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch patients', err);
+      }
+    };
+    fetchData();
+  }, [searchParams, loadMedicationsForPatient]);
 
   const getScheduledTimes = (frequency: string): string[] => {
     switch (frequency) {

@@ -161,6 +161,12 @@ export function FocusTrap({
     // Use setTimeout to ensure the DOM is ready
     const timeoutId = setTimeout(focusFirst, 0);
 
+    // Read the return target NOW, not in the cleanup. By teardown the ref may
+    // already point at an unmounted node, and focusing a detached element sends
+    // the user to <body> — i.e. back to the top of the page rather than to the
+    // control that opened the dialog.
+    const returnTarget = returnFocusRef?.current ?? null;
+
     // Add keydown listener
     document.addEventListener('keydown', handleKeyDown);
 
@@ -170,7 +176,7 @@ export function FocusTrap({
 
       // Restore focus when trap is deactivated
       if (restoreFocus) {
-        const elementToFocus = returnFocusRef?.current || previousActiveElement.current;
+        const elementToFocus = returnTarget || previousActiveElement.current;
         if (elementToFocus instanceof HTMLElement) {
           // Use setTimeout to avoid focus conflicts
           setTimeout(() => elementToFocus.focus(), 0);

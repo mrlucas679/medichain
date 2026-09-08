@@ -149,7 +149,7 @@ const AutopsyPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const loadData = async () => {

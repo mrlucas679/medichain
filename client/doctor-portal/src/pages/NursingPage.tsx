@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store';
 import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
@@ -121,36 +121,7 @@ function NursingPage() {
   }, [isAuthenticated, navigate]);
 
   // Fetch data on mount
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchData();
-      fetchPatients();
-    }
-  }, [isAuthenticated, user]);
-
-  const fetchPatients = async () => {
-    if (!user) return;
-    try {
-      const response = await fetch(apiUrl('/api/patients'), {
-        headers: { 
-          ...getApiClient().getSessionHeaders(user.walletAddress),
-          'X-Provider-Role': user.role,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const patientArray = Array.isArray(data) ? data : (data.data || []);
-        setPatients(patientArray.map((p: { patient_id: string; full_name: string }) => ({
-          id: p.patient_id,
-          name: p.full_name,
-        })));
-      }
-    } catch (err) {
-      console.error('Failed to fetch patients:', err);
-    }
-  };
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     try {
@@ -183,7 +154,36 @@ function NursingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t, user]);
+
+  const fetchPatients = useCallback(async () => {
+    if (!user) return;
+    try {
+      const response = await fetch(apiUrl('/api/patients'), {
+        headers: { 
+          ...getApiClient().getSessionHeaders(user.walletAddress),
+          'X-Provider-Role': user.role,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const patientArray = Array.isArray(data) ? data : (data.data || []);
+        setPatients(patientArray.map((p: { patient_id: string; full_name: string }) => ({
+          id: p.patient_id,
+          name: p.full_name,
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to fetch patients:', err);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchData();
+      fetchPatients();
+    }
+  }, [isAuthenticated, user, fetchData, fetchPatients]);
 
   // MAR: Administer medication
   const administerMedication = async (marId: string, medIndex: number, doseIndex: number) => {

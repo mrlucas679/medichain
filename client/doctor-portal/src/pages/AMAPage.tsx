@@ -139,7 +139,7 @@ const AMAPage: React.FC = () => {
 
     fetchAMARecords();
     fetchPatients();
-  }, [user]);
+  }, [user, t]);
 
   const handleCreateAMA = async () => {
     if (!patientId || !patientName || !diagnosis || !recommendedTreatment) {

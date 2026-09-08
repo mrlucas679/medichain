@@ -3952,6 +3952,7 @@ const en_US: TranslationRecord = {
     topTriggeredTitle: 'Top Triggered Rules',
     triggersLabel: 'triggers',
     errorRequiredFieldsRule: 'Please fill in all required fields: name, description, at least one condition, and at least one action.',
+    errorToggleFailed: 'The rule was not changed — the server rejected or did not receive the request.',
     errorRequiredCondition: 'Please fill in all condition fields: field, operator, and value.',
     errorRequiredActionMessage: 'Please provide an action message.',
     successRuleCreated: 'Rule "{{name}}" created successfully!',

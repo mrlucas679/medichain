@@ -139,6 +139,10 @@ const AnesthesiaPage: React.FC = () => {
       await createAnesthesia(record);
     } catch (err) {
       console.error('Failed to save anesthesia record:', err);
+      // Stop here. Falling through announced success for a write that
+      // never happened.
+      showError(t('common.saveFailed'));
+      return;
     }
     setRecords([record, ...records]);
     showSuccess(t('docAnesthesia.saved'));

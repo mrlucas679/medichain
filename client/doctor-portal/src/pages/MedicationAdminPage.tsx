@@ -120,7 +120,7 @@ const MedicationAdminPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadData();

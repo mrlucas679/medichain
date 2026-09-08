@@ -164,7 +164,7 @@ const IncidentReportPage: React.FC = () => {
     };
     
     fetchIncidents();
-  }, [user]);
+  }, [user, t]);
 
   const handleSubmitReport = async () => {
     if (!formData.description || !formData.location || !formData.dateTime) {

@@ -128,7 +128,7 @@ const ConsultPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -181,6 +181,10 @@ const ConsultPage: React.FC = () => {
       await createConsult(consult);
     } catch (err) {
       console.error('Failed to save consult:', err);
+      // Stop here. Falling through announced success for a write that
+      // never happened.
+      showError(t('common.saveFailed'));
+      return;
     }
 
     setConsults([consult, ...consults]);

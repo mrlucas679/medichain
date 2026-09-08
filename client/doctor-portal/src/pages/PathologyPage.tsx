@@ -202,7 +202,7 @@ const PathologyPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const loadPatients = async () => {
@@ -247,6 +247,10 @@ const PathologyPage: React.FC = () => {
       await createPathology(newSpecimen);
     } catch (err) {
       console.error('Failed to save pathology specimen:', err);
+      // Stop here. Falling through announced success for a write that
+      // never happened.
+      showError(t('common.saveFailed'));
+      return;
     }
 
     setSpecimens([...specimens, newSpecimen]);

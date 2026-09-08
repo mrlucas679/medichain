@@ -138,7 +138,7 @@ const UserManagementPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     // Skip the request, not the hook: a non-administrator would otherwise
