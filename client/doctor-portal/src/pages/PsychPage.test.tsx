@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { patientProfile } from '../test/fixtures';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import PsychPage from './PsychPage';
 import { useAuthStore } from '../store/authStore';
@@ -30,11 +31,11 @@ describe('PsychPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
     });
-    (shared.getPatients as any).mockResolvedValue([]);
-    (shared.getPsychForPatient as any).mockResolvedValue({ assessments: [] });
+    vi.mocked(shared.getPatients).mockResolvedValue([]);
+    vi.mocked(shared.getPsychForPatient).mockResolvedValue({ assessments: [] });
   });
 
   /**
@@ -46,10 +47,10 @@ describe('PsychPage', () => {
    * "no assessments on file" for a patient who has one.
    */
   it('renders a stored assessment in the History tab without crashing', async () => {
-    (shared.getPatients as any).mockResolvedValue([
-      { patient_id: 'PAT-001', full_name: 'Stored Patient' },
+    vi.mocked(shared.getPatients).mockResolvedValue([
+      patientProfile({ full_name: 'Stored Patient' }),
     ]);
-    (shared.getPsychForPatient as any).mockResolvedValue({
+    vi.mocked(shared.getPsychForPatient).mockResolvedValue({
       assessments: [
         {
           assessment_id: 'PSYCH-1',

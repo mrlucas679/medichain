@@ -53,7 +53,7 @@ describe('authStore', () => {
   it('refuses to sign in a wallet it cannot prove control of', async () => {
     // No signature provider attached: there is no key, so no challenge can be
     // signed and no session can exist. A lookup would have "succeeded" here.
-    (shared.isValidWalletAddress as any).mockReturnValue(true);
+    vi.mocked(shared.isValidWalletAddress).mockReturnValue(true);
 
     const success = await useAuthStore.getState().login('5GvT8...mock');
 
@@ -65,13 +65,13 @@ describe('authStore', () => {
   });
 
   it('never enters an authenticated state without a session', async () => {
-    (shared.isValidWalletAddress as any).mockReturnValue(true);
+    vi.mocked(shared.isValidWalletAddress).mockReturnValue(true);
     // Even if something answered on the network, no signer means no token, and
     // no token must mean no authenticated state.
-    (global.fetch as any).mockResolvedValue({
+    vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
       json: async () => ({ address: '5GvT8...mock', name: 'Dr. Test', role: 'Doctor' }),
-    });
+    } as unknown as Response);
 
     await useAuthStore.getState().login('5GvT8...mock');
 
@@ -101,18 +101,18 @@ describe('authStore', () => {
   });
 
   it('does not restore a session after logout wins an in-flight validation race', async () => {
-    let resolveValidation!: (value: unknown) => void;
-    (shared.getProviderAuth as any).mockReturnValue({
+    let resolveValidation!: (value: Response) => void;
+    vi.mocked(shared.getProviderAuth).mockReturnValue({
       address: '5RaceWallet', role: 'Doctor', name: 'Dr. Race',
     });
-    (global.fetch as any).mockReturnValue(new Promise(resolve => {
+    vi.mocked(global.fetch).mockReturnValue(new Promise(resolve => {
       resolveValidation = resolve;
     }));
 
     const restoring = useAuthStore.getState().restoreSession();
-    (shared.getProviderAuth as any).mockReturnValue(null);
+    vi.mocked(shared.getProviderAuth).mockReturnValue(null);
     useAuthStore.getState().logout();
-    resolveValidation({ ok: true });
+    resolveValidation({ ok: true } as unknown as Response);
 
     expect(await restoring).toBe(false);
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
@@ -126,10 +126,10 @@ describe('authStore', () => {
       role: 'Doctor',
     };
 
-    (global.fetch as any).mockResolvedValue({
+    vi.mocked(global.fetch).mockResolvedValue({
       ok: true,
       json: async () => mockDemoUser,
-    });
+    } as unknown as Response);
 
     const success = await useAuthStore.getState().loginWithDemoWallet('Doctor');
 

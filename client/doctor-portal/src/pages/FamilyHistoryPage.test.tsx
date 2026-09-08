@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { patientProfile } from '../test/fixtures';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import FamilyHistoryPage from './FamilyHistoryPage';
 import { useAuthStore } from '../store/authStore';
@@ -59,15 +60,22 @@ describe('FamilyHistoryPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
     });
-    (shared.getFamilyHistory as any).mockResolvedValue(mockFamilyMembers);
+    vi.mocked(shared.getFamilyHistory).mockResolvedValue({
+      patient_id: 'PAT-001',
+      family_members: mockFamilyMembers,
+      genetic_conditions: [],
+      three_gen_complete: false,
+      last_updated: 0,
+      updated_by: 'test',
+    });
     // The page fetches family history only for a SELECTED patient, and the
     // selector is populated from getPatients — an empty list meant no
     // patient could be chosen, so members never loaded.
-    (shared.getPatients as any).mockResolvedValue([
-      { patient_id: 'PAT-001', full_name: 'Test Patient' },
+    vi.mocked(shared.getPatients).mockResolvedValue([
+      patientProfile(),
     ]);
   });
 

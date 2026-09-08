@@ -92,8 +92,8 @@ const slidePrefix = (specimenId: string) => `pathslide__${specimenId}__`;
  * was trusting an assertion over data that comes off the wire.
  */
 function toSpecimen(raw: unknown): PathologySpecimen {
-  const row = raw as Record<string, any>;
-  const tracked: Record<string, any> = row.data ?? {};
+  const row = raw as Record<string, unknown>;
+  const tracked = (row.data ?? {}) as Record<string, unknown>;
   const pick = (...keys: string[]): string => {
     for (const key of keys) {
       const value = row[key] ?? tracked[key];

@@ -100,7 +100,7 @@ describe('AnalyticsPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
       isAuthenticated: true,
     });
@@ -280,7 +280,7 @@ describe('AnalyticsPage', () => {
   });
 
   it('tells a non-administrator the section is restricted rather than rendering it', async () => {
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: { walletAddress: '5GrwvaEF...mock', role: 'Doctor' },
       isAuthenticated: true,
     });

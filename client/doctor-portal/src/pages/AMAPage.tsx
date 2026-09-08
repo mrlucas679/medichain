@@ -104,9 +104,9 @@ const AMAPage: React.FC = () => {
       try {
         const data = await listAMADischarges();
         // Convert date strings to Date objects
-        const amaRecords = (data as unknown[]).map((r: any) => ({
-          ...r,
-          dateCreated: new Date(r.dateCreated || Date.now())
+        const amaRecords = (data as unknown[]).map((r) => ({
+          ...(r as AMARecord),
+          dateCreated: new Date((r as { dateCreated?: string }).dateCreated || Date.now()),
         }));
         setRecords(amaRecords);
         setError(null);
@@ -184,9 +184,9 @@ const AMAPage: React.FC = () => {
       
       // Refresh list
       const updatedData = await listAMADischarges();
-      const amaRecords = (updatedData as unknown[]).map((r: any) => ({
-        ...r,
-        dateCreated: new Date(r.dateCreated || Date.now())
+      const amaRecords = (updatedData as unknown[]).map((r) => ({
+        ...(r as AMARecord),
+        dateCreated: new Date((r as { dateCreated?: string }).dateCreated || Date.now()),
       }));
       setRecords(amaRecords);
       setActiveTab('list');

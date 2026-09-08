@@ -51,6 +51,23 @@ interface LabResult {
   notes?: string;
 }
 
+/** A lab submission row, in either of the two casings it is stored under. */
+interface RawLabSubmission {
+  id?: string; submission_id?: string;
+  patient_id?: string; patientId?: string;
+  patient_name?: string; patientName?: string;
+  mrn?: string;
+  order_date?: string; orderDate?: string;
+  collection_date?: string; collectionDate?: string;
+  result_date?: string; resultDate?: string;
+  panel_name?: string; panelName?: string;
+  status?: string;
+  ordered_by?: string; orderedBy?: string;
+  tests?: LabResult['tests'];
+  specimen?: string;
+  notes?: string;
+}
+
 const LabResultPage: React.FC = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'results' | 'pending' | 'critical'>('results');
@@ -68,7 +85,7 @@ const LabResultPage: React.FC = () => {
     try {
       const submissions = await getAllLabSubmissions();
       // Map API response to LabResult interface
-      const mappedResults: LabResult[] = ((submissions as unknown) as unknown[]).map((s: any) => ({
+      const mappedResults: LabResult[] = ((submissions as unknown) as RawLabSubmission[]).map((s) => ({
         id: s.id || s.submission_id || '',
         patientId: s.patient_id || s.patientId || '',
         patientName: s.patient_name || s.patientName || t('docLabResult.unknownPatient'),

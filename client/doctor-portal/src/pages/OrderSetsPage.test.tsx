@@ -46,7 +46,7 @@ const ORDER_SETS = [
 ];
 
 beforeEach(() => {
-  (shared.getOrderSets as any).mockResolvedValue(ORDER_SETS);
+  vi.mocked(shared.getOrderSets).mockResolvedValue({ success: true, order_sets: ORDER_SETS });
 });
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import OrderSetsPage from './OrderSetsPage';

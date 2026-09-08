@@ -120,9 +120,16 @@ const CriticalValuePage: React.FC = () => {
       ]);
       setPatients(Array.isArray(patientData) ? patientData : []);
       
-      // Map API response to interface
-      const items = (Array.isArray(criticalData) ? criticalData : []) as unknown[];
-      const mappedNotifications: CriticalValueNotification[] = items.map((item: any) => ({
+      // `listCriticalValues` returns `{ success, total, items }` — the client
+      // wraps the server's bare array back into that envelope. This read
+      // `Array.isArray(criticalData) ? criticalData : []`, which is false for
+      // an object, so the list was always empty: no unacknowledged critical
+      // value ever appeared on this screen. The test mocked a bare array, so it
+      // passed against a shape the endpoint does not return.
+      const items = (Array.isArray(criticalData)
+        ? criticalData
+        : (criticalData?.items ?? [])) as Record<string, unknown>[];
+      const mappedNotifications: CriticalValueNotification[] = items.map((item) => ({
         notificationId: (item.notification_id || item.notificationId || '') as string,
         patientId: (item.patient_id || item.patientId || '') as string,
         patientName: (item.patient_name || item.patientName || '') as string,

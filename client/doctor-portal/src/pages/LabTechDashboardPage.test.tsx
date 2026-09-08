@@ -21,7 +21,7 @@ describe('LabTechDashboardPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
       isAuthenticated: true,
     });
@@ -91,7 +91,7 @@ describe('LabTechDashboardPage recollection control (SCR-009b)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({ user: mockUser, isAuthenticated: true });
+    vi.mocked(useAuthStore).mockReturnValue({ user: mockUser, isAuthenticated: true });
     mockFetch.mockImplementation(() =>
       Promise.resolve({
         ok: true,

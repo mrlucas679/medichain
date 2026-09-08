@@ -1693,7 +1693,27 @@ export async function createIntakeOutput(data: unknown): Promise<ClinicalCreateR
   return getApiClient().post('/api/emergency/io', data);
 }
 
-export async function listIntakeOutput(): Promise<IntakeOutputRecord[]> {
+/**
+ * One stored intake/output row.
+ *
+ * Distinct from `IntakeOutputRecord`, which is the shape a nurse submits —
+ * `intake`/`output` arrays and a `totals` object. What comes back from the list
+ * endpoint is the persisted row, already totalled. The return type here used to
+ * name the submit shape, so every field the page reads was untyped.
+ */
+export interface IntakeOutputRow {
+  id: string;
+  patient_id: string;
+  record_date: string;
+  shift: string;
+  total_intake: number;
+  total_output: number;
+  net_balance: number;
+  entries?: Record<string, unknown>[];
+  [key: string]: unknown;
+}
+
+export async function listIntakeOutput(): Promise<IntakeOutputRow[]> {
   return getApiClient().get('/api/platform/list/intake-output');
 }
 

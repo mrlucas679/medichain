@@ -37,10 +37,10 @@ describe('SpecimenPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
     });
-    (shared.getPatients as any).mockResolvedValue([]);
+    vi.mocked(shared.getPatients).mockResolvedValue([]);
     // The component does `data.map(...)` directly, so this endpoint must return
     // an ARRAY. Handing it an object made `.map` throw inside the effect and the
     // page never left its loading state.

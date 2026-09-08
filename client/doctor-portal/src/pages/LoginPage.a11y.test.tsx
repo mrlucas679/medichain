@@ -34,7 +34,7 @@ vi.mock('../store', () => ({
 }));
 
 vi.mock('react-router-dom', async () => {
-    const actual: any = await vi.importActual('react-router-dom');
+    const actual = await vi.importActual<Record<string, unknown>>('react-router-dom');
     return { ...actual, useNavigate: () => vi.fn() };
 });
 
@@ -88,7 +88,7 @@ describe('the accessibility scanner itself', () => {
 
 describe('LoginPage accessibility (WCAG 2.2 AA, automated subset)', () => {
     beforeEach(() => {
-        (useAuthStore as any).mockReturnValue({
+        vi.mocked(useAuthStore).mockReturnValue({
             login: vi.fn(),
             loginWithCredentials: vi.fn(),
             loginWithExtension: vi.fn(),
@@ -108,7 +108,7 @@ describe('LoginPage accessibility (WCAG 2.2 AA, automated subset)', () => {
     });
 
     it('still has none while showing an error, the state most likely to add unlabelled content', async () => {
-        (useAuthStore as any).mockReturnValue({
+        vi.mocked(useAuthStore).mockReturnValue({
             login: vi.fn(),
             loginWithCredentials: vi.fn(),
             loginWithExtension: vi.fn(),

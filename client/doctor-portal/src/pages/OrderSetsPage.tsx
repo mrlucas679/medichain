@@ -88,11 +88,15 @@ const OrderSetsPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       const response = await getOrderSets();
-      if (response && Array.isArray(response)) {
-        setOrderSets(response as OrderSet[]);
-      } else if (response && typeof response === 'object' && 'items' in response) {
-        setOrderSets((response as { items: OrderSet[] }).items);
-      }
+      // The endpoint answers `{ success, order_sets }`, and `order_sets` is not one of
+      // the keys ApiClient unwraps. This checked for a bare array and then for
+      // `items`, so neither branch ever matched and the setter was never called
+      // — the list stayed empty however many rows the server held. The test
+      // mocked a bare array, so it passed against a shape the API never sends.
+      const rows = Array.isArray(response)
+        ? (response as OrderSet[])
+        : ((response?.order_sets ?? []) as unknown as OrderSet[]);
+      setOrderSets(rows);
     } catch (err) {
       console.error('Error fetching order sets:', err);
       setError(t('docOrderSets.errorLoad'));

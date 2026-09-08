@@ -77,10 +77,10 @@ describe('NoteTemplatesPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
     });
-    (shared.getNoteTemplates as any).mockResolvedValue(TEMPLATES);
+    vi.mocked(shared.getNoteTemplates).mockResolvedValue({ success: true, templates: TEMPLATES, count: TEMPLATES.length });
   });
 
   it('renders note templates page', () => {

@@ -45,6 +45,39 @@ const bodyParts = [
   'Upper Extremity', 'Lower Extremity', 'Whole Body'
 ];
 
+/**
+ * One imaging order exactly as the endpoint hands it over.
+ *
+ * Every field is optional and most exist twice, in snake_case and camelCase,
+ * because rows written through different paths carry different casings and the
+ * original payload is sometimes nested under `data`. Writing that down is the
+ * point: with `any` the mapper below read fifteen fields with nothing checking
+ * that any of them were spelled the way the writer spelled them.
+ */
+interface RawImagingOrder {
+  id?: string;
+  order_id?: string;
+  patient_id?: string;
+  patientId?: string;
+  modality?: string;
+  study_type?: string;
+  special_instructions?: string;
+  body_part?: string;
+  laterality?: string;
+  indication?: string;
+  clinical_indication?: string;
+  priority?: string;
+  status?: string;
+  ordering_provider?: string;
+  ordering_provider_id?: string;
+  order_time?: number;
+  created_at?: string;
+  contrast?: boolean;
+  allergies_reviewed?: boolean;
+  data?: unknown;
+  [key: string]: unknown;
+}
+
 const ImagingPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
@@ -128,23 +161,25 @@ const ImagingPage: React.FC = () => {
         if (res.ok) {
           const data = await res.json();
           const rawOrders = Array.isArray(data) ? data : (data.orders || []);
-          const fetchedOrders: ImagingOrder[] = rawOrders.map((entity: any) => {
-            if (entity.patientId && entity.modality) return entity as ImagingOrder;
-            const raw = entity.data && typeof entity.data === 'object' ? entity.data : entity;
+          const fetchedOrders: ImagingOrder[] = (rawOrders as RawImagingOrder[]).map((entity) => {
+            if (entity.patientId && entity.modality) return entity as unknown as ImagingOrder;
+            const raw = (entity.data && typeof entity.data === 'object'
+              ? entity.data
+              : entity) as RawImagingOrder;
             const patient = patients.find(p => p.patient_id === (raw.patient_id || entity.patient_id));
             return {
-              id: raw.order_id || entity.id,
-              patientId: raw.patient_id || entity.patient_id,
-              patientName: patient?.full_name || raw.patient_id || entity.patient_id,
-              modality: ({ XRay: 'xray', CT: 'ct', CTWithContrast: 'ct', MRI: 'mri', MRIWithContrast: 'mri', Ultrasound: 'ultrasound', Nuclear: 'nuclear', PET: 'pet', Fluoroscopy: 'fluoro', Mammography: 'mammo', Angiography: 'ct' } as Record<string, ImagingModality>)[raw.study_type] || 'xray',
-              study: raw.special_instructions || raw.study_type || entity.study_type,
-              bodyPart: raw.body_part || entity.body_part,
+              id: raw.order_id || entity.id || '',
+              patientId: raw.patient_id || entity.patient_id || '',
+              patientName: patient?.full_name || raw.patient_id || entity.patient_id || '',
+              modality: ({ XRay: 'xray', CT: 'ct', CTWithContrast: 'ct', MRI: 'mri', MRIWithContrast: 'mri', Ultrasound: 'ultrasound', Nuclear: 'nuclear', PET: 'pet', Fluoroscopy: 'fluoro', Mammography: 'mammo', Angiography: 'ct' } as Record<string, ImagingModality>)[raw.study_type ?? ''] || 'xray',
+              study: raw.special_instructions || raw.study_type || entity.study_type || '',
+              bodyPart: raw.body_part || entity.body_part || '',
               laterality: String(raw.laterality || entity.laterality || 'NA').toLowerCase() as ImagingOrder['laterality'],
-              indication: raw.indication || entity.clinical_indication,
+              indication: raw.indication || entity.clinical_indication || '',
               priority: String(raw.priority || entity.priority || 'Routine').toLowerCase() as ImagingPriority,
-              status: ({ Ordered: 'ordered', Scheduled: 'scheduled', InProgress: 'in-progress', Completed: 'completed', Preliminary: 'prelim', Final: 'final' } as Record<string, ImagingStatus>)[raw.status] || 'ordered',
-              orderedBy: raw.ordering_provider || entity.ordering_provider_id,
-              orderedAt: raw.order_time ? new Date(raw.order_time * 1000).toISOString() : entity.created_at,
+              status: ({ Ordered: 'ordered', Scheduled: 'scheduled', InProgress: 'in-progress', Completed: 'completed', Preliminary: 'prelim', Final: 'final' } as Record<string, ImagingStatus>)[raw.status ?? ''] || 'ordered',
+              orderedBy: raw.ordering_provider || entity.ordering_provider_id || '',
+              orderedAt: raw.order_time ? new Date(raw.order_time * 1000).toISOString() : (entity.created_at || ''),
               contrast: Boolean(raw.contrast), allergies: raw.allergies_reviewed ? 'Reviewed' : '',
               criticalValue: false,
             };

@@ -30,7 +30,7 @@ describe('IntakeOutputPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
     });
     // The ward list is a join: the roster comes from a direct
@@ -39,15 +39,15 @@ describe('IntakeOutputPage', () => {
     // `toPatientIO` folds together per patient. This fixture used to mock an
     // empty roster and hand `listIntakeOutput` the already-folded camelCase view
     // model, so the join produced nobody and the patient never appeared.
-    (shared.getPatients as any).mockResolvedValue([]);
+    vi.mocked(shared.getPatients).mockResolvedValue([]);
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       headers: new Headers({ 'content-type': 'application/json' }),
       json: async () => ({ data: [{ patient_id: 'PAT-001', full_name: 'Test Patient' }] }),
-    }) as any;
+    }) as unknown as typeof global.fetch;
     // Raw rows in the API's own shape — snake_case, with the per-shift totals
     // the page sums into the 24h figures.
-    (shared.listIntakeOutput as any).mockResolvedValue([
+    vi.mocked(shared.listIntakeOutput).mockResolvedValue([
       {
         id: 'IO-001',
         patient_id: 'PAT-001',

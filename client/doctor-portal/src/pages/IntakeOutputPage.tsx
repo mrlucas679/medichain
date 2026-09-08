@@ -41,6 +41,13 @@ interface IOEntry {
   recordedBy: string;
 }
 
+/** A stored intake/output entry: `timestamp` may be the write time or the
+ *  time the nurse recorded it, depending on which writer produced the row. */
+type RawIOEntry = Omit<IOEntry, 'timestamp'> & {
+  timestamp?: string | number | Date;
+  recorded_at?: string;
+};
+
 interface PatientIO {
   patientId: string;
   patientName: string;
@@ -279,23 +286,25 @@ const IntakeOutputPage: React.FC = () => {
       // Refresh list
       const data = await listIntakeOutput();
       if (Array.isArray(data)) {
-        setPatients(data.map((p: any) => ({
-          ...p,
-          entries: (p.entries || []).map((e: any) => ({
+        setPatients(data.map((p) => ({
+          ...(p as unknown as PatientIO),
+          // `timestamp` on a stored entry may be the write time or the time the
+          // nurse recorded it; the row carries whichever the writer set.
+          entries: (((p.entries ?? []) as RawIOEntry[])).map((e) => ({
             ...e,
-            timestamp: new Date(e.timestamp || e.recorded_at || Date.now())
-          }))
-        })));
+            timestamp: new Date(e.timestamp || e.recorded_at || Date.now()),
+          })),
+        })) as unknown as PatientIO[]);
         
         // Update selected patient too
         const updatedSelected = (data as unknown as NonNullable<typeof selectedPatient>[]).find(p => p.patientId === selectedPatient.patientId);
         if (updatedSelected) {
           setSelectedPatient({
             ...updatedSelected,
-            entries: (updatedSelected.entries || []).map((e: any) => ({
+            entries: ((updatedSelected.entries || []) as unknown as RawIOEntry[]).map((e) => ({
               ...e,
-              timestamp: new Date(e.timestamp || e.recorded_at || Date.now())
-            }))
+              timestamp: new Date(e.timestamp || e.recorded_at || Date.now()),
+            })) as typeof updatedSelected.entries
           });
         }
       }

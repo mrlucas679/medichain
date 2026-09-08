@@ -165,11 +165,17 @@ const HistoryAndPhysicalPage: React.FC = () => {
         
         const records = Array.isArray(hpData) ? hpData : ((hpData as { records?: unknown[]; hp_records?: unknown[] }).records || (hpData as { records?: unknown[]; hp_records?: unknown[] }).hp_records || []);
         if (Array.isArray(records)) {
-          setHpRecords(records.map((record: any) => ({
-            ...record,
-            dateOfExam: new Date(record.dateOfExam || record.date_of_exam || Date.now()),
-            signedAt: record.signedAt || record.signed_at ? new Date(record.signedAt || record.signed_at) : undefined
-          })));
+          setHpRecords(records.map((record) => {
+            // Snake_case off the wire, camelCase in the component; the row
+            // carries whichever the writer used.
+            const row = record as HistoryAndPhysical & { date_of_exam?: string; signed_at?: string };
+            const signed = row.signedAt || row.signed_at;
+            return {
+              ...row,
+              dateOfExam: new Date(row.dateOfExam || row.date_of_exam || Date.now()),
+              signedAt: signed ? new Date(signed) : undefined,
+            };
+          }));
         }
       } catch (err) {
         console.error('Failed to load data:', err);
@@ -235,11 +241,15 @@ const HistoryAndPhysicalPage: React.FC = () => {
       // Refresh list
       const hpData = await listHistoryPhysicals();
       const records = Array.isArray(hpData) ? hpData : ((hpData as { records?: unknown[]; hp_records?: unknown[] }).records || (hpData as { records?: unknown[]; hp_records?: unknown[] }).hp_records || []);
-      setHpRecords(records.map((record: any) => ({
-        ...record,
-        dateOfExam: new Date(record.dateOfExam || record.date_of_exam || Date.now()),
-        signedAt: record.signedAt || record.signed_at ? new Date(record.signedAt || record.signed_at) : undefined
-      })));
+      setHpRecords(records.map((record) => {
+        const row = record as HistoryAndPhysical & { date_of_exam?: string; signed_at?: string };
+        const signed = row.signedAt || row.signed_at;
+        return {
+          ...row,
+          dateOfExam: new Date(row.dateOfExam || row.date_of_exam || Date.now()),
+          signedAt: signed ? new Date(signed) : undefined,
+        };
+      }));
     } catch (err) {
       console.error('Failed to save H&P:', err);
       showError(t('docHistoryPhysical.errorSave'));

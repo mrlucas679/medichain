@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import type { EmergencyInfo } from '../store/patientStore';
 import { useNavigate } from 'react-router-dom';
 import { usePatientStore } from '../store';
 import { Smartphone, Wifi, QrCode, Search, AlertCircle, CheckCircle } from 'lucide-react';
@@ -13,7 +14,7 @@ type TapState = 'idle' | 'waiting' | 'success' | 'error';
  * Props for NFCTapSimulator component
  */
 interface NFCTapSimulatorProps {
-  onEmergencyAccess?: (data: { patientId: string; emergencyInfo: any }) => void;
+  onEmergencyAccess?: (data: { patientId: string; emergencyInfo: EmergencyInfo }) => void;
 }
 
 /**

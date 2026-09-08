@@ -143,16 +143,14 @@ const FamilyHistoryPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       const response = await getFamilyHistory(patientId);
-      if (response && typeof response === 'object') {
-        const data = response as { success?: boolean; members?: FamilyMember[]; items?: FamilyMember[] };
-        if (data.success && Array.isArray(data.members)) {
-          setFamilyMembers(data.members);
-        } else if (data.success && Array.isArray(data.items)) {
-          setFamilyMembers(data.items as FamilyMember[]);
-        } else if (Array.isArray(response)) {
-          setFamilyMembers(response as FamilyMember[]);
-        }
-      }
+      // The endpoint returns `FamilyMedicalHistory`, whose array is
+      // `family_members`. This checked for `members`, then `items`, then a bare
+      // array — three shapes the handler does not send — so the setter was
+      // never reached and the pedigree stayed empty no matter what was stored.
+      const members = Array.isArray(response)
+        ? (response as FamilyMember[])
+        : ((response?.family_members ?? []) as unknown as FamilyMember[]);
+      setFamilyMembers(members);
     } catch (err) {
       console.error('Error fetching family history:', err);
       setError(t('docFamilyHistory.errorLoadHistory'));

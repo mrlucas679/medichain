@@ -46,17 +46,38 @@ interface VitalFlowsheet {
   readings: VitalReading[];
 }
 
-function normalizeFlowsheet(data: any): VitalFlowsheet {
+/**
+ * A flowsheet row as stored, which is not quite a `VitalReading`.
+ *
+ * Blood pressure and GCS each arrive under two names depending on which writer
+ * produced the row, and the timestamp is either an ISO string or epoch seconds.
+ * Naming the alternatives is the whole job of this function; `any` meant the
+ * five field names below were unchecked spelling.
+ */
+type RawVitalReading = Partial<VitalReading> & {
+  timestamp?: number;
+  systolic_bp?: number | null;
+  diastolic_bp?: number | null;
+  gcs_score?: number | null;
+};
+
+interface RawFlowsheet {
+  patient_id: string;
+  patient_name?: string;
+  readings?: RawVitalReading[];
+}
+
+function normalizeFlowsheet(data: RawFlowsheet): VitalFlowsheet {
   return {
     patient_id: data.patient_id,
     patient_name: data.patient_name || '',
-    readings: (data.readings || []).map((reading: any) => ({
+    readings: (data.readings || []).map((reading) => ({
       ...reading,
       recorded_at: reading.recorded_at || new Date((reading.timestamp || 0) * 1000).toISOString(),
       blood_pressure_systolic: reading.blood_pressure_systolic ?? reading.systolic_bp ?? null,
       blood_pressure_diastolic: reading.blood_pressure_diastolic ?? reading.diastolic_bp ?? null,
       gcs_total: reading.gcs_total ?? reading.gcs_score ?? null,
-    })),
+    })) as VitalReading[],
   };
 }
 

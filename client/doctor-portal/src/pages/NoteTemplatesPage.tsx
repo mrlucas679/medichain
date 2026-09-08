@@ -70,11 +70,15 @@ const NoteTemplatesPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       const response = await getNoteTemplates();
-      if (response && Array.isArray(response)) {
-        setTemplates(response as NoteTemplate[]);
-      } else if (response && typeof response === 'object' && 'items' in response) {
-        setTemplates((response as { items: NoteTemplate[] }).items);
-      }
+      // The endpoint answers `{ success, templates }`, and `templates` is not one of
+      // the keys ApiClient unwraps. This checked for a bare array and then for
+      // `items`, so neither branch ever matched and the setter was never called
+      // — the list stayed empty however many rows the server held. The test
+      // mocked a bare array, so it passed against a shape the API never sends.
+      const rows = Array.isArray(response)
+        ? (response as NoteTemplate[])
+        : ((response?.templates ?? []) as unknown as NoteTemplate[]);
+      setTemplates(rows);
     } catch (err) {
       console.error('Error fetching note templates:', err);
       setError(t('docNoteTemplates.errorLoad'));

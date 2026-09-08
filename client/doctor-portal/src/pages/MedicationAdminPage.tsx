@@ -55,6 +55,25 @@ interface MedicationAdmin {
   fiveRightsVerified: boolean;
 }
 
+/** A MAR row, in either of the two casings it is stored under. */
+interface RawMarRow {
+  med_id?: string; medId?: string;
+  patient_id?: string; patientId?: string;
+  patient_name?: string; patientName?: string;
+  medication_name?: string; medicationName?: string;
+  dose?: string;
+  route?: string;
+  frequency?: string;
+  scheduled_times?: string[]; scheduledTimes?: string[];
+  start_date?: string; startDate?: string;
+  end_date?: string; endDate?: string;
+  indication?: string;
+  prescriber?: string;
+  priority?: string;
+  allergies?: ScheduledMedication['allergies'];
+  interactions?: ScheduledMedication['interactions'];
+}
+
 const MedicationAdminPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
@@ -93,7 +112,7 @@ const MedicationAdminPage: React.FC = () => {
       // Fetch MAR (Medication Administration Records)
       const marData = await listMar();
       // Map API response to ScheduledMedication interface
-      const mappedMeds: ScheduledMedication[] = (marData as unknown[]).map((m: any) => ({
+      const mappedMeds: ScheduledMedication[] = (marData as unknown as RawMarRow[]).map((m) => ({
         medId: m.med_id || m.medId || '',
         patientId: m.patient_id || m.patientId || '',
         patientName: m.patient_name || m.patientName || '',

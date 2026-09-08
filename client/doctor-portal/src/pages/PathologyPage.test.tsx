@@ -48,11 +48,11 @@ describe('PathologyPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
     });
-    (shared.getPatients as any).mockResolvedValue([]);
-    (shared.listPathology as any).mockResolvedValue({ success: true, items: [SPECIMEN] });
+    vi.mocked(shared.getPatients).mockResolvedValue([]);
+    vi.mocked(shared.listPathology).mockResolvedValue({ success: true, total: 1, items: [SPECIMEN] });
   });
 
   it('renders pathology page', () => {

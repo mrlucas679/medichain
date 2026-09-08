@@ -92,7 +92,33 @@ function toRiskLevel(value: unknown): RiskLevel {
  */
 function toStoredAssessment(patients: Array<{ patient_id: string; full_name: string }>) {
   return (raw: unknown): PsychAssessment => {
-    const item = raw as Record<string, any>;
+    // The stored assessment nests several sub-objects; each is read with `??`
+    // fallbacks below, so the shape is optional all the way down.
+    const item = raw as {
+      history_of_present_illness?: string;
+      psych_medications?: unknown;
+      diagnoses?: unknown;
+      safety_plan?: unknown;
+      notes?: string;
+      assessment_id?: string;
+      patient_id?: string;
+      chief_complaint?: string;
+      assessed_by?: string;
+      assessed_at?: number;
+      disposition?: string;
+      // Each sub-object is read field-by-field with a `?? ''` fallback, so its
+      // values are strings-or-absent. `Record<string, unknown>` would make
+      // every one of those reads `{}` rather than `string`.
+      suicide_risk?: Partial<Record<string, string>>;
+      homicidal_risk?: Partial<Record<string, string>>;
+      mental_status?: Partial<Record<string, string>>;
+      legal_status?: { admission_type?: string };
+      psych_history?: { diagnoses?: unknown };
+      substance_use?: {
+        substances?: { substance?: string; frequency?: string; last_use?: string; lastUse?: string }[];
+      };
+      [key: string]: unknown;
+    };
     const suicide = item.suicide_risk ?? {};
     const homicide = item.homicidal_risk ?? {};
     const mse = item.mental_status ?? {};
@@ -106,7 +132,7 @@ function toStoredAssessment(patients: Array<{ patient_id: string; full_name: str
     return {
       historyOfPresentIllness: item.history_of_present_illness ?? '',
       psychiatricHistory: asList(item.psych_history?.diagnoses),
-      substanceUse: (item.substance_use?.substances ?? []).map((s: any) => ({
+      substanceUse: (item.substance_use?.substances ?? []).map((s) => ({
         substance: s.substance ?? '',
         frequency: s.frequency ?? '',
         lastUse: s.last_use ?? s.lastUse ?? '',
@@ -134,15 +160,16 @@ function toStoredAssessment(patients: Array<{ patient_id: string; full_name: str
       diagnoses: asList(item.diagnoses),
       safetyPlan: asList(item.safety_plan),
       notes: item.notes ?? '',
-      id: item.assessment_id,
-      patientId: item.patient_id,
-      chiefComplaint: item.chief_complaint,
-      assessedBy: item.assessed_by,
+      id: item.assessment_id ?? '',
+      patientId: item.patient_id ?? '',
+      chiefComplaint: item.chief_complaint ?? '',
+      assessedBy: item.assessed_by ?? '',
       assessedAt: new Date((item.assessed_at ?? 0) * 1000).toISOString(),
-      disposition: item.disposition,
+      disposition: item.disposition ?? '',
       patientName:
-        patients.find((patient) => patient.patient_id === item.patient_id)?.full_name ||
-        item.patient_id,
+        patients.find((patient) => patient.patient_id === item.patient_id)?.full_name ??
+        item.patient_id ??
+        '',
       suicideRisk: {
         ideation: Boolean(suicide.ideation),
         plan: Boolean(suicide.plan),

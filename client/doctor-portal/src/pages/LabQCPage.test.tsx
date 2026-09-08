@@ -37,6 +37,8 @@ describe('LabQCPage', () => {
   };
 
   const mockQcData = {
+    success: true,
+    total: 1,
     items: [
       {
         test_id: '1',
@@ -52,10 +54,10 @@ describe('LabQCPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
     });
-    (shared.listLabQc as any).mockResolvedValue(mockQcData);
+    vi.mocked(shared.listLabQc).mockResolvedValue(mockQcData);
   });
 
   it('renders lab QC page', async () => {

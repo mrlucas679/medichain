@@ -56,11 +56,15 @@ describe('CriticalValuePage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
     });
-    (shared.listCriticalValues as any).mockResolvedValue(mockNotifications);
-    (shared.getPatients as any).mockResolvedValue([]);
+    vi.mocked(shared.listCriticalValues).mockResolvedValue({
+      success: true,
+      total: mockNotifications.length,
+      items: mockNotifications,
+    });
+    vi.mocked(shared.getPatients).mockResolvedValue([]);
   });
 
   it('renders critical value page with pending notifications', async () => {

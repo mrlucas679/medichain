@@ -84,7 +84,7 @@ const ProgressNotePage: React.FC = () => {
           });
           const patientsBody = patientsResponse.ok ? await patientsResponse.json() : { data: [] };
           const patientNames = new Map(
-            (patientsBody.data || patientsBody || []).map((patient: any) => [patient.patient_id, patient.full_name])
+            (patientsBody.data || patientsBody || []).map((patient: { patient_id: string; full_name: string }) => [patient.patient_id, patient.full_name])
           );
           // The list endpoint returns a bare array of record entities of the
           // shape { id, patient_id, data: {...the note...}, created_at }. Flatten
@@ -114,7 +114,7 @@ const ProgressNotePage: React.FC = () => {
             subjective: note.subjective as string || '',
             objective: note.objective || note.exam || '',
             assessment: Array.isArray(note.assessment)
-              ? note.assessment.map((problem: any) => problem.problem || '').filter(Boolean).join('\n')
+              ? note.assessment.map((problem: { problem?: string }) => problem.problem || '').filter(Boolean).join('\n')
               : (note.assessment || ''),
             plan: Array.isArray(note.plan) ? note.plan.join('\n') : (note.plan || ''),
             signedAt: note.signed_at ? new Date(note.signed_at as string) : undefined,

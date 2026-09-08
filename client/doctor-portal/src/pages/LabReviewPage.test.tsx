@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
+import type { LabResultSubmission } from '@medichain/shared';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import LabReviewPage from './LabReviewPage';
 import { getPendingLabResults, reviewLabResult } from '@medichain/shared';
 import { useAuthStore } from '../store';
 
 vi.mock('@medichain/shared', async () => {
-  const actual: any = await vi.importActual('@medichain/shared');
+  const actual = await vi.importActual<Record<string, unknown>>('@medichain/shared');
   return {
     ...actual,
     getPendingLabResults: vi.fn(),
@@ -33,7 +35,7 @@ vi.mock('../store', () => ({
  * nothing and cost them a round trip.
  */
 describe('LabReviewPage', () => {
-  const submission = (over: Record<string, unknown> = {}) => ({
+  const submission = (over: Partial<LabResultSubmission> = {}): LabResultSubmission => ({
     id: 'LAB-1',
     patient_id: 'PAT-1',
     patient_name: 'Thandiwe Test',
@@ -45,25 +47,26 @@ describe('LabReviewPage', () => {
         value: '13.2',
         unit: 'g/dL',
         reference_range: '12.0-17.5',
-        flag: null,
+        flag: undefined,
       },
     ],
     notes: 'synthetic',
     submitted_by: 'lab_tech_wallet',
     submitted_at: new Date('2026-08-26T08:00:00Z').toISOString(),
-    status: 'Pending',
+    status: 'pending' as const,
     ...over,
   });
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockImplementation((sel: any) =>
-      sel({ user: { walletAddress: 'doctor_wallet', role: 'Doctor' } })
+    (useAuthStore as unknown as Mock).mockImplementation(
+      (sel: (s: unknown) => unknown) =>
+        sel({ user: { walletAddress: 'doctor_wallet', role: 'Doctor' } })
     );
   });
 
   it('lists what is waiting for signature', async () => {
-    (getPendingLabResults as any).mockResolvedValue([submission()]);
+    vi.mocked(getPendingLabResults).mockResolvedValue([submission()]);
     render(<LabReviewPage />);
 
     expect(await screen.findByText('Full Blood Count')).toBeTruthy();
@@ -79,19 +82,27 @@ describe('LabReviewPage', () => {
    * one of those facts is visible in the types. It has to survive both.
    */
   it('accepts the envelope shape as well as the bare array', async () => {
-    (getPendingLabResults as any).mockResolvedValue({
+    // Deliberately not the declared return type: this test exists because the
+    // endpoint has been seen to answer with an envelope as well as a bare
+    // array, and the page must survive both.
+    vi.mocked(getPendingLabResults).mockResolvedValue({
       submissions: [submission()],
       total: 1,
-    });
+    } as unknown as LabResultSubmission[]);
     render(<LabReviewPage />);
     expect(await screen.findByText('Full Blood Count')).toBeTruthy();
   });
 
   it('approves through the API and refreshes the queue', async () => {
-    (getPendingLabResults as any)
+    vi.mocked(getPendingLabResults)
       .mockResolvedValueOnce([submission()])
       .mockResolvedValueOnce([]);
-    (reviewLabResult as any).mockResolvedValue({ success: true });
+    vi.mocked(reviewLabResult).mockResolvedValue({
+      success: true,
+      submission_id: 'LAB-1',
+      status: 'approved',
+      message: 'approved',
+    });
 
     render(<LabReviewPage />);
     fireEvent.click(await screen.findByRole('button', { name: /lab\.review\.approve/ }));
@@ -108,7 +119,7 @@ describe('LabReviewPage', () => {
   });
 
   it('will not let the submitter sign off their own result', async () => {
-    (getPendingLabResults as any).mockResolvedValue([
+    vi.mocked(getPendingLabResults).mockResolvedValue([
       submission({ submitted_by: 'doctor_wallet' }),
     ]);
     render(<LabReviewPage />);
@@ -122,7 +133,7 @@ describe('LabReviewPage', () => {
   });
 
   it('refuses to send a rejection with no reason', async () => {
-    (getPendingLabResults as any).mockResolvedValue([submission()]);
+    vi.mocked(getPendingLabResults).mockResolvedValue([submission()]);
     render(<LabReviewPage />);
 
     fireEvent.click(await screen.findByRole('button', { name: /lab\.review\.reject/ }));
@@ -134,10 +145,15 @@ describe('LabReviewPage', () => {
   });
 
   it('sends the reason when one is given', async () => {
-    (getPendingLabResults as any)
+    vi.mocked(getPendingLabResults)
       .mockResolvedValueOnce([submission()])
       .mockResolvedValueOnce([]);
-    (reviewLabResult as any).mockResolvedValue({ success: true });
+    vi.mocked(reviewLabResult).mockResolvedValue({
+      success: true,
+      submission_id: 'LAB-1',
+      status: 'approved',
+      message: 'approved',
+    });
 
     render(<LabReviewPage />);
     await screen.findByText('Full Blood Count');
@@ -157,8 +173,8 @@ describe('LabReviewPage', () => {
   });
 
   it('surfaces a server refusal instead of appearing to succeed', async () => {
-    (getPendingLabResults as any).mockResolvedValue([submission()]);
-    (reviewLabResult as any).mockRejectedValue(new Error('AUDIT_UNAVAILABLE'));
+    vi.mocked(getPendingLabResults).mockResolvedValue([submission()]);
+    vi.mocked(reviewLabResult).mockRejectedValue(new Error('AUDIT_UNAVAILABLE'));
 
     render(<LabReviewPage />);
     fireEvent.click(await screen.findByRole('button', { name: /lab\.review\.approve/ }));
@@ -174,7 +190,7 @@ describe('LabReviewPage', () => {
    * belongs to — there is one per row.
    */
   it('exposes the results as a real table with an accessible name', async () => {
-    (getPendingLabResults as any).mockResolvedValue([submission()]);
+    vi.mocked(getPendingLabResults).mockResolvedValue([submission()]);
     render(<LabReviewPage />);
 
     const table = await screen.findByRole('table', {
@@ -186,7 +202,7 @@ describe('LabReviewPage', () => {
   });
 
   it('names each rejection box after the result it rejects', async () => {
-    (getPendingLabResults as any).mockResolvedValue([
+    vi.mocked(getPendingLabResults).mockResolvedValue([
       submission(),
       submission({ id: 'LAB-2', test_name: 'Urea and Electrolytes' }),
     ]);
@@ -199,7 +215,7 @@ describe('LabReviewPage', () => {
   });
 
   it('reports a failure to load rather than showing an empty queue', async () => {
-    (getPendingLabResults as any).mockRejectedValue(new Error('network down'));
+    vi.mocked(getPendingLabResults).mockRejectedValue(new Error('network down'));
     render(<LabReviewPage />);
 
     // An empty queue and an unreachable server look identical otherwise, and

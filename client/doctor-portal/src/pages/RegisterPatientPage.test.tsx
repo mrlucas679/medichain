@@ -11,7 +11,7 @@ vi.mock('../store', () => ({
 describe('RegisterPatientPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: { userId: 'DOC-001' }
     });
 

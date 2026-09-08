@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { EmergencyInfo } from '../store/patientStore';
 import { useTranslation } from '@medichain/shared';
 import { NFCTapSimulator, EmergencyPatientCard } from '../components';
 import { usePatientStore } from '../store';
@@ -15,7 +16,7 @@ function EmergencyAccessPage() {
   const { currentEmergency, clearEmergencyAccess } = usePatientStore();
   const [accessGrantedAt, setAccessGrantedAt] = useState<Date | null>(null);
 
-  const handleEmergencyAccess = (info: { patientId: string; emergencyInfo: any }) => {
+  const handleEmergencyAccess = (info: { patientId: string; emergencyInfo: EmergencyInfo }) => {
     // Use the info parameter to log the access
     console.log('Emergency access granted for patient:', info.patientId);
     setAccessGrantedAt(new Date());

@@ -348,7 +348,15 @@ export interface PatientProfile {
   patient_id: string;
   full_name: string;
   date_of_birth: string;
+  /** Returned by the API for neonatal records, where the date alone is not enough. */
+  time_of_birth?: string;
   national_id: string;
+  /**
+   * Both of these are returned by `PatientProfile` on the API side and were
+   * missing here, so any screen reading them was reading an untyped field.
+   */
+  gender?: string;
+  phone?: string;
   emergency_info: EmergencyInfo;
   /** Patient's address (optional, FHIR compatible) */
   address?: Address;

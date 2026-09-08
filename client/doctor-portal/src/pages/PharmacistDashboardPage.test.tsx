@@ -22,7 +22,7 @@ describe('PharmacistDashboardPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: mockUser,
       isAuthenticated: true,
     });
@@ -90,7 +90,7 @@ describe('PharmacistDashboardPage dispensing actions (SCR-013)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({ user: mockUser, isAuthenticated: true });
+    vi.mocked(useAuthStore).mockReturnValue({ user: mockUser, isAuthenticated: true });
     mockFetch.mockImplementation(() =>
       Promise.resolve({
         ok: true,
@@ -185,7 +185,7 @@ describe('PharmacistDashboardPage secondary verification actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: { walletAddress: pharmacistId, role: 'Pharmacist' },
       isAuthenticated: true,
     });
@@ -274,7 +274,7 @@ describe('PharmacistDashboardPage dispense correction history', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: { walletAddress: 'pharmacist-one', role: 'Pharmacist' },
       isAuthenticated: true,
     });

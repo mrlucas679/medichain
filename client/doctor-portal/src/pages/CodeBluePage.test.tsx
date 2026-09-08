@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { patientProfile } from '../test/fixtures';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import * as shared from '@medichain/shared';
 import CodeBluePage from './CodeBluePage';
@@ -24,8 +25,8 @@ const startCode = async () => {
 };
 
 beforeEach(() => {
-  (shared.getPatients as any).mockResolvedValue([
-    { patient_id: 'PAT-001', full_name: 'Test Patient', health_id: 'MCHI-1' },
+  vi.mocked(shared.getPatients).mockResolvedValue([
+    patientProfile(),
   ]);
 });
 
