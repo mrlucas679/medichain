@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../store';
-import { apiUrl, exportDocumentToPdf, getApiClient, useTranslation } from '@medichain/shared';
+import { apiUrl, exportDocumentToPdf, getApiClient, useTranslation, clickable } from '@medichain/shared';
 import {
   FlaskConical,
   Search,
@@ -345,7 +345,7 @@ function LabResultsPage() {
                 {/* Header */}
                 <div
                   className="p-4 cursor-pointer hover:bg-surface-sunken transition-colors"
-                  onClick={() => setExpandedId(isExpanded ? null : submission.id)}
+                  {...clickable(() => setExpandedId(isExpanded ? null : submission.id))}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4">

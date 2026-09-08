@@ -13,7 +13,7 @@ import {
   FileSignature
 } from 'lucide-react';
 import { createPeds, listPedsForPatient } from '../../../shared/src/api/endpoints';
-import { getPatients, useTranslation } from '@medichain/shared';
+import { getPatients, useTranslation, clickable } from '@medichain/shared';
 
 /**
  * PediatricsPage
@@ -372,7 +372,7 @@ const PediatricsPage: React.FC = () => {
               return (
                 <div
                   key={patient.id}
-                  onClick={() => setSelectedPatient(patient)}
+                  {...clickable(() => setSelectedPatient(patient))}
                   className={`bg-surface rounded-lg shadow border p-4 cursor-pointer hover:shadow-md ${
                     patient.alerts.length > 0 ? 'border-l-4 border-l-yellow-500' : ''
                   }`}

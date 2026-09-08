@@ -11,7 +11,7 @@ test.describe('Login Flow', () => {
     // only when the API runs with MEDICHAIN_DEV_MODE. Without the guard this
     // clicked a button that did not exist and reported a bare 30-second
     // timeout, which says nothing about the missing environment variable.
-    const demoDoctor = page.locator('button:has-text("Mbeki")');
+    const demoDoctor = page.locator('button').filter({ hasText: /doctor/i });
     const available = await demoDoctor
       .first()
       .waitFor({ state: 'visible', timeout: 5000 })
@@ -34,7 +34,10 @@ test.describe('Login Flow', () => {
     // the *page* heading.
     const heading = page.locator('main h1');
     await expect(heading).toContainText(/Welcome back/);
-    await expect(heading).toContainText(/Mbeki/i);
+    // The signed-in clinician's name, whoever the seed provides. Asserting a
+    // specific person ("Mbeki") tied this test to a fixture that has since been
+    // replaced twice; what matters is that the greeting is personalised at all.
+    await expect(heading).not.toHaveText(/^Welcome back,?\s*$/);
   });
 
   test('should show error for invalid credentials', async ({ page }) => {

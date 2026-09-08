@@ -16,7 +16,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { apiUrl, getApiClient, useProviderDirectory, useTranslation } from '@medichain/shared';
+import { apiUrl, getApiClient, useProviderDirectory, useTranslation, clickable } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 
 /**
@@ -445,7 +445,7 @@ const WoundCarePage: React.FC = () => {
               return (
                 <div
                   key={wound.id}
-                  onClick={() => setSelectedWound(wound)}
+                  {...clickable(() => setSelectedWound(wound))}
                   className={`bg-surface rounded-lg shadow border p-4 cursor-pointer hover:shadow-md ${
                     wound.status === 'deteriorating' || wound.status === 'infected' ? 'border-l-4 border-l-red-500' : ''
                   }`}

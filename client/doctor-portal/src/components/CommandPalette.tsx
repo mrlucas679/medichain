@@ -139,7 +139,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
   return (
     <div className="fixed inset-0 z-[999] overflow-y-auto">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
+      <div aria-hidden="true" className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
 
       {/* Dialog */}
       <div className="fixed inset-0 flex items-start justify-center pt-[15vh] px-4">

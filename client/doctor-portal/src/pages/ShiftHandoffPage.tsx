@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { apiUrl, createShiftHandoff, getApiClient, getPatients, useTranslation } from '@medichain/shared';
+import { apiUrl, createShiftHandoff, getApiClient, getPatients, useTranslation, clickable } from '@medichain/shared';
 import type { PatientProfile } from '@medichain/shared';
 import {
   ArrowRightLeft,
@@ -676,7 +676,7 @@ export default function ShiftHandoffPage() {
                         patient.priority === 'urgent' ? 'bg-caution-subtle border-l-4 border-yellow-500' :
                         'bg-ok-subtle border-l-4 border-green-500'
                       }`}
-                      onClick={() => setExpandedPatient(expandedPatient === patient.patientId ? null : patient.patientId)}
+                      {...clickable(() => setExpandedPatient(expandedPatient === patient.patientId ? null : patient.patientId))}
                     >
                       <div className="flex justify-between items-start">
                         <div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store';
-import { apiUrl, getApiClient } from '@medichain/shared';
+import { apiUrl, getApiClient, clickable } from '@medichain/shared';
 import { Search, User, ChevronDown, Loader2, X, UserCircle } from 'lucide-react';
 
 export interface StaffMember {
@@ -173,7 +173,7 @@ export default function StaffSelect({
               bg-surface dark:bg-slate-800 
               ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-brand'}
             `}
-            onClick={() => !disabled && setIsOpen(true)}
+            {...clickable(() => !disabled && setIsOpen(true))}
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-notice-subtle dark:bg-blue-900 rounded-full flex items-center justify-center">

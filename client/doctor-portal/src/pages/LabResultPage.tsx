@@ -15,7 +15,7 @@ import {
   RefreshCw,
   AlertCircle
 } from 'lucide-react';
-import { getAllLabSubmissions, useTranslation } from '@medichain/shared';
+import { getAllLabSubmissions, useTranslation, clickable } from '@medichain/shared';
 
 /**
  * LabResultPage
@@ -227,7 +227,7 @@ const LabResultPage: React.FC = () => {
         {filteredResults.map(result => (
           <div
             key={result.id}
-            onClick={() => setSelectedResult(result)}
+            {...clickable(() => setSelectedResult(result))}
             className={`bg-surface rounded-lg shadow border p-4 cursor-pointer hover:shadow-md transition-shadow ${
               hasCritical(result) ? 'border-l-4 border-l-red-500' : ''
             }`}

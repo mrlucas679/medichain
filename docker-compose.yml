@@ -89,6 +89,16 @@ services:
       # the internal Prometheus scrape endpoint.
       METRICS_TOKEN: ${METRICS_TOKEN:-}
       IS_DEMO: ${IS_DEMO:-true}
+      # Pass-through, NOT a default. `GET /api/auth/demo-credentials` answers
+      # only when this is set, and it returns sign-in credentials — so it must
+      # stay off in any deployment that inherits this file. Unset here it is
+      # empty, exactly as before; a developer running the browser suites opts in
+      # with MEDICHAIN_DEV_MODE=1 in their shell or .env.
+      #
+      # Without the pass-through the variable could not reach the container at
+      # all, so the doctor-portal Playwright suites clicked a demo button that
+      # never rendered and reported a bare 30-second timeout.
+      MEDICHAIN_DEV_MODE: ${MEDICHAIN_DEV_MODE:-}
     depends_on:
       postgres:
         condition: service_healthy

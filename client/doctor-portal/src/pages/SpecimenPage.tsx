@@ -13,7 +13,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
+import { apiUrl, getApiClient, useTranslation, clickable } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 
 /**
@@ -363,7 +363,7 @@ const SpecimenPage: React.FC = () => {
             {filteredSpecimens.map(specimen => (
               <div
                 key={specimen.id}
-                onClick={() => setSelectedSpecimen(specimen)}
+                {...clickable(() => setSelectedSpecimen(specimen))}
                 className={`bg-surface rounded-lg shadow border p-4 cursor-pointer hover:shadow-md ${
                   specimen.priority === 'stat' ? 'border-l-4 border-l-red-500' : ''
                 }`}

@@ -22,8 +22,7 @@ import {
   createAMADischarge,
   getPatients,
   useTranslation,
-  type PatientProfile
-} from '@medichain/shared';
+  type PatientProfile, clickable } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 import { useToastActions } from '../components/Toast';
 
@@ -767,7 +766,7 @@ const AMAPage: React.FC = () => {
                   {riskDisclosures.map(risk => (
                     <div
                       key={risk.id}
-                      onClick={() => handleRiskAcknowledge(risk.id)}
+                      {...clickable(() => handleRiskAcknowledge(risk.id))}
                       className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                         risk.acknowledged
                           ? 'border-green-500 bg-ok-subtle'

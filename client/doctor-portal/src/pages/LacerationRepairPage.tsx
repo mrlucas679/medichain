@@ -15,7 +15,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
+import { apiUrl, getApiClient, useTranslation, clickable } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 
 /**
@@ -312,7 +312,7 @@ const LacerationRepairPage: React.FC = () => {
             {filteredRepairs.map(repair => (
               <div
                 key={repair.id}
-                onClick={() => setSelectedRepair(repair)}
+                {...clickable(() => setSelectedRepair(repair))}
                 className="bg-surface rounded-lg shadow border p-4 cursor-pointer hover:shadow-md"
               >
                 <div className="flex items-start justify-between mb-2">

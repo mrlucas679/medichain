@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { apiUrl, createSepsis, getApiClient, getPatients, useTranslation } from '@medichain/shared';
+import { apiUrl, createSepsis, getApiClient, getPatients, useTranslation, clickable } from '@medichain/shared';
 import type { PatientProfile } from '@medichain/shared';
 import {
   Thermometer,
@@ -578,7 +578,7 @@ export default function SepsisPage() {
                   {hour1Bundle.map(item => (
                     <div
                       key={item.id}
-                      onClick={() => toggleBundleItem('hour1', item.id)}
+                      {...clickable(() => toggleBundleItem('hour1', item.id))}
                       className={`p-4 rounded-lg cursor-pointer transition-all ${
                         item.completed
                           ? 'bg-ok-subtle border-2 border-green-500'
@@ -808,7 +808,7 @@ export default function SepsisPage() {
                   {hour3Bundle.map(item => (
                     <div
                       key={item.id}
-                      onClick={() => toggleBundleItem('hour3', item.id)}
+                      {...clickable(() => toggleBundleItem('hour3', item.id))}
                       className={`p-3 rounded-lg cursor-pointer text-sm ${
                         item.completed
                           ? 'bg-ok-subtle border border-ok'

@@ -299,6 +299,7 @@ function SettingsPage() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
+                      aria-label={t('docSettings.emergencyAlerts')}
                       checked={settings.notifications.emergencyAlerts}
                       onChange={(e) => updateNotification('emergencyAlerts', e.target.checked)}
                       className="sr-only peer"
@@ -315,6 +316,7 @@ function SettingsPage() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
+                      aria-label={t('docSettings.patientUpdates')}
                       checked={settings.notifications.patientUpdates}
                       onChange={(e) => updateNotification('patientUpdates', e.target.checked)}
                       className="sr-only peer"
@@ -331,6 +333,7 @@ function SettingsPage() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
+                      aria-label={t('docSettings.systemAnnouncements')}
                       checked={settings.notifications.systemAnnouncements}
                       onChange={(e) => updateNotification('systemAnnouncements', e.target.checked)}
                       className="sr-only peer"
@@ -347,6 +350,7 @@ function SettingsPage() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
+                      aria-label={t('docSettings.emailDigest')}
                       checked={settings.notifications.emailDigest}
                       onChange={(e) => updateNotification('emailDigest', e.target.checked)}
                       className="sr-only peer"
@@ -375,6 +379,7 @@ function SettingsPage() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
+                      aria-label={t('docSettings.twoFactor')}
                       checked={settings.security.twoFactorEnabled}
                       onChange={(e) => updateSecurity('twoFactorEnabled', e.target.checked)}
                       className="sr-only peer"
@@ -414,6 +419,7 @@ function SettingsPage() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
+                      aria-label={t('docSettings.sessionTimeout')}
                       checked={settings.security.requirePinForEmergency}
                       onChange={(e) => updateSecurity('requirePinForEmergency', e.target.checked)}
                       className="sr-only peer"
@@ -528,6 +534,7 @@ function SettingsPage() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
+                      aria-label={t('docSettings.language')}
                       checked={settings.display.compactView}
                       onChange={(e) => updateDisplay('compactView', e.target.checked)}
                       className="sr-only peer"

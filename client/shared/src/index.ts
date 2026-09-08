@@ -82,3 +82,4 @@ export * from './validation/clinical';
 export * from './validation/useValidatedForm';
 export * from './components/field';
 export * from './components/FieldParts';
+export * from './utils/clickable';

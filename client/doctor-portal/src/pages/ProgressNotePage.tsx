@@ -8,7 +8,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
+import { apiUrl, getApiClient, useTranslation, clickable } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 import PatientSelect, { type Patient } from '../components/PatientSelect';
 
@@ -360,7 +360,7 @@ const ProgressNotePage: React.FC = () => {
             {filteredNotes.map(note => (
               <div
                 key={note.id}
-                onClick={() => setSelectedNote(note)}
+                {...clickable(() => setSelectedNote(note))}
                 className={`bg-surface rounded-lg shadow border p-4 cursor-pointer hover:shadow-md ${
                   note.status === 'draft' ? 'border-l-4 border-l-yellow-500' : ''
                 }`}

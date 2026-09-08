@@ -132,3 +132,6 @@ fix-results.tsv
 # recovery phrases. Regenerate with scripts/seed-browser-test-fixtures.ts;
 # never commit them.
 .browser-test/
+
+# Playwright saved sign-in state (contains a live session token)
+client/**/.auth/

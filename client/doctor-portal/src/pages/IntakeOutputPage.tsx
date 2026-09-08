@@ -14,7 +14,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { apiUrl, createIntakeOutput, getApiClient, listIntakeOutput, useTranslation } from '@medichain/shared';
+import { apiUrl, createIntakeOutput, getApiClient, listIntakeOutput, useTranslation, clickable } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 import { useToastActions } from '../components/Toast';
 
@@ -383,7 +383,7 @@ const IntakeOutputPage: React.FC = () => {
                     <div
                       key={patient.patientId ?? `p-${pIdx}`}
                       className="bg-surface rounded-lg shadow border overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                      onClick={() => setSelectedPatient(patient)}
+                      {...clickable(() => setSelectedPatient(patient))}
                     >
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-4">

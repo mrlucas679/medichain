@@ -51,6 +51,10 @@ const ROUTES = [
   { path: '/settings', name: 'Settings' },
 ];
 
+test.beforeEach(async ({ page }) => {
+  await signIn(page);
+});
+
 interface Failure {
   ratio: number;
   required: number;
@@ -191,10 +195,6 @@ function report(route: string, theme: string, result: { sampled: number; failure
  * would happily measure the login page and report full coverage of screens they
  * never opened — the same shape of false assurance this suite exists to catch.
  */
-test.beforeEach(async ({ page }) => {
-  await signIn(page);
-});
-
 for (const route of ROUTES) {
   for (const theme of ['light', 'dark'] as const) {
     test(`${route.name} meets WCAG AA in ${theme} mode`, async ({ page }) => {
