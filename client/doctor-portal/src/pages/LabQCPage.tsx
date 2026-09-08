@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { listLabQc, createLabQc, useTranslation } from '@medichain/shared';
+import { listLabQc, createLabQc, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
 import { CheckCircle, XCircle, AlertTriangle, Activity, FileText, Search, Plus, Beaker, ThermometerSun, RefreshCw } from 'lucide-react';
 import { useToastActions } from '../components/Toast';
 
@@ -60,7 +60,7 @@ interface Calibration {
 const LabQCPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showWarning } = useToastActions();
   const [qcTests, setQcTests] = useState<QCTest[]>([]);
   const [calibrations, setCalibrations] = useState<Calibration[]>([]);
   const [activeTab, setActiveTab] = useState<'qcTests' | 'newQC' | 'calibrations' | 'newCalibration'>('qcTests');
@@ -306,6 +306,31 @@ const LabQCPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => void fetchData()}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 px-3 py-1.5 min-h-[24px] rounded-lg border border-critical text-critical-subtle-fg hover:bg-critical-subtle disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+              {t('common.refresh')}
+            </button>
+          </div>
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex space-x-1 mb-6 border-b">

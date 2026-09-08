@@ -17,7 +17,6 @@ import {
   Loader2
 } from 'lucide-react';
 import {
-  apiUrl,
   listAMADischarges,
   createAMADischarge,
   getPatients,
@@ -72,7 +71,7 @@ const AMAPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [availablePatients, setAvailablePatients] = useState<PatientProfile[]>([]);
 
   // Form state
@@ -363,10 +362,10 @@ const AMAPage: React.FC = () => {
                   <div
                     key={record.id}
                     className="p-4 hover:bg-surface-sunken cursor-pointer"
-                    onClick={() => {
+                    {...clickable(() => {
                       setSelectedRecord(record);
                       setActiveTab('view');
-                    }}
+                    })}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">

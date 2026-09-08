@@ -13,7 +13,7 @@ import {
   Heart
 } from 'lucide-react';
 import { createDeathCertificate } from '../../../shared/src/api/endpoints';
-import { useTranslation } from '@medichain/shared';
+import { useTranslation, clickable } from '@medichain/shared';
 
 /**
  * DeathCertificatePage
@@ -965,7 +965,7 @@ const DeathCertificatePage: React.FC = () => {
               </div>
 
               <div className="border-2 border-dashed border-border-strong rounded-lg p-8 text-center mb-6 cursor-pointer hover:bg-surface-sunken transition-colors"
-                   onClick={() => setCertifierInfo({ ...certifierInfo, signature: 'DIGITAL_SIG_' + Date.now() })}>
+                   {...clickable(() => setCertifierInfo({ ...certifierInfo, signature: 'DIGITAL_SIG_' + Date.now() }))}>
                 {certifierInfo.signature ? (
                   <div className="flex flex-col items-center">
                     <CheckCircle className="w-8 h-8 text-green-500 mb-2" />

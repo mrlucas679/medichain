@@ -13,8 +13,6 @@ import {
   Droplets,
   Pill,
   ClipboardList,
-  Thermometer,
-  Clock,
   FileText,
 } from 'lucide-react';
 import { getNurseDashboard, useTranslation } from '@medichain/shared';

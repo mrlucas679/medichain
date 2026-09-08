@@ -12,10 +12,9 @@ import {
   Minus,
   Download,
   Printer,
-  RefreshCw,
-  AlertCircle
+  RefreshCw
 } from 'lucide-react';
-import { getAllLabSubmissions, useTranslation, clickable } from '@medichain/shared';
+import { getAllLabSubmissions, useTranslation, clickable, Alert, LoadingSpinner } from '@medichain/shared';
 
 /**
  * LabResultPage
@@ -160,6 +159,20 @@ const LabResultPage: React.FC = () => {
         </div>
         <p className="text-emerald-100">{t('docLabResult.subtitle')}</p>
       </div>
+
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 p-4 -mt-4">

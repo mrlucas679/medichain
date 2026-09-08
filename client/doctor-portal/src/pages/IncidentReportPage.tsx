@@ -17,7 +17,6 @@ import {
   AlertCircle
 } from 'lucide-react';
 import {
-  apiUrl,
   listIncidentReports,
   createIncidentReport,
   useTranslation,
@@ -124,7 +123,7 @@ const IncidentReportPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
 
   const [formData, setFormData] = useState({
     type: 'fall' as IncidentType,

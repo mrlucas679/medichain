@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Baby,
   Search,
-  Plus,
   TrendingUp,
   Ruler,
   Scale,
@@ -687,6 +686,18 @@ const PediatricsPage: React.FC = () => {
                   {t('docPediatrics.vaccinesStatusLine', { status: selectedPatient.vaccinesUpToDate ? t('docPediatrics.upToDate') : t('docPediatrics.overdue') })}
                 </span>
                 {getDevelopmentBadge(selectedPatient.developmentStatus)}
+              </div>
+
+              {/* `developmentalMilestones` was built and never rendered. The badge
+                  above says "delayed" or "on track" without saying against what;
+                  these are the milestones that judgement is made against. */}
+              <div>
+                <h3 className="font-medium mb-2">{t('docPediatrics.milestonesHeading')}</h3>
+                <ul className="list-disc list-inside space-y-1 text-sm text-content-secondary">
+                  {developmentalMilestones[selectedPatient.ageGroup].map((milestone) => (
+                    <li key={milestone}>{milestone}</li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>

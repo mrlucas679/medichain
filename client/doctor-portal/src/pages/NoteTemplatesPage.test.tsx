@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import NoteTemplatesPage from './NoteTemplatesPage';
 import { useAuthStore } from '../store/authStore';

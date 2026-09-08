@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
+import { apiUrl, getApiClient, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
 import {
   AlertTriangle,
   Search,
@@ -20,7 +20,6 @@ import {
   RefreshCw,
   ChevronDown,
   ChevronUp,
-  Loader2,
 } from 'lucide-react';
 
 // ===== PART 1: Types, State, Data, Helpers =====
@@ -430,6 +429,20 @@ const DrugInteractionsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+      {loading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
+
       {/* Tab Navigation */}
       <div className="flex gap-2 mb-6 border-b border-border">
         <button
@@ -666,7 +679,7 @@ const DrugInteractionsPage: React.FC = () => {
                 )}
               </div>
 
-              {interactions.length === 0 ? (
+              {!error && !loading && interactions.length === 0 ? (
                 <div className="text-center py-12 bg-ok-subtle rounded-lg border-2 border-ok">
                   <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500" />
                   <h3 className="text-xl font-semibold text-ok-subtle-fg mb-2">{t('docDrugInteractions.noInteractionsTitle')}</h3>

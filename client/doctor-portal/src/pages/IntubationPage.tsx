@@ -199,6 +199,10 @@ const IntubationPage: React.FC = () => {
       await createIntubation(newRecord);
     } catch (err) {
       console.error('Failed to save intubation record:', err);
+      // Stop here. Falling through added the record to the local list
+      // and toasted success for a write that never happened.
+      showError(t('common.saveFailed'));
+      return;
     }
     setRecords([newRecord, ...records]);
     showSuccess(t('docIntubation.successDocumented'));

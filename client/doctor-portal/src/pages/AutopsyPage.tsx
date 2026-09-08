@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getPatients, listAutopsy, createAutopsyReport, useTranslation } from '@medichain/shared';
+import { getPatients, listAutopsy, createAutopsyReport, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
 import type { PatientProfile } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 import {
@@ -10,7 +10,6 @@ import {
   Heart,
   Brain,
   RefreshCw,
-  AlertCircle,
 } from 'lucide-react';
 
 type AutopsyType = 'medico-legal' | 'hospital' | 'forensic' | 'clinical';
@@ -319,6 +318,31 @@ const AutopsyPage: React.FC = () => {
         <p className="text-orange-100">{t('docAutopsy.subtitle')}</p>
       </div>
 
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => void fetchAutopsies()}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 px-3 py-1.5 min-h-[24px] rounded-lg border border-critical text-critical-subtle-fg hover:bg-critical-subtle disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+              {t('common.refresh')}
+            </button>
+          </div>
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
+
       <div className="flex gap-2 mb-6 border-b">
         <button
           onClick={() => setActiveTab('reports')}
@@ -540,7 +564,7 @@ const AutopsyPage: React.FC = () => {
               </div>
             ))}
 
-            {(activeTab === 'pending' ? pendingAutopsies : filteredAutopsies).length === 0 && (
+            {!error && !isLoading && (activeTab === 'pending' ? pendingAutopsies : filteredAutopsies).length === 0 && (
               <div className="bg-surface-sunken border border-border rounded-lg p-8 text-center">
                 <FileText className="w-12 h-12 text-content-muted mx-auto mb-3" />
                 <p className="text-content-muted">{t('docAutopsy.noReports')}</p>

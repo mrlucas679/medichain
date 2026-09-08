@@ -281,7 +281,7 @@ function Layout() {
   
   // Real-time events
   const { events, isConnected: isSSEConnected } = useSSE();
-  const { showInfo, showWarning, showError, showSuccess } = useToastActions();
+  const { showInfo, showWarning, showSuccess } = useToastActions();
   // Connectivity status (offline banner + pending-write count)
   const { isOnline, queueSize, checkConnection } = useApiStatus();
   const lastProcessedEventRef = useRef<number>(0);
@@ -289,7 +289,11 @@ function Layout() {
   const userRole = (user?.role as Role) || 'Doctor';
 
   // Fetch real-time sidebar data from API
-  const { badges, recentPatients, isLoading: isBadgesLoading, refetch: refetchBadges } = useSidebarData(
+  // NOTE: this hook also returns `recentPatients` and `isLoading`, which are the
+  // exact two props of <RecentPatientsList/> -- a finished component with no
+  // call site anywhere. Not destructured here because nothing renders them; see
+  // docs/TECHNICAL_DEBT_REGISTER.md "Sidebar recent-patients list".
+  const { badges, refetch: refetchBadges } = useSidebarData(
     userRole,
     30000 // Refresh every 30 seconds
   );
@@ -662,8 +666,9 @@ function Layout() {
             )}
             <button
               onClick={() => checkConnection()}
-              className="ml-auto underline hover:no-underline"
+              className="ml-auto inline-flex items-center gap-1.5 min-h-[24px] underline hover:no-underline"
             >
+              <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
               Retry
             </button>
           </div>

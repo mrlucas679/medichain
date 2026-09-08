@@ -29,7 +29,6 @@ import {
   Siren,
   Database,
   Server,
-  HardDrive,
   RefreshCw,
 } from 'lucide-react';
 import { getAdminDashboard, detailedHealthCheck, useTranslation, type ServiceHealth, RestrictedSection } from '@medichain/shared';

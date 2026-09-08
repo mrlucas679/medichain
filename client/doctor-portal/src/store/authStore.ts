@@ -8,7 +8,6 @@ import {
   debugLog,
   IS_DEVELOPMENT,
   checkApiHealth,
-  isValidWalletAddress,
   syncApiClientUserId,
   getApiClient,
   getApiErrorMessage,
@@ -25,7 +24,6 @@ import {
 } from '@medichain/shared';
 import type { UserPermissions } from '@medichain/shared';
 import { connectRealWallet, signMessage } from '@medichain/shared';
-import type { Role as WalletRole } from '@medichain/shared';
 
 /**
  * User roles matching the blockchain pallet

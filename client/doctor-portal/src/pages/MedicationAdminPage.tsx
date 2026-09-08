@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { getPatients, listMar, administerMedication, useTranslation } from '@medichain/shared';
+import { getPatients, listMar, administerMedication, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
 import type { PatientProfile } from '@medichain/shared';
 import { Pill, Clock, User, CheckCircle, XCircle, AlertTriangle, Calendar, Search, FileText, Activity, RefreshCw } from 'lucide-react';
 import { useToastActions } from '../components/Toast';
@@ -274,6 +274,31 @@ const MedicationAdminPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => void loadData()}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 px-3 py-1.5 min-h-[24px] rounded-lg border border-critical text-critical-subtle-fg hover:bg-critical-subtle disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+              {t('common.refresh')}
+            </button>
+          </div>
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
 
       {/* Patient and Date Selection */}
       <div className="bg-surface rounded-lg shadow p-4 mb-6">

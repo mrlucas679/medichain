@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store';
 import { apiUrl, getApiClient, clickable } from '@medichain/shared';
-import { Search, User, ChevronDown, Loader2, X, UserCircle } from 'lucide-react';
+import { Search, ChevronDown, Loader2, X, UserCircle } from 'lucide-react';
 
 export interface StaffMember {
   wallet_address: string;

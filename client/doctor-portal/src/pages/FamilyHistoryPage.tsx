@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getPatients, getFamilyHistory, createFamilyHistory, useTranslation } from '@medichain/shared';
+import { getPatients, getFamilyHistory, createFamilyHistory, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
 import type { PatientProfile } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 import { useToastActions } from '../components/Toast';
@@ -93,7 +93,7 @@ interface RiskAssessment {
 const FamilyHistoryPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showWarning } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -392,6 +392,31 @@ const FamilyHistoryPage: React.FC = () => {
         <p className="text-pink-100">{t('docFamilyHistory.subtitle')}</p>
       </div>
 
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => void fetchFamilyHistory(selectedPatient)}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 px-3 py-1.5 min-h-[24px] rounded-lg border border-critical text-critical-subtle-fg hover:bg-critical-subtle disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+              {t('common.refresh')}
+            </button>
+          </div>
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
+
       <div className="flex gap-2 mb-6 border-b">
         <button
           onClick={() => setActiveTab('overview')}
@@ -589,7 +614,7 @@ const FamilyHistoryPage: React.FC = () => {
               </div>
             ))}
 
-            {filteredMembers.length === 0 && (
+            {!error && !isLoading && filteredMembers.length === 0 && (
               <div className="bg-surface-sunken border border-border rounded-lg p-8 text-center">
                 <Users className="w-12 h-12 text-content-muted mx-auto mb-3" />
                 <p className="text-content-muted">{t('docFamilyHistory.noMembersFound')}</p>

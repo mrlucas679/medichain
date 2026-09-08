@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { apiUrl, getApiClient, useTranslation, RestrictedSection } from '@medichain/shared';
-import { BarChart3, TrendingUp, Users, Activity, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Loader2 } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Activity, Clock, AlertCircle, CheckCircle, Calendar, Loader2 } from 'lucide-react';
 
 type MetricPeriod = 'today' | 'week' | 'month' | 'year';
 type DepartmentType = 'emergency' | 'surgery' | 'medicine' | 'pediatrics' | 'radiology' | 'laboratory';

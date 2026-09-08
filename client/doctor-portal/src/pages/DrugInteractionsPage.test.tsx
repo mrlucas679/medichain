@@ -2,7 +2,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import DrugInteractionsPage from './DrugInteractionsPage';
 import { useAuthStore } from '../store/authStore';
-import * as shared from '@medichain/shared';
 
 // Mock the auth store
 // Spread the real module: it also exports `isHealthcareProvider`,

@@ -121,6 +121,10 @@ const SplintPage: React.FC = () => {
       await createSplint(record);
     } catch (err) {
       console.error('Failed to save splint record:', err);
+      // Stop here. Falling through added the record to the local list
+      // and toasted success for a write that never happened.
+      showError(t('common.saveFailed'));
+      return;
     }
     setRecords([record, ...records]);
     showSuccess(t('docSplint.saved'));

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Users, Plus, Search, Edit, Trash2, Shield, Key, Lock, Unlock, CheckCircle, XCircle, Mail, Phone, Calendar, User, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { assignRole, getUsers, revokeRole, updateUserProfile, walletRegister, useTranslation, RestrictedSection } from '@medichain/shared';
+import { assignRole, getUsers, revokeRole, updateUserProfile, walletRegister, useTranslation, RestrictedSection, Alert, LoadingSpinner } from '@medichain/shared';
 import { useToastActions } from '../components/Toast';
 
 type UserRole = 'admin' | 'doctor' | 'nurse' | 'lab-technician' | 'pharmacist' | 'patient';
@@ -317,6 +317,31 @@ const UserManagementPage: React.FC = () => {
         <p className="text-purple-100">{t('docUserManagement.subtitle')}</p>
       </div>
 
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => void fetchUsers()}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 px-3 py-1.5 min-h-[24px] rounded-lg border border-critical text-critical-subtle-fg hover:bg-critical-subtle disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+              {t('common.refresh')}
+            </button>
+          </div>
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
+
       <div className="flex gap-2 mb-6 border-b">
         <button
           onClick={() => setActiveTab('users')}
@@ -578,7 +603,7 @@ const UserManagementPage: React.FC = () => {
               </div>
             ))}
 
-            {filteredUsers.length === 0 && (
+            {!error && !isLoading && filteredUsers.length === 0 && (
               <div className="bg-surface-sunken border border-border rounded-lg p-8 text-center">
                 <Users className="w-12 h-12 text-content-muted mx-auto mb-3" />
                 <p className="text-content-muted">{t('docUserManagement.noUsersFound')}</p>

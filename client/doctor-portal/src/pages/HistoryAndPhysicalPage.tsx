@@ -24,7 +24,6 @@ import {
   AlertCircle
 } from 'lucide-react';
 import {
-  apiUrl,
   getPatients,
   createHistoryPhysical,
   listHistoryPhysicals,
@@ -100,7 +99,7 @@ const HistoryAndPhysicalPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [availablePatients, setAvailablePatients] = useState<PatientProfile[]>([]);
 
   // Form state

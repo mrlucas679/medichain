@@ -161,6 +161,10 @@ const ToxicologyPage: React.FC = () => {
       await createTox(newCase);
     } catch (err) {
       console.error('Failed to save toxicology case:', err);
+      // Stop here. Falling through added the record to the local list
+      // and toasted success for a write that never happened.
+      showError(t('common.saveFailed'));
+      return;
     }
     setCases([newCase, ...cases]);
     showSuccess(t('docToxicology.saved'));

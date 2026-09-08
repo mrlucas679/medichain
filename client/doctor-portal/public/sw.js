@@ -8,7 +8,6 @@
  */
 
 const CACHE_VERSION = 'v3';
-const CACHE_NAME = `medichain-${CACHE_VERSION}`;
 const STATIC_CACHE = `medichain-static-${CACHE_VERSION}`;
 const DATA_CACHE = `medichain-data-${CACHE_VERSION}`;
 

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import * as shared from '@medichain/shared';
 
 vi.mock('@medichain/shared', async (importOriginal) => ({

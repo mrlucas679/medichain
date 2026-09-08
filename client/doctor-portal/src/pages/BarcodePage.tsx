@@ -14,10 +14,9 @@ import {
   FlashlightOff,
   History,
   Barcode,
-  Activity,
-  Loader2
+  Activity
 } from 'lucide-react';
-import { apiUrl, EmptyState, getApiClient, useTranslation } from '@medichain/shared';
+import { apiUrl, EmptyState, getApiClient, useTranslation, LoadingSpinner } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 
 /**
@@ -275,6 +274,13 @@ const BarcodePage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {loading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
 
       {/* Mode Selector */}
       <div className="bg-gray-800 px-4 py-3">

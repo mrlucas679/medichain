@@ -315,14 +315,6 @@ export default function PharmacistDashboardPage() {
   // the action column has to know the id and the current state.
   const prescriptionQueue = data?.prescriptions?.list?.slice(0, 10) || [];
 
-  // Drug interactions table (moderate + major)
-  const interactionsTable = data?.drug_interactions?.map((d) => [
-    d.severity,
-    d.patient_name || 'Unknown',
-    `${d.drug1} + ${d.drug2}`,
-    d.description.slice(0, 50) + (d.description.length > 50 ? '...' : ''),
-  ]) || [];
-
   return (
     <div className="p-6 space-y-6 bg-surface-sunken min-h-screen">
       {/* Header */}

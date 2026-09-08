@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getPatients, listConsults, createConsult, respondToConsult, useTranslation, lookupOr, componentOr } from '@medichain/shared';
+import { getPatients, listConsults, createConsult, respondToConsult, useTranslation, lookupOr, componentOr, Alert, LoadingSpinner } from '@medichain/shared';
 import { useToastActions } from '../components/Toast';
 import type { PatientProfile } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
@@ -320,6 +320,20 @@ const ConsultPage: React.FC = () => {
         <p className="text-blue-100">{t('docConsult.subtitle')}</p>
       </div>
 
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
+
       <div className="flex gap-2 mb-6 border-b">
         <button
           onClick={() => setActiveTab('active')}
@@ -574,7 +588,7 @@ const ConsultPage: React.FC = () => {
                 );
               })}
 
-            {(activeTab === 'active' ? activeConsults : activeTab === 'completed' ? completedConsults : myConsults).filter((c) => {
+            {!error && !isLoading && (activeTab === 'active' ? activeConsults : activeTab === 'completed' ? completedConsults : myConsults).filter((c) => {
               const matchesSearch =
                 c.consultId.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 c.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { apiUrl, getApiClient, listCdsAlerts, useTranslation } from '@medichain/shared';
+import { apiUrl, getApiClient, listCdsAlerts, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
 import { useToastActions } from '../components/Toast';
 import {
   Bell,
@@ -157,7 +157,7 @@ const CDSAlertsPage: React.FC = () => {
   }, [fetchRules]);
 
   // Handler Functions
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
 
   const handleCreateRule = () => {
     if (!newRule.name || !newRule.description || !newRule.conditions?.length || !newRule.actions?.length) {
@@ -448,6 +448,20 @@ const CDSAlertsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
 
       {/* Tab Navigation */}
       <div className="flex gap-2 mb-6 border-b border-border">

@@ -8,7 +8,6 @@ import {
   Loader2,
   UserCircle,
   ShieldCheck,
-  Scale,
   Stethoscope,
   Syringe,
   FlaskConical,
@@ -64,7 +63,7 @@ const ROLE_STYLES: Record<string, string> = {
 function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login, loginWithCredentials, loginWithExtension, isLoading, error, clearError } =
+  const { loginWithCredentials, loginWithExtension, isLoading, error, clearError } =
     useAuthStore();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');

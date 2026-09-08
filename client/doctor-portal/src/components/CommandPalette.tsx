@@ -149,7 +149,6 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
             <Search className="text-content-muted" size={20} />
             <input
               ref={inputRef}
-              autoFocus
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -211,24 +210,4 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
       </div>
     </div>
   );
-}
-
-/**
- * Hook to manage command palette state with keyboard shortcut
- */
-export function useCommandPalette() {
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsOpen(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  return { isOpen, open: () => setIsOpen(true), close: () => setIsOpen(false) };
 }

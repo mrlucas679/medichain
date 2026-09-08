@@ -153,6 +153,10 @@ const PostOpPage: React.FC = () => {
       await createPostOp(note);
     } catch (err) {
       console.error('Failed to save post-op note:', err);
+      // Stop here. Falling through added the record to the local list
+      // and toasted success for a write that never happened.
+      showError(t('common.saveFailed'));
+      return;
     }
     setNotes([note, ...notes]);
     showSuccess(t('docPostOp.saved'));

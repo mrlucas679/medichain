@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useToastActions } from '../components/Toast';
-import { getOrderSets, useTranslation } from '@medichain/shared';
+import { getOrderSets, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
 import {
   FileText,
   Plus,
@@ -278,6 +278,20 @@ const OrderSetsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
 
       <div className="flex gap-2 mb-6 border-b border-border-strong">
         <button

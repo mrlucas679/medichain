@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getPatients, listChainOfCustody, createChainOfCustody, useTranslation } from '@medichain/shared';
+import { getPatients, listChainOfCustody, createChainOfCustody, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
 import type { PatientProfile } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 import { useToastActions } from '../components/Toast';
@@ -16,7 +16,6 @@ import {
   Package,
   XCircle,
   RefreshCw,
-  AlertCircle,
 } from 'lucide-react';
 
 type SpecimenType = 'blood' | 'urine' | 'other-fluid' | 'tissue' | 'swab' | 'evidence';
@@ -66,7 +65,7 @@ interface ChainOfCustody {
 const ChainOfCustodyPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showWarning } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [records, setRecords] = useState<ChainOfCustody[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'new-collection' | 'transfer' | 'history'>('active');
@@ -154,7 +153,15 @@ const ChainOfCustodyPage: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  const handleCreateCustody = () => {
+  // `createChainOfCustody` was imported here and never called: the handler was
+  // synchronous and only did `setRecords([...])`, so a custody record lived in
+  // React state and was gone on reload — while the page toasted success.
+  //
+  // A chain of custody is the legal evidence trail for a forensic specimen:
+  // who held it, when, and whether the seal was intact. A gap in it is what
+  // makes the specimen inadmissible, so a record that only exists in a browser
+  // tab is worse than no record, because the collector believes it was kept.
+  const handleCreateCustody = async () => {
     if (!newCollection.patientId || !newCollection.specimenDescription || !newCollection.sealNumber) {
       showWarning(t('docChainOfCustody.errorRequiredFields'));
       return;
@@ -187,6 +194,22 @@ const ChainOfCustodyPage: React.FC = () => {
       transfers: [],
       notes: newCollection.notes,
     };
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await createChainOfCustody(newRecord);
+      if (!response.success) {
+        setError(t('common.saveFailed'));
+        return;
+      }
+    } catch (err) {
+      console.error('Failed to save chain-of-custody record:', err);
+      setError(t('common.saveFailed'));
+      return;
+    } finally {
+      setIsLoading(false);
+    }
 
     setRecords([newRecord, ...records]);
     setNewCollection({
@@ -314,6 +337,31 @@ const ChainOfCustodyPage: React.FC = () => {
         <p className="text-gray-100">{t('docChainOfCustody.subtitle')}</p>
       </div>
 
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => void fetchData()}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 px-3 py-1.5 min-h-[24px] rounded-lg border border-critical text-critical-subtle-fg hover:bg-critical-subtle disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+              {t('common.refresh')}
+            </button>
+          </div>
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
+
       <div className="flex gap-2 mb-6 border-b">
         <button
           onClick={() => setActiveTab('active')}
@@ -354,7 +402,7 @@ const ChainOfCustodyPage: React.FC = () => {
 
       {activeTab === 'active' && (
         <div className="space-y-4">
-          {activeRecords.length === 0 ? (
+          {!error && !isLoading && activeRecords.length === 0 ? (
             <div className="bg-surface-sunken border border-border rounded-lg p-8 text-center">
               <Package className="w-12 h-12 text-content-muted mx-auto mb-3" />
               <h3 className="text-lg font-semibold text-content mb-2">{t('docChainOfCustody.noActiveTitle')}</h3>
@@ -678,7 +726,7 @@ const ChainOfCustodyPage: React.FC = () => {
           </div>
 
           <button
-            onClick={handleCreateCustody}
+            onClick={() => void handleCreateCustody()}
             className="w-full bg-gray-700 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors font-semibold"
           >
             {t('docChainOfCustody.createRecordBtn')}

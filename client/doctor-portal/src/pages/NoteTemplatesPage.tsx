@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useToastActions } from '../components/Toast';
-import { getNoteTemplates, useTranslation } from '@medichain/shared';
-import { FileText, Plus, Search, Edit, Copy, Trash2, User, Clock, FileCheck, Clipboard, RefreshCw, AlertCircle } from 'lucide-react';
+import { getNoteTemplates, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
+import { FileText, Plus, Search, Edit, Copy, Trash2, User, Clock, FileCheck, Clipboard, RefreshCw } from 'lucide-react';
 
 type TemplateType = 'history-physical' | 'progress-note' | 'discharge-summary' | 'consult' | 'procedure' | 'soap' | 'op-note';
 type TemplateCategory = 'general' | 'emergency' | 'surgery' | 'medicine' | 'pediatrics' | 'psychiatry';
@@ -241,6 +241,31 @@ const NoteTemplatesPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* The page already tracked this; it just never showed it. A failed
+          save left the screen unchanged, which reads as success. */}
+      {error && (
+        <Alert variant="error" className="mb-6" onClose={() => setError(null)}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => void fetchTemplates()}
+              disabled={isLoading}
+              className="inline-flex items-center gap-2 px-3 py-1.5 min-h-[24px] rounded-lg border border-critical text-critical-subtle-fg hover:bg-critical-subtle disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
+              {t('common.refresh')}
+            </button>
+          </div>
+        </Alert>
+      )}
+      {isLoading && (
+        <div role="status" className="flex items-center justify-center gap-2 py-8 text-content-muted">
+          <LoadingSpinner size="sm" />
+          {t('common.loading')}
+        </div>
+      )}
 
       <div className="flex gap-2 mb-6 border-b border-border-strong">
         <button
