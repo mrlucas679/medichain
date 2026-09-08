@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 import WearablesPage from './WearablesPage';
 import { usePatientAuthStore } from '../store/authStore';
 import * as shared from '@medichain/shared';
@@ -28,12 +29,12 @@ describe('WearablesPage (Patient)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (usePatientAuthStore as any).mockReturnValue({
+    (usePatientAuthStore as unknown as Mock).mockReturnValue({
       patient: mockPatient,
     });
     // Empty devices/readings means the dashboard correctly shows its empty
     // state; the generated test then asserted metric tiles that cannot exist.
-    (shared.getWearableDevices as any).mockResolvedValue({
+    vi.mocked(shared.getWearableDevices).mockResolvedValue({
       success: true,
       count: 1,
       devices: [{
@@ -46,7 +47,7 @@ describe('WearablesPage (Patient)', () => {
     });
     // Metric tiles render per reading; an empty array means the dashboard
     // correctly shows nothing, so the metric assertions could never pass.
-    (shared.getWearableReadings as any).mockResolvedValue({
+    vi.mocked(shared.getWearableReadings).mockResolvedValue({
       success: true,
       count: 2,
       readings: [

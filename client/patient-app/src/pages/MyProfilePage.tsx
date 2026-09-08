@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   apiUrl,
   getApiClient,
@@ -129,11 +129,7 @@ export function MyProfilePage() {
   const [editingInsurance, setEditingInsurance] = useState(false);
   const [insuranceDraft, setInsuranceDraft] = useState<PatientInsurance>(EMPTY_INSURANCE);
 
-  useEffect(() => {
-    loadProfile();
-  }, [patient?.healthId]);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     setIsLoading(true);
     
     try {
@@ -208,7 +204,11 @@ export function MyProfilePage() {
     }
     
     setIsLoading(false);
-  };
+  }, [patient]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [patient?.healthId, loadProfile]);
 
   /** Show a message for a few seconds, then clear it. */
   const flash = (message: string) => {

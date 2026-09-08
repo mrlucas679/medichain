@@ -1,6 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import type { FamilyGroup } from '@medichain/shared';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 import { FamilyGroupPage } from './FamilyGroupPage';
 import { usePatientAuthStore } from '../store/authStore';
 import * as shared from '@medichain/shared';
@@ -37,21 +39,31 @@ describe('FamilyGroupPage (Patient)', () => {
 
   const mockGroups = [
     {
-      group_id: 'group1',
-      group_name: 'The Smiths',
+      // `family_id` / `family_name`, which is what the API returns. The mock
+      // used `group_id` / `group_name` — the names the page normalises *to* —
+      // so it only ever exercised the fallback half of that normalisation.
+      family_id: 'group1',
+      family_name: 'The Smiths',
+      primary_account_id: 'HEALTH123',
       members: [
         { patient_id: 'HEALTH123', name: 'Test Patient', relationship: 'Self' },
         { patient_id: 'HEALTH456', name: 'Jane Smith', relationship: 'Spouse' }
       ],
+      created_at: 0,
+      last_modified: 0,
     }
-  ];
+  ] as unknown as FamilyGroup[];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (usePatientAuthStore as any).mockReturnValue({
+    (usePatientAuthStore as unknown as Mock).mockReturnValue({
       patient: mockPatient,
     });
-    (shared.getMyFamilyGroups as any).mockResolvedValue({ groups: mockGroups });
+    vi.mocked(shared.getMyFamilyGroups).mockResolvedValue({
+      success: true,
+      groups: mockGroups,
+      count: mockGroups.length,
+    });
   });
 
   it('renders family groups page with list of groups', async () => {
@@ -89,7 +101,11 @@ describe('FamilyGroupPage (Patient)', () => {
   });
 
   it('allows creating a new family group', async () => {
-    (shared.createFamilyGroup as any).mockResolvedValue({});
+    vi.mocked(shared.createFamilyGroup).mockResolvedValue({
+      success: true,
+      group_id: 'group2',
+      message: 'created',
+    });
     
     render(
       <MemoryRouter>

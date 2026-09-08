@@ -171,12 +171,10 @@ export function EmergencyCardPage() {
     return () => {
       cancelled = true;
     };
-  }, [
-    emergencyData?.nationalHealthId,
-    emergencyData?.fullName,
-    emergencyData?.bloodType,
-    emergencyUrl,
-  ]);
+    // `emergencyData` rather than three of its fields: the QR encodes the card,
+    // and listing a subset means a change to anything else in it leaves a code
+    // on screen that no longer matches what it claims to represent.
+  }, [emergencyData, emergencyUrl]);
 
   const handleRefreshQR = async () => {
     setIsRefreshing(true);

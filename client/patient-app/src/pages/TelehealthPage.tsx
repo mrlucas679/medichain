@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { apiUrl, getApiClient, joinTelehealthSession, getApiErrorMessage, JitsiMeetComponent, useTranslation } from '@medichain/shared';
 import { usePatientAuthStore } from '../store/authStore';
 import { useToastActions } from '../components/Toast';
@@ -64,28 +64,7 @@ export function TelehealthPage() {
   const [activeSessionId, setActiveSessionId] = useState('');
   const [activeSubject, setActiveSubject] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    if (!patient?.healthId) {
-      setLoading(false);
-      return;
-    }
-    loadSessions();
-  }, [patient]);
-
-  /**
-   * Deep-link auto-join (Phase 4): opening `/telehealth?session=...&join=1`
-   * (from the in-app QR / redirect) joins straight into the call, in-browser.
-   */
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const sid = params.get('session');
-    if (sid && params.get('join') === '1') {
-      void joinById(sid);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     if (!patient) return;
     setLoading(true);
     try {
@@ -113,7 +92,28 @@ export function TelehealthPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patient]);
+
+  useEffect(() => {
+    if (!patient?.healthId) {
+      setLoading(false);
+      return;
+    }
+    loadSessions();
+  }, [patient, loadSessions]);
+
+  /**
+   * Deep-link auto-join (Phase 4): opening `/telehealth?session=...&join=1`
+   * (from the in-app QR / redirect) joins straight into the call, in-browser.
+   */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sid = params.get('session');
+    if (sid && params.get('join') === '1') {
+      void joinById(sid);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Join a session: ask the backend for Jitsi credentials (domain/room/JWT) and

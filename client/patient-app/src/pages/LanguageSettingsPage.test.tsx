@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi, describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import LanguageSettingsPage from './LanguageSettingsPage';
 
 describe('LanguageSettingsPage (Patient)', () => {

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   apiUrl,
   getApiClient,
   useTranslation,
   useToastActions,
+  updateMedicalIdPreferences,
   formatDate,
   normalizePhone,
   EmptyState,
@@ -26,7 +27,6 @@ import {
   Share2,
   Lock,
   CheckCircle,
-  XCircle,
 } from 'lucide-react';
 
 interface DnrStatusObject {
@@ -125,9 +125,10 @@ interface MedicalIdData {
 export function MedicalIdPage() {
   const navigate = useNavigate();
   const { t, locale } = useTranslation();
-  const { showError, showWarning } = useToastActions();
+  const { showSuccess, showError, showWarning } = useToastActions();
   const { patient, isAuthenticated } = usePatientAuthStore();
   const [data, setData] = useState<MedicalIdData | null>(null);
+  const [savingPreference, setSavingPreference] = useState(false);
 
   // The API returns these as strings on some paths and objects (e.g.
   // `{name, ...}`) on others. Rendering an object directly threw
@@ -157,13 +158,7 @@ export function MedicalIdPage() {
     }
   }, [isAuthenticated, patient, navigate]);
 
-  useEffect(() => {
-    if (patient) {
-      loadMedicalId();
-    }
-  }, [patient, activeView]);
-
-  const loadMedicalId = async () => {
+  const loadMedicalId = useCallback(async () => {
     if (!patient) return;
     
     setIsLoading(true);
@@ -232,7 +227,13 @@ export function MedicalIdPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeView, patient]);
+
+  useEffect(() => {
+    if (patient) {
+      loadMedicalId();
+    }
+  }, [patient, activeView, loadMedicalId]);
 
   const getSeverityColor = (severity: string) => {
     switch (severity.toLowerCase()) {
@@ -337,6 +338,35 @@ export function MedicalIdPage() {
 
   const dnr = resolveDnr(data.dnr_status);
 
+  /**
+   * Whether the medical ID shows on the phone's lock screen.
+   *
+   * This switch was `onChange={() => {}}` — it moved nothing, saved nothing and
+   * called nothing, while `updateMedicalIdPreferences` sat imported nowhere. A
+   * privacy control that appears to work and does not is worse than no control:
+   * a patient who turns it off believes their allergies and conditions are no
+   * longer readable from a locked phone.
+   *
+   * Optimistic, then reverted on failure — the switch must never rest in a
+   * position the server did not agree to.
+   */
+  const handleShowWhenLocked = async (next: boolean) => {
+    if (!data || !patient?.healthId) return;
+    const previous = data.preferences.show_when_locked;
+    setData({ ...data, preferences: { ...data.preferences, show_when_locked: next } });
+    setSavingPreference(true);
+    try {
+      await updateMedicalIdPreferences(patient.healthId, { show_when_locked: next });
+      showSuccess(t('medicalId.preferenceSaved'));
+    } catch (error) {
+      console.error('Failed to save lock-screen preference:', error);
+      setData({ ...data, preferences: { ...data.preferences, show_when_locked: previous } });
+      showError(t('medicalId.preferenceSaveFailed'));
+    } finally {
+      setSavingPreference(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-6 pb-24">
       {/* Header with settings */}
@@ -388,10 +418,12 @@ export function MedicalIdPage() {
             </div>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
+            <span className="sr-only">{t('medicalId.showWhenLocked')}</span>
             <input
               type="checkbox"
               checked={data.preferences.show_when_locked}
-              onChange={() => {}}
+              disabled={savingPreference}
+              onChange={(event) => void handleShowWhenLocked(event.target.checked)}
               className="sr-only peer"
             />
             <div className="w-11 h-6 bg-surface-sunken peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:border-border-strong after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>

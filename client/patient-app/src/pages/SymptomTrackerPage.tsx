@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
 import { usePatientAuthStore } from '../store/authStore';
@@ -112,13 +112,7 @@ export function SymptomTrackerPage() {
     }
   }, [isAuthenticated, patient, navigate]);
 
-  useEffect(() => {
-    if (patient) {
-      loadEntries();
-    }
-  }, [patient]);
-
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     if (!patient) return;
     
     setLoading(true);
@@ -147,7 +141,13 @@ export function SymptomTrackerPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patient]);
+
+  useEffect(() => {
+    if (patient) {
+      loadEntries();
+    }
+  }, [patient, loadEntries]);
 
   const addEntry = async () => {
     if (!newEntry.symptom || !newEntry.category) return;

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
+import { useState, useEffect, useCallback } from 'react';
+import { apiUrl, getApiClient, useTranslation, clickable } from '@medichain/shared';
 import { useToastActions } from '../components/Toast';
 import {
   FileText,
@@ -122,11 +122,7 @@ export function MyRecordsPage() {
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const patient = usePatientAuthStore(state => state.patient);
 
-  useEffect(() => {
-    loadRecords();
-  }, [patient?.healthId]);
-
-  const loadRecords = async () => {
+  const loadRecords = useCallback(async () => {
     setIsLoading(true);
     
     if (!patient) {
@@ -312,7 +308,11 @@ export function MyRecordsPage() {
 
     setRecords(allRecords);
     setIsLoading(false);
-  };
+  }, [patient, t]);
+
+  useEffect(() => {
+    loadRecords();
+  }, [patient?.healthId, loadRecords]);
 
   const getRecordIcon = (type: string) => {
     switch (type) {
@@ -553,7 +553,7 @@ export function MyRecordsPage() {
           <div
             key={record.id}
             className="patient-card hover:border-brand border-2 border-transparent cursor-pointer"
-            onClick={() => setSelectedRecord(record)}
+            {...clickable(() => setSelectedRecord(record))}
           >
             <div className="flex items-start gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getRecordColor(record.type)}`}>

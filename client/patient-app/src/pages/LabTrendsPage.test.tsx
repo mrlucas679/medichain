@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 import LabTrendsPage from './LabTrendsPage';
 import { usePatientAuthStore } from '../store/authStore';
 import * as shared from '@medichain/shared';
@@ -26,15 +27,17 @@ describe('LabTrendsPage (Patient)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (usePatientAuthStore as any).mockReturnValue({
+    (usePatientAuthStore as unknown as Mock).mockReturnValue({
       patient: mockPatient,
     });
     // An empty `trends` array means the page correctly renders its empty
     // state; the generated test then asserted a test name that could never
     // appear. This is the shape the page transforms: `loinc_code`,
     // `test_name`, `unit`, `reference_range` and `data_points[]`.
-    (shared.getLabTrends as any).mockResolvedValue({
+    vi.mocked(shared.getLabTrends).mockResolvedValue({
       success: true,
+      patient_id: 'HEALTH123',
+      count: 1,
       trends: [
         {
           loinc_code: '2345-7',
@@ -67,7 +70,7 @@ describe('LabTrendsPage (Patient)', () => {
           ],
         },
       ],
-    });
+    } as unknown as Awaited<ReturnType<typeof shared.getLabTrends>>);
   });
 
   it('renders lab trends page', async () => {

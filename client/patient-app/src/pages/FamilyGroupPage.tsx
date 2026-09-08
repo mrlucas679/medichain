@@ -41,11 +41,18 @@ export function FamilyGroupPage() {
 
   const loadGroups = () => {
     getMyFamilyGroups()
-      .then((res: any) => setGroups((res.groups || []).map((group: any) => ({
-        ...group,
-        group_id: group.group_id || group.family_id,
-        group_name: group.group_name || group.family_name,
-      }))))
+      // The API returns `family_id` / `family_name`; the screen reads
+      // `group_id` / `group_name`. Both are accepted so a row written under
+      // either name still renders.
+      .then((res) =>
+        setGroups(
+          (res.groups || []).map((group) => ({
+            ...group,
+            group_id: group.family_id,
+            group_name: group.family_name,
+          }))
+        )
+      )
       .catch(console.error)
       .finally(() => setLoading(false));
   };

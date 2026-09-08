@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
 import { usePatientAuthStore } from '../store/authStore';
@@ -53,23 +53,52 @@ function messageTimestamp(value: number | string): string {
     : value;
 }
 
-function normalizeConversation(raw: Record<string, any>, patientWallet: string): Conversation {
+/**
+ * A conversation and its messages as stored, in either casing.
+ *
+ * The normaliser below exists precisely because both spellings occur; naming
+ * them is what makes the `||` chains checkable rather than hopeful.
+ */
+interface RawMessage {
+  id?: string; message_id?: string;
+  senderId?: string; sender_id?: string;
+  senderName?: string; sender_name?: string;
+  senderRole?: string; sender_role?: string;
+  content?: string;
+  timestamp?: string | number; sent_at?: string | number;
+  [key: string]: unknown;
+}
+
+interface RawConversation {
+  id?: string;
+  providerId?: string;
+  providerName?: string;
+  providerRole?: string;
+  specialty?: string;
+  lastMessage?: string;
+  lastMessageTime?: string | number;
+  unreadCount?: number;
+  messages?: RawMessage[];
+  [key: string]: unknown;
+}
+
+function normalizeConversation(raw: RawConversation, patientWallet: string): Conversation {
   return {
-    id: raw.id,
-    providerId: raw.providerId,
-    providerName: raw.providerName,
+    id: raw.id ?? '',
+    providerId: raw.providerId ?? '',
+    providerName: raw.providerName ?? '',
     providerRole: raw.providerRole || 'Provider',
     specialty: raw.specialty || raw.providerRole || 'Healthcare provider',
     lastMessage: raw.lastMessage || '',
-    lastMessageTime: messageTimestamp(raw.lastMessageTime),
+    lastMessageTime: messageTimestamp(raw.lastMessageTime ?? ''),
     unreadCount: raw.unreadCount || 0,
-    messages: (raw.messages || []).map((message: Record<string, any>) => ({
-      id: message.id || message.message_id,
-      senderId: message.senderId || message.sender_id,
-      senderName: message.senderName || message.sender_name,
-      senderRole: message.senderRole || message.sender_role,
-      content: message.content,
-      timestamp: messageTimestamp(message.timestamp || message.sent_at),
+    messages: (raw.messages || []).map((message) => ({
+      id: message.id || message.message_id || '',
+      senderId: message.senderId || message.sender_id || '',
+      senderName: message.senderName || message.sender_name || '',
+      senderRole: message.senderRole || message.sender_role || '',
+      content: message.content ?? '',
+      timestamp: messageTimestamp(message.timestamp || message.sent_at || ''),
       read: Boolean(message.read),
       isPatient: (message.senderId || message.sender_id) === patientWallet,
     })),
@@ -109,17 +138,7 @@ export function MessagesPage() {
     }
   }, [isAuthenticated, patient, navigate]);
 
-  useEffect(() => {
-    if (patient) {
-      loadConversations();
-    }
-  }, [patient]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [selectedConversation?.messages]);
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     if (!patient) return;
     
     setLoading(true);
@@ -136,7 +155,7 @@ export function MessagesPage() {
         setApiConnected(true);
         // Transform API data to conversations format
         setConversations((data.conversations || []).map(
-          (conversation: Record<string, any>) => normalizeConversation(conversation, patient.walletAddress)
+          (conversation: RawConversation) => normalizeConversation(conversation, patient.walletAddress)
         ));
       } else {
         setApiConnected(false);
@@ -146,7 +165,17 @@ export function MessagesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patient]);
+
+  useEffect(() => {
+    if (patient) {
+      loadConversations();
+    }
+  }, [patient, loadConversations]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [selectedConversation?.messages]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !patient) return;

@@ -1257,6 +1257,8 @@ const en_US: TranslationRecord = {
     view_lockscreen: 'Lock Screen',
     showWhenLocked: 'Show When Locked',
     showWhenLockedDesc: 'Emergency access from lock screen',
+    preferenceSaved: 'Saved.',
+    preferenceSaveFailed: 'Could not save that setting — it has been put back. Please try again.',
     bloodTypeLabel: 'Blood Type',
     organDonorLabel: 'Organ Donor',
     organDonorYes: 'Yes',

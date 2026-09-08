@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   apiUrl,
@@ -148,11 +148,80 @@ export function AppointmentsPage() {
     }
   }, [isAuthenticated, patient, navigate]);
 
+  const loadAppointments = useCallback(async () => {
+    if (!patient) return;
+    
+    setLoading(true);
+    try {
+      const patientId = patient.healthId;
+      
+      const response = await fetch(apiUrl(`/api/appointments/patient/${patientId}`), {
+        headers: { 
+          ...getApiClient().getSessionHeaders(patient.walletAddress),
+          'X-Health-Id': patient.healthId,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setApiConnected(true);
+        
+        const appts: Appointment[] = (data.appointments || []).map((a: {
+          appointment_id: string;
+          type?: string;
+          appointment_type?: string;
+          status: string;
+          provider_name: string;
+          specialty: string;
+          scheduled_date: string;
+          start_time?: string;
+          scheduled_time?: number | string;
+          duration_minutes: number;
+          location?: string | { telehealth_link?: string | null };
+          reason?: string;
+          visit_reason?: string;
+          notes?: string;
+          is_telehealth?: boolean;
+          telehealth_session_id?: string;
+          awaiting_confirmation_from?: 'patient' | 'provider' | null;
+        }) => ({
+          id: a.appointment_id,
+          type: normalizeAppointmentType(a.appointment_type || a.type, a.is_telehealth),
+          status: normalizeStatus(a.status),
+          awaitingConfirmationFrom: a.awaiting_confirmation_from ?? null,
+          provider: a.provider_name,
+          specialty: a.specialty,
+          date: a.scheduled_date,
+          time: displayTime(a.start_time, a.scheduled_time),
+          duration: a.duration_minutes || 30,
+          location: typeof a.location === 'string' ? a.location : undefined,
+          reason: a.visit_reason || a.reason || 'No reason provided',
+          notes: a.notes,
+          // Only a provisioned session yields a link. Without one the card
+          // shows the waiting state rather than a Join button, because there
+          // is genuinely no meeting to join yet.
+          videoLink:
+            a.telehealth_session_id && typeof a.location === 'object'
+              ? a.location?.telehealth_link ?? undefined
+              : undefined,
+        }));
+        
+        setAppointments(appts);
+      } else {
+        setApiConnected(false);
+      }
+    } catch {
+      setApiConnected(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [patient]);
+
   useEffect(() => {
     if (patient) {
       loadAppointments();
     }
-  }, [patient]);
+  }, [patient, loadAppointments]);
 
   /**
    * Move an appointment through the lifecycle.
@@ -273,75 +342,6 @@ export function AppointmentsPage() {
     booking.date !== '' &&
     booking.time !== '' &&
     booking.reason.trim() !== '';
-
-  const loadAppointments = async () => {
-    if (!patient) return;
-    
-    setLoading(true);
-    try {
-      const patientId = patient.healthId;
-      
-      const response = await fetch(apiUrl(`/api/appointments/patient/${patientId}`), {
-        headers: { 
-          ...getApiClient().getSessionHeaders(patient.walletAddress),
-          'X-Health-Id': patient.healthId,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setApiConnected(true);
-        
-        const appts: Appointment[] = (data.appointments || []).map((a: {
-          appointment_id: string;
-          type?: string;
-          appointment_type?: string;
-          status: string;
-          provider_name: string;
-          specialty: string;
-          scheduled_date: string;
-          start_time?: string;
-          scheduled_time?: number | string;
-          duration_minutes: number;
-          location?: string | { telehealth_link?: string | null };
-          reason?: string;
-          visit_reason?: string;
-          notes?: string;
-          is_telehealth?: boolean;
-          telehealth_session_id?: string;
-          awaiting_confirmation_from?: 'patient' | 'provider' | null;
-        }) => ({
-          id: a.appointment_id,
-          type: normalizeAppointmentType(a.appointment_type || a.type, a.is_telehealth),
-          status: normalizeStatus(a.status),
-          awaitingConfirmationFrom: a.awaiting_confirmation_from ?? null,
-          provider: a.provider_name,
-          specialty: a.specialty,
-          date: a.scheduled_date,
-          time: displayTime(a.start_time, a.scheduled_time),
-          duration: a.duration_minutes || 30,
-          location: typeof a.location === 'string' ? a.location : undefined,
-          reason: a.visit_reason || a.reason || 'No reason provided',
-          notes: a.notes,
-          // Only a provisioned session yields a link. Without one the card
-          // shows the waiting state rather than a Join button, because there
-          // is genuinely no meeting to join yet.
-          videoLink:
-            a.telehealth_session_id && typeof a.location === 'object'
-              ? a.location?.telehealth_link ?? undefined
-              : undefined,
-        }));
-        
-        setAppointments(appts);
-      } else {
-        setApiConnected(false);
-      }
-    } catch {
-      setApiConnected(false);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const now = new Date();
 

@@ -10,7 +10,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
-  apiUrl,
   setPatientAuth,
   clearPatientAuth as clearStoredAuth,
   getPatientAuth,

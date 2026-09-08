@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   CreditCard,
   Plus,
@@ -177,11 +177,7 @@ const InsurancePage: React.FC = () => {
     outOfPocketMax: '6000'
   });
 
-  useEffect(() => {
-    loadInsuranceData();
-  }, [patient]);
-
-  const loadInsuranceData = async () => {
+  const loadInsuranceData = useCallback(async () => {
     setLoading(true);
     
     // Try to load from API first
@@ -215,7 +211,11 @@ const InsurancePage: React.FC = () => {
       await loadDemoClaims();
     }
     setLoading(false);
-  };
+  }, [patient?.healthId]);
+
+  useEffect(() => {
+    loadInsuranceData();
+  }, [patient, loadInsuranceData]);
 
   // Dynamically imported so the sample data isn't bundled into production
   // builds (demo mode is gated by IS_DEMO, but the bundler can't statically

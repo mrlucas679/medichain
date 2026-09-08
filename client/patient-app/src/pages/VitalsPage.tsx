@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getPatientVitals, IS_DEMO, useTranslation } from '@medichain/shared';
 import { usePatientAuthStore } from '../store/authStore';
@@ -60,13 +60,7 @@ export function VitalsPage() {
     }
   }, [isAuthenticated, patient, navigate]);
 
-  useEffect(() => {
-    if (patient) {
-      loadVitals();
-    }
-  }, [patient]);
-
-  const loadVitals = async () => {
+  const loadVitals = useCallback(async () => {
     if (!patient) return;
     setLoading(true);
     try {
@@ -117,7 +111,13 @@ export function VitalsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patient]);
+
+  useEffect(() => {
+    if (patient) {
+      loadVitals();
+    }
+  }, [patient, loadVitals]);
 
   const trend = (key: keyof VitalReading): 'up' | 'down' | 'stable' => {
     if (!latest || !previous) return 'stable';

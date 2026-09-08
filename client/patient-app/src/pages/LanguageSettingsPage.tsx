@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { usePatientAuthStore } from '../store/authStore';
 import { setLanguagePreference, LOCALE_CONFIGS, useTranslation } from '@medichain/shared';
 import type { SupportedLocale } from '@medichain/shared';
@@ -9,11 +9,8 @@ import {
   ChevronRight,
   Calendar,
   Clock,
-  DollarSign,
   Thermometer,
   Ruler,
-  Scale,
-  MapPin,
   Settings,
   RefreshCw,
   Info

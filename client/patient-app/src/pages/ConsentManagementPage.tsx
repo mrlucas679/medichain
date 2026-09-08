@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Shield,
   UserCheck,
@@ -17,7 +17,7 @@ import {
   FileText,
   PenLine,
 } from 'lucide-react';
-import { apiUrl, getApiClient, getPatientConsents, getConsentTypes, signConsent, useTranslation } from '@medichain/shared';
+import { apiUrl, getApiClient, getPatientConsents, getConsentTypes, signConsent, useTranslation, clickable } from '@medichain/shared';
 import { usePatientAuthStore } from '../store/authStore';
 
 interface AccessGrant {
@@ -96,11 +96,7 @@ export function ConsentManagementPage() {
   const [isSigning, setIsSigning] = useState<string | null>(null);
   const [consentError, setConsentError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [patient?.healthId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
 
     try {
@@ -163,7 +159,11 @@ export function ConsentManagementPage() {
     }
 
     setIsLoading(false);
-  };
+  }, [patient?.healthId, patient?.walletAddress]);
+
+  useEffect(() => {
+    loadData();
+  }, [patient?.healthId, loadData]);
 
   const handleSignConsent = async (consentType: string) => {
     if (!patient?.healthId) return;
@@ -367,9 +367,9 @@ export function ConsentManagementPage() {
 
       {/* Pending Requests Alert */}
       {pendingRequests.length > 0 && (
-        <div 
+        <div
           className="warning-card flex items-center gap-3 cursor-pointer"
-          onClick={() => setActiveTab('requests')}
+          {...clickable(() => setActiveTab('requests'))}
         >
           <AlertTriangle className="w-5 h-5 text-warning-600 flex-shrink-0" />
           <div className="flex-1">
@@ -596,7 +596,7 @@ export function ConsentManagementPage() {
               <div
                 key={grant.id}
                 className="patient-card hover:border-brand border-2 border-transparent cursor-pointer"
-                onClick={() => setSelectedGrant(grant)}
+                {...clickable(() => setSelectedGrant(grant))}
               >
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-brand-subtle rounded-xl flex items-center justify-center text-brand-subtle-fg">

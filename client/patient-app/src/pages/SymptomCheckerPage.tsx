@@ -8,7 +8,6 @@ import {
   Clock,
   User,
   Bot,
-  Plus,
   X,
   ChevronRight,
   Phone,
@@ -17,10 +16,7 @@ import {
   Thermometer,
   Activity,
   Brain,
-  Bone,
-  Eye,
-  Ear,
-  Loader2
+  Bone
 } from 'lucide-react';
 import { analyzeSymptoms as analyzeSymptomAPI, useTranslation } from '@medichain/shared';
 

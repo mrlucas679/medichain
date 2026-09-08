@@ -1,20 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Activity,
   TrendingUp,
   TrendingDown,
   Minus,
-  Calendar,
-  ChevronDown,
   AlertTriangle,
   CheckCircle,
-  Info,
-  Download,
-  Share2,
-  Filter,
-  BarChart3,
-  LineChart as LineChartIcon,
-  Loader2
+  LineChart as Loader2
 } from 'lucide-react';
 import { getLabTrends, IS_DEMO, useTranslation } from '@medichain/shared';
 import { usePatientAuthStore } from '../store/authStore';
@@ -67,7 +59,6 @@ const LabTrendsPage: React.FC = () => {
   const [selectedTest, setSelectedTest] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<'3m' | '6m' | '1y' | '2y' | 'all'>('1y');
   const [labTrends, setLabTrends] = useState<LabTrend[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(true);
   const { patient } = usePatientAuthStore();
 
@@ -93,11 +84,7 @@ const LabTrendsPage: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    loadLabTrends();
-  }, [patient]);
-
-  const loadLabTrends = async () => {
+  const loadLabTrends = useCallback(async () => {
     setLoading(true);
     
     // Try to load from API first
@@ -177,7 +164,11 @@ const LabTrendsPage: React.FC = () => {
       await loadDemoData();
     }
     setLoading(false);
-  };
+  }, [patient?.walletAddress]);
+
+  useEffect(() => {
+    loadLabTrends();
+  }, [patient, loadLabTrends]);
 
   // Dynamically imported so the sample data isn't bundled into production
   // builds (demo mode is gated by IS_DEMO, but the bundler can't statically
@@ -295,7 +286,7 @@ const LabTrendsPage: React.FC = () => {
 
         {/* Data points */}
         <div className="relative h-full flex items-end justify-between px-4">
-          {results.map((r, idx) => {
+          {results.map((r) => {
             const y = range > 0 ? ((r.value - minVal) / range) * 100 : 50;
             return (
               <div key={r.id} className="flex flex-col items-center">

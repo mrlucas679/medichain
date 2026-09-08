@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 import { LoginPage } from './LoginPage';
 import { usePatientAuthStore } from '../store/authStore';
 
@@ -26,7 +27,7 @@ describe('LoginPage (Patient)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (usePatientAuthStore as any).mockReturnValue({
+    (usePatientAuthStore as unknown as Mock).mockReturnValue({
       login: mockLogin,
       loginWithDemoWallet: mockLoginWithDemoWallet,
       isAuthenticated: false,

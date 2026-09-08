@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   getPatientEPrescriptions,
@@ -61,6 +61,33 @@ interface MedicationReminder {
  * 
  * © 2025 Lukau Invasion (Pty) Ltd. All rights reserved.
  */
+/** A prescription row, in either of the two casings it is stored under. */
+interface RawPrescription {
+  prescription_id?: string; medication_id?: string;
+  medication_name?: string; name?: string;
+  dosage?: string;
+  frequency?: string;
+  prescriber_name?: string; prescribed_by?: string;
+  prescribed_date?: string; start_date?: string;
+  end_date?: string;
+  refills_remaining?: number;
+  instructions?: string;
+  side_effects?: string[];
+  interactions?: string[];
+  status?: Medication['status'];
+}
+
+/** A reminder row, likewise. */
+interface RawReminder {
+  reminder_id?: string; id?: string;
+  medication_id?: string;
+  medication_name?: string;
+  dosage?: string;
+  scheduled_time?: string;
+  taken?: boolean;
+  taken_at?: string;
+}
+
 export function MedicationsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -81,13 +108,7 @@ export function MedicationsPage() {
     }
   }, [isAuthenticated, patient, navigate]);
 
-  useEffect(() => {
-    if (patient) {
-      loadMedications();
-    }
-  }, [patient]);
-
-  const loadMedications = async () => {
+  const loadMedications = useCallback(async () => {
     if (!patient) return;
     
     setLoading(true);
@@ -102,10 +123,10 @@ export function MedicationsPage() {
 
       setApiConnected(true);
 
-      const meds: Medication[] = ((prescData as { prescriptions?: unknown[]; medications?: unknown[] }).prescriptions || (prescData as { prescriptions?: unknown[]; medications?: unknown[] }).medications || []).map((m: any) => ({
+      const meds: Medication[] = (((prescData as { prescriptions?: unknown[]; medications?: unknown[] }).prescriptions || (prescData as { prescriptions?: unknown[]; medications?: unknown[] }).medications || []) as RawPrescription[]).map((m) => ({
         id: m.prescription_id || m.medication_id || '',
         name: m.medication_name || m.name || '',
-        dosage: m.dosage,
+        dosage: m.dosage ?? '',
         frequency: m.frequency || 'As directed',
         prescribedBy: m.prescriber_name || m.prescribed_by || '',
         startDate: m.prescribed_date || m.start_date || '',
@@ -153,12 +174,12 @@ export function MedicationsPage() {
       } else {
         setMedications(meds);
         
-        const apiReminders: MedicationReminder[] = ((remindersData as { reminders?: unknown[] }).reminders || []).map((r: any) => ({
+        const apiReminders: MedicationReminder[] = (((remindersData as { reminders?: unknown[] }).reminders || []) as RawReminder[]).map((r) => ({
           id: r.reminder_id || r.id || `reminder-${Date.now()}`,
-          medicationId: r.medication_id,
-          medicationName: r.medication_name,
-          dosage: r.dosage,
-          scheduledTime: r.scheduled_time,
+          medicationId: r.medication_id ?? '',
+          medicationName: r.medication_name ?? '',
+          dosage: r.dosage ?? '',
+          scheduledTime: r.scheduled_time ?? '',
           taken: r.taken || false,
           takenAt: r.taken_at,
         }));
@@ -176,7 +197,13 @@ export function MedicationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patient]);
+
+  useEffect(() => {
+    if (patient) {
+      loadMedications();
+    }
+  }, [patient, loadMedications]);
 
   const generateReminders = (meds: Medication[]) => {
     const now = new Date();

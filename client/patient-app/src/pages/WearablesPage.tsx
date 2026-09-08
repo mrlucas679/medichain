@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Watch,
   Smartphone,
   Heart,
   Moon,
   Activity,
-  Link,
   Unlink,
   RefreshCw,
   ChevronRight,
@@ -13,8 +12,6 @@ import {
   TrendingDown,
   Minus,
   CheckCircle,
-  AlertCircle,
-  Settings,
   Clock,
   Bluetooth,
   Zap,
@@ -107,11 +104,7 @@ const WearablesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { patient } = usePatientAuthStore();
 
-  useEffect(() => {
-    loadWearableData();
-  }, [patient]);
-
-  const loadWearableData = async () => {
+  const loadWearableData = useCallback(async () => {
     setLoading(true);
     
     // Try to load from API first
@@ -149,7 +142,11 @@ const WearablesPage: React.FC = () => {
       await loadDemoMetrics();
     }
     setLoading(false);
-  };
+  }, [patient?.healthId]);
+
+  useEffect(() => {
+    loadWearableData();
+  }, [patient, loadWearableData]);
 
   // Dynamically imported so the sample data isn't bundled into production
   // builds (demo mode is gated by IS_DEMO, but the bundler can't statically

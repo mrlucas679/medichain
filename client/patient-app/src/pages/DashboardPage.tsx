@@ -171,7 +171,7 @@ export function DashboardPage() {
     if (patient) {
       loadData();
     }
-  }, [patient]);
+  }, [patient, t]);
 
   const handleLogout = () => {
     logout();

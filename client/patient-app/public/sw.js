@@ -5,7 +5,6 @@
  * Prioritizes caching critical emergency data.
  */
 
-const CACHE_NAME = 'medichain-patient-v1';
 const STATIC_CACHE = 'medichain-patient-static-v1';
 const DATA_CACHE = 'medichain-patient-data-v1';
 

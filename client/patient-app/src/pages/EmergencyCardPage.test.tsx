@@ -32,19 +32,26 @@ function renderPage() {
   );
 }
 
+const mockPatientId = 'HEALTH123';
+
+const storeState = {
+  patient: {
+    healthId: mockPatientId,
+    walletAddress: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS60Z',
+  },
+};
+
 describe('EmergencyCardPage (Patient)', () => {
-  const mockPatientId = 'HEALTH123';
 
   beforeEach(() => {
     vi.clearAllMocks();
 
+    // One object, created once. Rebuilding it per call hands the component a
+    // new `patient` reference on every render, which the real store never does
+    // — and a callback depending on it is then rebuilt every render, re-running
+    // its effect forever. The page never leaves its loading skeleton.
     (usePatientAuthStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (selector: (state: unknown) => unknown) => selector({
-        patient: {
-          healthId: mockPatientId,
-          walletAddress: '5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS60Z',
-        },
-      }),
+      (selector: (state: unknown) => unknown) => selector(storeState),
     );
 
     mockFetch.mockImplementation(() => {

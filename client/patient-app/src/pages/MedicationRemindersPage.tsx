@@ -1,18 +1,26 @@
 import { useEffect, useState } from 'react';
-import { getPatientReminders, createMedicationReminder, useTranslation } from '@medichain/shared';
+import { getPatientReminders, useTranslation } from '@medichain/shared';
+
+/** One reminder as `GET /api/patients/{id}/reminders` returns it. */
+interface PatientReminder {
+  id: string;
+  medication: string;
+  dosage: string;
+  schedule?: string[];
+}
 import { usePatientAuthStore } from '../store/authStore';
 
 export function MedicationRemindersPage() {
   const { t } = useTranslation();
   // Use wallet-authenticated patient from auth store
   const { patient } = usePatientAuthStore();
-  const [reminders, setReminders] = useState<any[]>([]);
+  const [reminders, setReminders] = useState<PatientReminder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (patient?.healthId) {
       getPatientReminders(patient.healthId)
-        .then((res: any) => setReminders(res.reminders || []))
+        .then((res) => setReminders((res.reminders || []) as unknown as PatientReminder[]))
         .catch(console.error)
         .finally(() => setLoading(false));
     }

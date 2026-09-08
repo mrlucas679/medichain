@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiUrl, getApiClient, IS_DEMO, useTranslation } from '@medichain/shared';
 import { usePatientAuthStore } from '../store/authStore';
@@ -57,13 +57,7 @@ export function LabResultsPage() {
     }
   }, [isAuthenticated, patient, navigate]);
 
-  useEffect(() => {
-    if (patient) {
-      loadResults();
-    }
-  }, [patient]);
-
-  const loadResults = async () => {
+  const loadResults = useCallback(async () => {
     if (!patient) return;
     setLoading(true);
     try {
@@ -136,7 +130,13 @@ export function LabResultsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patient]);
+
+  useEffect(() => {
+    if (patient) {
+      loadResults();
+    }
+  }, [patient, loadResults]);
 
   const isCritical = (r: LabResult) =>
     r.is_critical || r.result_status === 'critical' || r.status === 'critical';

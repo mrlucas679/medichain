@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
 import { usePatientAuthStore } from '../store/authStore';
@@ -64,13 +64,7 @@ export function NotificationsPage() {
     }
   }, [isAuthenticated, patient, navigate]);
 
-  useEffect(() => {
-    if (patient) {
-      loadAll();
-    }
-  }, [patient]);
-
-  const loadAll = async () => {
+  const loadAll = useCallback(async () => {
     if (!patient) return;
     setLoading(true);
     const headers = {
@@ -99,7 +93,13 @@ export function NotificationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patient]);
+
+  useEffect(() => {
+    if (patient) {
+      loadAll();
+    }
+  }, [patient, loadAll]);
 
   const formatTime = (dateStr?: string) => {
     if (!dateStr) return '';

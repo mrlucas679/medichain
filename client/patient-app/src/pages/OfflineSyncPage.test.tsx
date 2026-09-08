@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 import OfflineSyncPage from './OfflineSyncPage';
 import { usePatientAuthStore } from '../store/authStore';
 import * as shared from '@medichain/shared';
@@ -31,12 +32,19 @@ describe('OfflineSyncPage (Patient)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (usePatientAuthStore as any).mockReturnValue({
+    (usePatientAuthStore as unknown as Mock).mockReturnValue({
       patient: mockPatient,
     });
-    (shared.getAllCachedItems as any).mockResolvedValue([]);
-    (shared.getAllSyncItems as any).mockResolvedValue([]);
-    (shared.getStorageInfo as any).mockResolvedValue({ used: 1024, available: 5000000, quota: 5001024 });
+    vi.mocked(shared.getAllCachedItems).mockResolvedValue([]);
+    vi.mocked(shared.getAllSyncItems).mockResolvedValue([]);
+    vi.mocked(shared.getStorageInfo).mockResolvedValue({
+      used: 1024,
+      available: 5000000,
+      quota: 5001024,
+      syncQueueSize: 0,
+      cachedItemsSize: 0,
+      documentsSize: 0,
+    });
   });
 
   it('renders offline sync page', async () => {

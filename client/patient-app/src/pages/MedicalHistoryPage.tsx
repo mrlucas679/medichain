@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiUrl, getApiClient, useTranslation } from '@medichain/shared';
 import { usePatientAuthStore } from '../store/authStore';
@@ -12,7 +12,6 @@ import {
   RefreshCw,
   Calendar,
   Download,
-  AlertTriangle,
 } from 'lucide-react';
 
 interface Immunization {
@@ -78,13 +77,7 @@ export function MedicalHistoryPage() {
     }
   }, [isAuthenticated, patient, navigate]);
 
-  useEffect(() => {
-    if (patient) {
-      loadAll();
-    }
-  }, [patient]);
-
-  const loadAll = async () => {
+  const loadAll = useCallback(async () => {
     if (!patient) return;
     setLoading(true);
     const headers = {
@@ -119,7 +112,13 @@ export function MedicalHistoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patient]);
+
+  useEffect(() => {
+    if (patient) {
+      loadAll();
+    }
+  }, [patient, loadAll]);
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '—';

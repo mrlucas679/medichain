@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiUrl, IS_DEVELOPMENT, useTranslation, LanguageSwitcher } from '@medichain/shared';
-import { Heart, Shield, Lock, Eye, EyeOff, Wallet, UserPlus, Zap } from 'lucide-react';
+import { IS_DEVELOPMENT, useTranslation, LanguageSwitcher } from '@medichain/shared';
+import { Heart, Shield, Wallet, UserPlus, Zap } from 'lucide-react';
 import { usePatientAuthStore } from '../store/authStore';
 
 /**

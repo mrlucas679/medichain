@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
 import { MedicationRemindersPage } from './MedicationRemindersPage';
 import { usePatientAuthStore } from '../store/authStore';
 import * as sharedApi from '@medichain/shared';
@@ -24,13 +25,16 @@ describe('MedicationRemindersPage (Patient)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (usePatientAuthStore as any).mockReturnValue({
+    (usePatientAuthStore as unknown as Mock).mockReturnValue({
       patient: mockPatient,
     });
   });
 
   it('renders medication reminders page with reminders', async () => {
-    (sharedApi.getPatientReminders as any).mockResolvedValue({
+    vi.mocked(sharedApi.getPatientReminders).mockResolvedValue({
+      success: true,
+      patient_id: 'HEALTH123',
+      count: 1,
       reminders: [
         {
           id: 'rem1',
@@ -52,7 +56,12 @@ describe('MedicationRemindersPage (Patient)', () => {
   });
 
   it('shows no reminders message when list is empty', async () => {
-    (sharedApi.getPatientReminders as any).mockResolvedValue({ reminders: [] });
+    vi.mocked(sharedApi.getPatientReminders).mockResolvedValue({
+      success: true,
+      patient_id: 'HEALTH123',
+      count: 0,
+      reminders: [],
+    });
 
     render(<MedicationRemindersPage />);
 
