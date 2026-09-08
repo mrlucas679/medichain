@@ -455,7 +455,7 @@ function NursingPage() {
                       id="nursing-patient-select"
                       value={selectedPatient}
                       onChange={(e) => setSelectedPatient(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg"
+                      className="w-full px-3 py-2 border border-border-interactive rounded-lg"
                     >
                       <option value="">{t('docNursing.selectPatientLabel')}</option>
                     {patients.map((p) => (
@@ -469,7 +469,7 @@ function NursingPage() {
                       id="nursing-entry-type"
                       value={newFluidEntry.type}
                       onChange={(e) => setNewFluidEntry({ ...newFluidEntry, type: e.target.value })}
-                      className="w-full px-3 py-2 border border-border rounded-lg"
+                      className="w-full px-3 py-2 border border-border-interactive rounded-lg"
                     >
                       <option value="intake">{t('docNursing.intakeOption')}</option>
                       <option value="output">{t('docNursing.outputOption')}</option>
@@ -481,7 +481,7 @@ function NursingPage() {
                       id="nursing-fluid-type"
                       value={newFluidEntry.fluidType}
                       onChange={(e) => setNewFluidEntry({ ...newFluidEntry, fluidType: e.target.value })}
-                      className="w-full px-3 py-2 border border-border rounded-lg"
+                      className="w-full px-3 py-2 border border-border-interactive rounded-lg"
                     >
                       {newFluidEntry.type === 'intake' ? (
                       <>
@@ -509,7 +509,7 @@ function NursingPage() {
                       value={newFluidEntry.amount}
                       onChange={(e) => setNewFluidEntry({ ...newFluidEntry, amount: parseInt(e.target.value) || 0 })}
                       placeholder={t('docNursing.amountMlPh')}
-                      className="w-full px-3 py-2 border border-border rounded-lg"
+                      className="w-full px-3 py-2 border border-border-interactive rounded-lg"
                       aria-label={t('docNursing.amountMlAriaLabel')}
                     />
                   </div>

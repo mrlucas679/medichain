@@ -121,6 +121,7 @@ export function EmergencyCardPage() {
     data: emergencyData,
     loading: isLoading,
     fromCache,
+    error: loadError,
     refresh,
   } = useOfflineCache<EmergencyData>(
     `emergency-card-${patientId || 'none'}`,
@@ -258,12 +259,50 @@ export function EmergencyCardPage() {
     showWarning(t('emergency.shareUnsupportedCopied'));
   };
 
-  if (isLoading || !emergencyData) {
+  // Loading, failed and empty are three different states and were collapsed
+  // into one skeleton. `isLoading || !emergencyData` meant that a card which
+  // failed to load — or a patient who simply has no emergency record yet —
+  // sat on a pulsing placeholder forever, with nothing to read and nothing to
+  // do. On this screen that is the worst possible outcome: someone checking
+  // their card before travelling is told nothing is wrong, and finds out it is
+  // empty at the moment it matters.
+  if (isLoading) {
     return (
-      <div className="p-6 space-y-4 animate-pulse">
+      <div className="p-6 space-y-4 animate-pulse" role="status" aria-live="polite">
+        <span className="sr-only">{t('emergency.loadingCard')}</span>
         <div className="h-8 bg-surface-sunken rounded w-48" />
         <div className="aspect-square max-w-xs mx-auto bg-surface-sunken rounded-3xl" />
         <div className="h-24 bg-surface-sunken rounded-xl" />
+      </div>
+    );
+  }
+
+  if (!emergencyData) {
+    return (
+      <div className="p-6">
+        <div
+          role="alert"
+          className="bg-caution-subtle border border-caution rounded-xl p-5 max-w-md mx-auto"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-6 h-6 text-caution-subtle-fg shrink-0" aria-hidden="true" />
+            <div>
+              <h2 className="font-semibold text-caution-subtle-fg mb-1">
+                {loadError ? t('emergency.cardUnavailable') : t('emergency.cardNotSetUp')}
+              </h2>
+              <p className="text-sm text-caution-subtle-fg mb-4">
+                {loadError ? t('emergency.cardUnavailableHelp') : t('emergency.cardNotSetUpHelp')}
+              </p>
+              <button
+                onClick={refresh}
+                className="inline-flex items-center gap-2 min-h-[44px] px-4 bg-caution text-caution-fg rounded-lg font-medium"
+              >
+                <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                {t('emergency.retry')}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

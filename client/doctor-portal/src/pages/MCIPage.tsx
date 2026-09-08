@@ -650,7 +650,7 @@ export default function MCIPage() {
                       value={incident.incidentName}
                       onChange={(e) => setIncident({ ...incident, incidentName: e.target.value })}
                       placeholder={t('docMCI.incidentNamePh')}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                       required
                     />
                   </div>
@@ -660,7 +660,7 @@ export default function MCIPage() {
                       id="mci-incident-type"
                       value={incident.incidentType}
                       onChange={(e) => setIncident({ ...incident, incidentType: e.target.value })}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="">{t('docMCI.selectTypePh')}</option>
                       {incidentTypes.map(type => (
@@ -678,7 +678,7 @@ export default function MCIPage() {
                       value={incident.location}
                       onChange={(e) => setIncident({ ...incident, location: e.target.value })}
                       placeholder={t('docMCI.locationPh')}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                   <div>
@@ -690,7 +690,7 @@ export default function MCIPage() {
                       type="datetime-local"
                       value={incident.startTime}
                       onChange={(e) => setIncident({ ...incident, startTime: e.target.value })}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                   <div>
@@ -702,7 +702,7 @@ export default function MCIPage() {
                       type="number"
                       value={incident.estimatedCasualties}
                       onChange={(e) => setIncident({ ...incident, estimatedCasualties: parseInt(e.target.value) })}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                   <div>
@@ -715,7 +715,7 @@ export default function MCIPage() {
                       value={incident.commandPost}
                       onChange={(e) => setIncident({ ...incident, commandPost: e.target.value })}
                       placeholder={t('docMCI.commandPostLocationPh')}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                   <div>
@@ -728,7 +728,7 @@ export default function MCIPage() {
                       value={incident.incidentCommander}
                       onChange={(e) => setIncident({ ...incident, incidentCommander: e.target.value })}
                       placeholder={t('docMCI.incidentCommanderPh')}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                   <div>
@@ -741,7 +741,7 @@ export default function MCIPage() {
                       value={incident.contactNumber}
                       onChange={(e) => setIncident({ ...incident, contactNumber: e.target.value })}
                       placeholder={t('docMCI.contactNumberPh')}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                 </div>
@@ -765,7 +765,7 @@ export default function MCIPage() {
                             setIncident({ ...incident, resourcesRequested: incident.resourcesRequested.filter(r => r !== resource) });
                           }
                         }}
-                        className="rounded border-border-strong text-content-secondary focus:ring-orange-500 h-5 w-5"
+                        className="rounded border-border-interactive text-content-secondary focus:ring-orange-500 h-5 w-5"
                       />
                       <span className="font-medium text-content-secondary">{t(`docMCI.resource_${RESOURCE_KEYS[resource]}`)}</span>
                     </label>

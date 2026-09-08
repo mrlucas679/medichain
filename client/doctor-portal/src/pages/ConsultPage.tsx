@@ -369,7 +369,7 @@ const ConsultPage: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t('docConsult.searchPh')}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg"
                   />
                 </div>
               </div>
@@ -379,7 +379,7 @@ const ConsultPage: React.FC = () => {
                   id="consult-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as ConsultStatus | 'all')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="all">{t('docConsult.filterAllStatuses')}</option>
                   <option value="requested">{t('docConsult.status_requested')}</option>
@@ -396,7 +396,7 @@ const ConsultPage: React.FC = () => {
                   id="consult-specialty-filter"
                   value={specialtyFilter}
                   onChange={(e) => setSpecialtyFilter(e.target.value as ConsultSpecialty | 'all')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="all">{t('docConsult.filterAllSpecialties')}</option>
                   <option value="cardiology">{t('docConsult.specialty_cardiology')}</option>
@@ -607,7 +607,7 @@ const ConsultPage: React.FC = () => {
                     value={consultResponse.assessment}
                     onChange={(e) => setConsultResponse({ ...consultResponse, assessment: e.target.value })}
                     placeholder={t('docConsult.assessmentPh')}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     rows={4}
                   />
                 </div>
@@ -621,7 +621,7 @@ const ConsultPage: React.FC = () => {
                     value={consultResponse.recommendations}
                     onChange={(e) => setConsultResponse({ ...consultResponse, recommendations: e.target.value })}
                     placeholder={t('docConsult.recommendationsPh')}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     rows={6}
                   />
                 </div>
@@ -633,7 +633,7 @@ const ConsultPage: React.FC = () => {
                     value={consultResponse.followUp}
                     onChange={(e) => setConsultResponse({ ...consultResponse, followUp: e.target.value })}
                     placeholder={t('docConsult.followUpPlanPh')}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     rows={3}
                   />
                 </div>
@@ -682,7 +682,7 @@ const ConsultPage: React.FC = () => {
                   id="consult-patient"
                   value={newConsult.patientId}
                   onChange={(e) => setNewConsult({ ...newConsult, patientId: e.target.value })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="">{t('docConsult.selectPatientPh')}</option>
                   {patients.map((p) => (
@@ -701,7 +701,7 @@ const ConsultPage: React.FC = () => {
                   id="consult-specialty"
                   value={newConsult.specialty}
                   onChange={(e) => setNewConsult({ ...newConsult, specialty: e.target.value as ConsultSpecialty })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="cardiology">{t('docConsult.specialty_cardiology')}</option>
                   <option value="neurology">{t('docConsult.specialty_neurology')}</option>
@@ -737,7 +737,7 @@ const ConsultPage: React.FC = () => {
                   id="consult-urgency"
                   value={newConsult.urgency}
                   onChange={(e) => setNewConsult({ ...newConsult, urgency: e.target.value as ConsultUrgency })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="routine">{t('docConsult.urgency_routine')}</option>
                   <option value="urgent">{t('docConsult.urgency_urgent')}</option>
@@ -757,7 +757,7 @@ const ConsultPage: React.FC = () => {
                 value={newConsult.reason}
                 onChange={(e) => setNewConsult({ ...newConsult, reason: e.target.value })}
                 placeholder={t('docConsult.reasonPh')}
-                className="w-full border border-border-strong rounded-lg px-3 py-2"
+                className="w-full border border-border-interactive rounded-lg px-3 py-2"
               />
             </div>
 
@@ -770,7 +770,7 @@ const ConsultPage: React.FC = () => {
                 value={newConsult.clinicalQuestion}
                 onChange={(e) => setNewConsult({ ...newConsult, clinicalQuestion: e.target.value })}
                 placeholder={t('docConsult.clinicalQuestionPh')}
-                className="w-full border border-border-strong rounded-lg px-3 py-2"
+                className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 rows={3}
               />
             </div>
@@ -782,7 +782,7 @@ const ConsultPage: React.FC = () => {
                 value={newConsult.relevantHistory}
                 onChange={(e) => setNewConsult({ ...newConsult, relevantHistory: e.target.value })}
                 placeholder={t('docConsult.relevantHistoryPh')}
-                className="w-full border border-border-strong rounded-lg px-3 py-2"
+                className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 rows={2}
               />
             </div>
@@ -795,7 +795,7 @@ const ConsultPage: React.FC = () => {
                   value={newConsult.currentMedications}
                   onChange={(e) => setNewConsult({ ...newConsult, currentMedications: e.target.value })}
                   placeholder={t('docConsult.currentMedicationsPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   rows={2}
                 />
               </div>
@@ -807,7 +807,7 @@ const ConsultPage: React.FC = () => {
                   value={newConsult.vitalSigns}
                   onChange={(e) => setNewConsult({ ...newConsult, vitalSigns: e.target.value })}
                   placeholder={t('docConsult.vitalSignsPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   rows={2}
                 />
               </div>
@@ -819,7 +819,7 @@ const ConsultPage: React.FC = () => {
                   value={newConsult.labResults}
                   onChange={(e) => setNewConsult({ ...newConsult, labResults: e.target.value })}
                   placeholder={t('docConsult.labResultsPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   rows={2}
                 />
               </div>
@@ -831,7 +831,7 @@ const ConsultPage: React.FC = () => {
                   value={newConsult.imagingResults}
                   onChange={(e) => setNewConsult({ ...newConsult, imagingResults: e.target.value })}
                   placeholder={t('docConsult.imagingResultsPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   rows={2}
                 />
               </div>
@@ -844,7 +844,7 @@ const ConsultPage: React.FC = () => {
                 value={newConsult.notes}
                 onChange={(e) => setNewConsult({ ...newConsult, notes: e.target.value })}
                 placeholder={t('docConsult.additionalNotesPh')}
-                className="w-full border border-border-strong rounded-lg px-3 py-2"
+                className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 rows={2}
               />
             </div>

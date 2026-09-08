@@ -621,7 +621,7 @@ function DischargePage() {
                   id="dc-patient"
                   value={selectedPatient}
                   onChange={(e) => setSelectedPatient(e.target.value)}
-                  className="w-full p-3 border border-border rounded-lg"
+                  className="w-full p-3 border border-border-interactive rounded-lg"
                   required
                 >
                   <option value="">{t('docDischarge.selectPatientPh')}</option>
@@ -642,7 +642,7 @@ function DischargePage() {
                     type="text"
                     value={formData.primary_diagnosis}
                     onChange={(e) => setFormData({ ...formData, primary_diagnosis: e.target.value })}
-                    className="w-full p-3 border border-border rounded-lg"
+                    className="w-full p-3 border border-border-interactive rounded-lg"
                     placeholder={t('docDischarge.primaryDiagnosisPh')}
                     required
                   />
@@ -655,7 +655,7 @@ function DischargePage() {
                     id="dc-discharge-disposition"
                     value={formData.discharge_disposition}
                     onChange={(e) => setFormData({ ...formData, discharge_disposition: e.target.value })}
-                    className="w-full p-3 border border-border rounded-lg"
+                    className="w-full p-3 border border-border-interactive rounded-lg"
                   >
                     <option value="home">{t('docDischarge.disposition_home')}</option>
                     <option value="home_health">{t('docDischarge.disposition_homeHealth')}</option>
@@ -674,7 +674,7 @@ function DischargePage() {
                   id="dc-secondary-diagnoses"
                   value={formData.secondary_diagnoses}
                   onChange={(e) => setFormData({ ...formData, secondary_diagnoses: e.target.value })}
-                  className="w-full p-3 border border-border rounded-lg"
+                  className="w-full p-3 border border-border-interactive rounded-lg"
                   rows={3}
                   placeholder="Type 2 Diabetes&#10;Hypertension&#10;..."
                 />
@@ -718,7 +718,7 @@ function DischargePage() {
                         setMedications(updated);
                       }}
                       placeholder={t('docDischarge.medNamePh')}
-                      className="p-2 border border-border rounded-lg"
+                      className="p-2 border border-border-interactive rounded-lg"
                     />
                     <input
                       type="text"
@@ -729,7 +729,7 @@ function DischargePage() {
                         setMedications(updated);
                       }}
                       placeholder={t('docDischarge.dosagePh')}
-                      className="p-2 border border-border rounded-lg"
+                      className="p-2 border border-border-interactive rounded-lg"
                     />
                     <input
                       type="text"
@@ -740,7 +740,7 @@ function DischargePage() {
                         setMedications(updated);
                       }}
                       placeholder={t('docDischarge.frequencyPh')}
-                      className="p-2 border border-border rounded-lg"
+                      className="p-2 border border-border-interactive rounded-lg"
                     />
                     <input
                       type="text"
@@ -751,7 +751,7 @@ function DischargePage() {
                         setMedications(updated);
                       }}
                       placeholder={t('docDischarge.durationPh')}
-                      className="p-2 border border-border rounded-lg"
+                      className="p-2 border border-border-interactive rounded-lg"
                     />
                     <button
                       type="button"
@@ -785,7 +785,7 @@ function DischargePage() {
                         setFollowUps(updated);
                       }}
                       placeholder={t('docDischarge.specialtyPh')}
-                      className="p-2 border border-border rounded-lg"
+                      className="p-2 border border-border-interactive rounded-lg"
                     />
                     <input
                       type="text"
@@ -796,7 +796,7 @@ function DischargePage() {
                         setFollowUps(updated);
                       }}
                       placeholder={t('docDischarge.providerPh')}
-                      className="p-2 border border-border rounded-lg"
+                      className="p-2 border border-border-interactive rounded-lg"
                     />
                     <input
                       type="date"
@@ -806,7 +806,7 @@ function DischargePage() {
                         updated[i].date = e.target.value;
                         setFollowUps(updated);
                       }}
-                      className="p-2 border border-border rounded-lg"
+                      className="p-2 border border-border-interactive rounded-lg"
                     />
                     <button
                       type="button"
@@ -828,7 +828,7 @@ function DischargePage() {
                   id="dc-warning-signs"
                   value={formData.warning_signs}
                   onChange={(e) => setFormData({ ...formData, warning_signs: e.target.value })}
-                  className="w-full p-3 border border-border rounded-lg"
+                  className="w-full p-3 border border-border-interactive rounded-lg"
                   rows={3}
                   placeholder="Fever above 38.5°C&#10;Worsening shortness of breath&#10;..."
                 />
@@ -842,7 +842,7 @@ function DischargePage() {
                     id="dc-diet-instructions"
                     value={formData.diet_instructions}
                     onChange={(e) => setFormData({ ...formData, diet_instructions: e.target.value })}
-                    className="w-full p-3 border border-border rounded-lg"
+                    className="w-full p-3 border border-border-interactive rounded-lg"
                     rows={2}
                   />
                 </div>
@@ -852,7 +852,7 @@ function DischargePage() {
                     id="dc-activity-restrictions"
                     value={formData.activity_restrictions}
                     onChange={(e) => setFormData({ ...formData, activity_restrictions: e.target.value })}
-                    className="w-full p-3 border border-border rounded-lg"
+                    className="w-full p-3 border border-border-interactive rounded-lg"
                     rows={2}
                     placeholder={t('docDischarge.activityRestrictionsPh')}
                   />

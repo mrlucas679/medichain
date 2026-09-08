@@ -5,8 +5,23 @@ test.describe('Login Flow', () => {
     // Navigate to login page
     await page.goto('/login');
 
-    // Click on a demo doctor button (Dr. Thandi Mbeki)
+    // Click on a demo doctor button (Dr. Thandi Mbeki).
+    //
+    // These are populated from GET /api/auth/demo-credentials, which answers
+    // only when the API runs with MEDICHAIN_DEV_MODE. Without the guard this
+    // clicked a button that did not exist and reported a bare 30-second
+    // timeout, which says nothing about the missing environment variable.
     const demoDoctor = page.locator('button:has-text("Mbeki")');
+    const available = await demoDoctor
+      .first()
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+    expect(
+      available,
+      'No demo sign-in buttons. Start the API with MEDICHAIN_DEV_MODE=1 — the compose ' +
+        'file deliberately does not set it, since the endpoint exposes credentials.'
+    ).toBe(true);
     await demoDoctor.click();
 
     // Should redirect to dashboard

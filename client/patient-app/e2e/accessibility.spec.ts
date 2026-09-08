@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { signIn, settle } from './support';
+import { signIn, settle, ROUTES } from './support';
 
 /**
  * WCAG 2.2 Level AA criteria other than text contrast.
  *
- * `contrast.spec.ts` measures SC 1.4.3 across 12 routes and passes. That is one
- * criterion. This file covers the ones that were claimed rather than measured:
+ * `contrast.spec.ts` measures SC 1.4.3 across this app's routes. That is one
+ * criterion. This file covers the rest of the AA set that decides most
+ * front-ends:
  *
  *   3.1.1  Language of Page          A
  *   1.4.10 Reflow                    AA   320 CSS px, no two-dimensional scroll
@@ -32,17 +33,9 @@ import { signIn, settle } from './support';
  * desktop user.
  */
 
-const ROUTES = [
-  { path: '/dashboard', name: 'Dashboard' },
-  { path: '/triage', name: 'Triage' },
-  { path: '/patients', name: 'Patient search' },
-  { path: '/settings', name: 'Settings' },
-];
-
 test.beforeEach(async ({ page }) => {
   await signIn(page);
 });
-
 
 // ---------------------------------------------------------------------------
 // 3.1.1 Language of Page (A)

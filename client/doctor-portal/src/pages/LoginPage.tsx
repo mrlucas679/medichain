@@ -174,7 +174,7 @@ function LoginPage() {
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               placeholder={t('docLogin.identifierPlaceholder')}
-              className="w-full px-4 py-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand"
+              className="w-full px-4 py-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand"
               disabled={isLoading}
               required
             />
@@ -192,7 +192,7 @@ function LoginPage() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand"
+              className="w-full px-4 py-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand"
               disabled={isLoading}
               required
             />

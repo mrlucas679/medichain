@@ -383,10 +383,19 @@ export function ConsentManagementPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 bg-surface-sunken p-1 rounded-xl">
+      {/*
+        `flex-wrap` and a minimum basis. Three `flex-1` buttons cannot shrink
+        below their own content width, so at 320 CSS px this row forced the
+        page to 366px and produced horizontal scrolling — a WCAG 2.2 SC
+        1.4.10 failure. 320px is not only a small phone: it is a 1280px
+        desktop at 400% zoom, which is how many low-vision users browse.
+        Wrapping to two rows keeps every label readable instead of
+        truncating a tab name.
+      */}
+      <div className="flex flex-wrap gap-2 bg-surface-sunken p-1 rounded-xl">
         <button
           onClick={() => setActiveTab('grants')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex-1 min-w-[8rem] py-2.5 px-3 rounded-lg text-sm font-medium transition-colors ${
             activeTab === 'grants'
               ? 'bg-surface text-content shadow-sm'
               : 'text-content-muted hover:text-content'
@@ -397,7 +406,7 @@ export function ConsentManagementPage() {
         </button>
         <button
           onClick={() => setActiveTab('requests')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-colors relative ${
+          className={`flex-1 min-w-[8rem] py-2.5 px-3 rounded-lg text-sm font-medium transition-colors relative ${
             activeTab === 'requests'
               ? 'bg-surface text-content shadow-sm'
               : 'text-content-muted hover:text-content'
@@ -413,7 +422,7 @@ export function ConsentManagementPage() {
         </button>
         <button
           onClick={() => setActiveTab('history')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex-1 min-w-[8rem] py-2.5 px-3 rounded-lg text-sm font-medium transition-colors ${
             activeTab === 'history'
               ? 'bg-surface text-content shadow-sm'
               : 'text-content-muted hover:text-content'
@@ -424,7 +433,7 @@ export function ConsentManagementPage() {
         </button>
         <button
           onClick={() => setActiveTab('consents')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex-1 min-w-[8rem] py-2.5 px-3 rounded-lg text-sm font-medium transition-colors ${
             activeTab === 'consents'
               ? 'bg-surface text-content shadow-sm'
               : 'text-content-muted hover:text-content'

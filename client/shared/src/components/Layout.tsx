@@ -219,6 +219,22 @@ export function Layout({ variant = 'doctor' }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-surface-sunken">
+      {/*
+        First focusable element in the document, deliberately. The patient app
+        had no skip link at all: a keyboard or switch user reached the page
+        content only after tabbing the entire header and navigation, on every
+        single route.
+
+        `min-h`/`min-w` because it becomes a real target once focused — WCAG 2.2
+        SC 2.5.8 asks for 24x24 CSS px, and padding around a 14px line box does
+        not get there on its own.
+      */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 inline-flex items-center min-h-[24px] min-w-[24px] px-3 py-1.5 bg-surface text-content border border-border-interactive rounded shadow"
+      >
+        Skip to main content
+      </a>
       {/* Offline Banner */}
       {!isOnline && (
         <div className="bg-caution text-caution-fg px-4 py-2 text-center text-sm font-medium animate-pulse flex items-center justify-center gap-2 sticky top-0 z-50">
@@ -384,7 +400,7 @@ export function Layout({ variant = 'doctor' }: LayoutProps) {
           patient portal and took the emergency medical ID down with it.
           Keying it on the path resets the boundary when the user navigates
           away; without that, one crash would latch for the rest of the session. */}
-      <main className="max-w-7xl mx-auto">
+      <main id="main-content" className="max-w-7xl mx-auto">
         <ErrorBoundary key={location.pathname}>
           <Outlet />
         </ErrorBoundary>

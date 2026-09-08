@@ -394,7 +394,7 @@ const SymptomCheckerPage: React.FC = () => {
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
                   placeholder={t('symptomChecker.agePlaceholder')}
-                  className="w-full border border-border-strong rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full border border-border-interactive rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 />
               </div>
               <div>
@@ -545,7 +545,7 @@ const SymptomCheckerPage: React.FC = () => {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 placeholder={t('symptomChecker.inputPlaceholder')}
-                className="flex-1 border border-border-strong rounded-full px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                className="flex-1 border border-border-interactive rounded-full px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               />
               <button
                 onClick={handleSendMessage}

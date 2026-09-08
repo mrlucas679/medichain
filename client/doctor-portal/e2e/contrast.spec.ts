@@ -1,4 +1,5 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { signIn, settle } from './support';
 
 /**
  * Measured contrast audit of the rendered application, in both themes.
@@ -191,9 +192,7 @@ function report(route: string, theme: string, result: { sampled: number; failure
  * never opened — the same shape of false assurance this suite exists to catch.
  */
 test.beforeEach(async ({ page }) => {
-  await page.goto('/login');
-  await page.locator('button:has-text("Mbeki")').click();
-  await expect(page).toHaveURL(/.*dashboard/);
+  await signIn(page);
 });
 
 for (const route of ROUTES) {

@@ -484,7 +484,7 @@ function SOAPNotePage() {
                 id="soap-patient-id"
                 value={selectedPatientId}
                 onChange={(e) => setSelectedPatientId(e.target.value)}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 required
                 disabled={loadingPatients}
               >
@@ -505,7 +505,7 @@ function SOAPNotePage() {
                 id="soap-encounter-type"
                 value={encounterType}
                 onChange={(e) => setEncounterType(e.target.value)}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 required
               >
                 {ENCOUNTER_TYPES.map(type => (
@@ -535,7 +535,7 @@ function SOAPNotePage() {
                 value={chiefComplaint}
                 onChange={(e) => setChiefComplaint(e.target.value)}
                 placeholder={t('docSOAPNote.chiefComplaintPh')}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 required
               />
             </div>
@@ -550,7 +550,7 @@ function SOAPNotePage() {
                 onChange={(e) => setHpi(e.target.value)}
                 placeholder={t('docSOAPNote.hpiPh')}
                 rows={4}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -565,7 +565,7 @@ function SOAPNotePage() {
                   value={symptoms}
                   onChange={(e) => setSymptoms(e.target.value)}
                   placeholder={t('docSOAPNote.symptomsPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
@@ -579,7 +579,7 @@ function SOAPNotePage() {
                   value={symptomDuration}
                   onChange={(e) => setSymptomDuration(e.target.value)}
                   placeholder={t('docSOAPNote.symptomDurationPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -592,7 +592,7 @@ function SOAPNotePage() {
                 onChange={(e) => setReviewOfSystems(e.target.value)}
                 placeholder={t('docSOAPNote.reviewOfSystemsPh')}
                 rows={3}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -607,7 +607,7 @@ function SOAPNotePage() {
                   value={modifyingFactors}
                   onChange={(e) => setModifyingFactors(e.target.value)}
                   placeholder={t('docSOAPNote.modifyingFactorsPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
@@ -621,7 +621,7 @@ function SOAPNotePage() {
                   value={previousTreatments}
                   onChange={(e) => setPreviousTreatments(e.target.value)}
                   placeholder={t('docSOAPNote.previousTreatmentsPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -647,7 +647,7 @@ function SOAPNotePage() {
                 value={generalAppearance}
                 onChange={(e) => setGeneralAppearance(e.target.value)}
                 placeholder={t('docSOAPNote.generalAppearancePh')}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -665,7 +665,7 @@ function SOAPNotePage() {
                         e.target.value = '';
                       }
                     }}
-                    className="text-sm px-3 py-1 border border-border-strong rounded-lg"
+                    className="text-sm px-3 py-1 border border-border-interactive rounded-lg"
                   >
                     <option value="">{t('docSOAPNote.addSystemPh')}</option>
                     {PHYSICAL_EXAM_SYSTEMS.map(system => (
@@ -690,7 +690,7 @@ function SOAPNotePage() {
                           value={exam.findings}
                           onChange={(e) => updatePhysicalExam(index, 'findings', e.target.value)}
                           placeholder={t('docSOAPNote.findingsPh')}
-                          className="w-full px-3 py-2 border border-border-strong rounded-lg text-sm"
+                          className="w-full px-3 py-2 border border-border-interactive rounded-lg text-sm"
                         />
                         <label className="flex items-center gap-2">
                           <input
@@ -726,7 +726,7 @@ function SOAPNotePage() {
                   value={labResults}
                   onChange={(e) => setLabResults(e.target.value)}
                   placeholder={t('docSOAPNote.labResultsPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
@@ -740,7 +740,7 @@ function SOAPNotePage() {
                   value={imagingResults}
                   onChange={(e) => setImagingResults(e.target.value)}
                   placeholder={t('docSOAPNote.imagingResultsPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -767,7 +767,7 @@ function SOAPNotePage() {
                   value={primaryDiagnosis}
                   onChange={(e) => setPrimaryDiagnosis(e.target.value)}
                   placeholder={t('docSOAPNote.primaryDiagnosisPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
@@ -781,7 +781,7 @@ function SOAPNotePage() {
                   value={primaryICD10}
                   onChange={(e) => setPrimaryICD10(e.target.value)}
                   placeholder="J20.9"
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -793,7 +793,7 @@ function SOAPNotePage() {
                 </label>
                 <select                  id="soap-diagnosis-status"                  value={primaryStatus}
                   onChange={(e) => setPrimaryStatus(e.target.value as typeof primaryStatus)}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   {DIAGNOSIS_STATUSES.map(status => (
                     <option key={status} value={status}>{t(`docSOAPNote.diagnosisStatus_${status}`)}</option>
@@ -811,7 +811,7 @@ function SOAPNotePage() {
                   value={severity}
                   onChange={(e) => setSeverity(e.target.value)}
                   placeholder={t('docSOAPNote.severityPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -824,7 +824,7 @@ function SOAPNotePage() {
                 onChange={(e) => setClinicalSummary(e.target.value)}
                 placeholder={t('docSOAPNote.clinicalSummaryPh')}
                 rows={4}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 required
               />
             </div>
@@ -850,7 +850,7 @@ function SOAPNotePage() {
                 onChange={(e) => setTreatmentPlan(e.target.value)}
                 placeholder={t('docSOAPNote.treatmentPlanPh')}
                 rows={3}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 required
               />
             </div>
@@ -884,19 +884,19 @@ function SOAPNotePage() {
                           value={med.medication}
                           onChange={(e) => updateMedication(index, 'medication', e.target.value)}
                           placeholder={t('docSOAPNote.medicationNamePh')}
-                          className="px-3 py-2 border border-border-strong rounded-lg text-sm"
+                          className="px-3 py-2 border border-border-interactive rounded-lg text-sm"
                         />
                         <input
                           type="text"
                           value={med.dosage}
                           onChange={(e) => updateMedication(index, 'dosage', e.target.value)}
                           placeholder={t('docSOAPNote.dosagePh')}
-                          className="px-3 py-2 border border-border-strong rounded-lg text-sm"
+                          className="px-3 py-2 border border-border-interactive rounded-lg text-sm"
                         />
                         <select
                           value={med.route}
                           onChange={(e) => updateMedication(index, 'route', e.target.value)}
-                          className="px-3 py-2 border border-border-strong rounded-lg text-sm"
+                          className="px-3 py-2 border border-border-interactive rounded-lg text-sm"
                         >
                           {MEDICATION_ROUTES.map(route => (
                             <option key={route} value={route}>{t(`docSOAPNote.route_${ROUTE_KEYS[route]}`)}</option>
@@ -909,14 +909,14 @@ function SOAPNotePage() {
                           value={med.frequency}
                           onChange={(e) => updateMedication(index, 'frequency', e.target.value)}
                           placeholder={t('docSOAPNote.frequencyPh')}
-                          className="px-3 py-2 border border-border-strong rounded-lg text-sm"
+                          className="px-3 py-2 border border-border-interactive rounded-lg text-sm"
                         />
                         <input
                           type="text"
                           value={med.duration}
                           onChange={(e) => updateMedication(index, 'duration', e.target.value)}
                           placeholder={t('docSOAPNote.durationPh')}
-                          className="px-3 py-2 border border-border-strong rounded-lg text-sm"
+                          className="px-3 py-2 border border-border-interactive rounded-lg text-sm"
                         />
                         <button
                           type="button"
@@ -943,7 +943,7 @@ function SOAPNotePage() {
                   value={procedures}
                   onChange={(e) => setProcedures(e.target.value)}
                   placeholder={t('docSOAPNote.proceduresPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
@@ -957,7 +957,7 @@ function SOAPNotePage() {
                   value={labOrders}
                   onChange={(e) => setLabOrders(e.target.value)}
                   placeholder={t('docSOAPNote.labOrdersPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -971,7 +971,7 @@ function SOAPNotePage() {
                   value={imagingOrders}
                   onChange={(e) => setImagingOrders(e.target.value)}
                   placeholder={t('docSOAPNote.imagingOrdersPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
@@ -985,7 +985,7 @@ function SOAPNotePage() {
                   value={referrals}
                   onChange={(e) => setReferrals(e.target.value)}
                   placeholder={t('docSOAPNote.referralsPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -998,7 +998,7 @@ function SOAPNotePage() {
                 value={patientEducation}
                 onChange={(e) => setPatientEducation(e.target.value)}
                 placeholder={t('docSOAPNote.patientEducationPh')}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
               />
             </div>
 
@@ -1014,7 +1014,7 @@ function SOAPNotePage() {
                   value={followUp}
                   onChange={(e) => setFollowUp(e.target.value)}
                   placeholder={t('docSOAPNote.followUpPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
 
@@ -1028,7 +1028,7 @@ function SOAPNotePage() {
                   value={activityRestrictions}
                   onChange={(e) => setActivityRestrictions(e.target.value)}
                   placeholder={t('docSOAPNote.activityRestrictionsPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
@@ -1041,7 +1041,7 @@ function SOAPNotePage() {
                 value={returnPrecautions}
                 onChange={(e) => setReturnPrecautions(e.target.value)}
                 placeholder={t('docSOAPNote.returnPrecautionsPh')}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
               />
             </div>
           </div>

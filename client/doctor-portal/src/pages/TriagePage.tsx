@@ -392,7 +392,7 @@ function TriagePage() {
                 }}
                 onFocus={() => setShowPatientDropdown(true)}
                 placeholder={t('docTriage.searchPatientPlaceholder')}
-                className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="w-full pl-10 pr-4 py-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
               />
               {showPatientDropdown && filteredPatients.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-surface border border-border rounded-lg shadow-lg max-h-60 overflow-auto">
@@ -485,7 +485,7 @@ function TriagePage() {
               onChange={(e) => setChiefComplaint(e.target.value)}
               placeholder={t('docTriage.chiefComplaintPlaceholder')}
               rows={3}
-              className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
               required
             />
           </div>
@@ -517,7 +517,7 @@ function TriagePage() {
                   className={`w-full px-3 py-2 border rounded-lg ${
                     vitalSigns.heart_rate && (vitalSigns.heart_rate < 40 || vitalSigns.heart_rate > 150)
                       ? 'border-red-500 bg-critical-subtle'
-                      : 'border-border'
+                      : 'border-border-interactive'
                   }`}
                 />
               </div>
@@ -537,7 +537,7 @@ function TriagePage() {
                   className={`w-full px-3 py-2 border rounded-lg ${
                     vitalSigns.respiratory_rate && (vitalSigns.respiratory_rate < 8 || vitalSigns.respiratory_rate > 35)
                       ? 'border-red-500 bg-critical-subtle'
-                      : 'border-border'
+                      : 'border-border-interactive'
                   }`}
                 />
               </div>
@@ -557,7 +557,7 @@ function TriagePage() {
                   className={`w-full px-3 py-2 border rounded-lg ${
                     vitalSigns.bp_systolic && (vitalSigns.bp_systolic < 80 || vitalSigns.bp_systolic > 220)
                       ? 'border-red-500 bg-critical-subtle'
-                      : 'border-border'
+                      : 'border-border-interactive'
                   }`}
                 />
               </div>
@@ -572,7 +572,7 @@ function TriagePage() {
                   value={vitalSigns.bp_diastolic ?? ''}
                   onChange={(e) => updateVitalSign('bp_diastolic', e.target.value)}
                   placeholder="60-80"
-                  className="w-full px-3 py-2 border border-border rounded-lg"
+                  className="w-full px-3 py-2 border border-border-interactive rounded-lg"
                 />
               </div>
               
@@ -592,7 +592,7 @@ function TriagePage() {
                   className={`w-full px-3 py-2 border rounded-lg ${
                     vitalSigns.temperature_celsius && (vitalSigns.temperature_celsius < 35 || vitalSigns.temperature_celsius > 40)
                       ? 'border-red-500 bg-critical-subtle'
-                      : 'border-border'
+                      : 'border-border-interactive'
                   }`}
                 />
               </div>
@@ -612,7 +612,7 @@ function TriagePage() {
                   className={`w-full px-3 py-2 border rounded-lg ${
                     vitalSigns.oxygen_saturation && vitalSigns.oxygen_saturation < 90
                       ? 'border-red-500 bg-critical-subtle'
-                      : 'border-border'
+                      : 'border-border-interactive'
                   }`}
                 />
               </div>
@@ -630,7 +630,7 @@ function TriagePage() {
                   value={vitalSigns.pain_scale ?? ''}
                   onChange={(e) => updateVitalSign('pain_scale', e.target.value)}
                   placeholder="0-10"
-                  className="w-full px-3 py-2 border border-border rounded-lg"
+                  className="w-full px-3 py-2 border border-border-interactive rounded-lg"
                 />
               </div>
               
@@ -650,7 +650,7 @@ function TriagePage() {
                   className={`w-full px-3 py-2 border rounded-lg ${
                     vitalSigns.gcs_score && vitalSigns.gcs_score < 9
                       ? 'border-red-500 bg-critical-subtle'
-                      : 'border-border'
+                      : 'border-border-interactive'
                   }`}
                 />
               </div>
@@ -666,7 +666,7 @@ function TriagePage() {
                   value={vitalSigns.blood_glucose ?? ''}
                   onChange={(e) => updateVitalSign('blood_glucose', e.target.value)}
                   placeholder="70-100"
-                  className="w-full px-3 py-2 border border-border rounded-lg"
+                  className="w-full px-3 py-2 border border-border-interactive rounded-lg"
                 />
               </div>
               
@@ -682,7 +682,7 @@ function TriagePage() {
                   value={vitalSigns.weight_kg ?? ''}
                   onChange={(e) => updateVitalSign('weight_kg', e.target.value)}
                   placeholder={t('docTriage.weightPlaceholder')}
-                  className="w-full px-3 py-2 border border-border rounded-lg"
+                  className="w-full px-3 py-2 border border-border-interactive rounded-lg"
                 />
               </div>
             </div>
@@ -696,7 +696,7 @@ function TriagePage() {
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t('docTriage.notesPlaceholder')}
               rows={3}
-              className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
             />
           </div>
 

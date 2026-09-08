@@ -738,7 +738,7 @@ const InsurancePage: React.FC = () => {
                   id="insurance-type"
                   value={newInsurance.type}
                   onChange={(e) => setNewInsurance(prev => ({ ...prev, type: e.target.value as InsuranceType }))}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="medical">{t('insurance.type_medical')}</option>
                   <option value="dental">{t('insurance.type_dental')}</option>
@@ -758,7 +758,7 @@ const InsurancePage: React.FC = () => {
                   value={newInsurance.providerName}
                   onChange={(e) => setNewInsurance(prev => ({ ...prev, providerName: e.target.value }))}
                   placeholder={t('insurance.insuranceProviderPlaceholder')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -772,7 +772,7 @@ const InsurancePage: React.FC = () => {
                   value={newInsurance.planName}
                   onChange={(e) => setNewInsurance(prev => ({ ...prev, planName: e.target.value }))}
                   placeholder={t('insurance.planNamePlaceholder')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -787,7 +787,7 @@ const InsurancePage: React.FC = () => {
                     value={newInsurance.memberId}
                     onChange={(e) => setNewInsurance(prev => ({ ...prev, memberId: e.target.value }))}
                     placeholder={t('insurance.memberIdPlaceholder')}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
                 <div>
@@ -800,7 +800,7 @@ const InsurancePage: React.FC = () => {
                     value={newInsurance.groupNumber}
                     onChange={(e) => setNewInsurance(prev => ({ ...prev, groupNumber: e.target.value }))}
                     placeholder={t('insurance.groupNumberPlaceholder')}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
               </div>
@@ -815,7 +815,7 @@ const InsurancePage: React.FC = () => {
                   value={newInsurance.subscriberName}
                   onChange={(e) => setNewInsurance(prev => ({ ...prev, subscriberName: e.target.value }))}
                   placeholder={t('insurance.subscriberNamePlaceholder')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -829,7 +829,7 @@ const InsurancePage: React.FC = () => {
                     type="date"
                     value={newInsurance.effectiveDate}
                     onChange={(e) => setNewInsurance(prev => ({ ...prev, effectiveDate: e.target.value }))}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
                 <div>
@@ -842,7 +842,7 @@ const InsurancePage: React.FC = () => {
                     value={newInsurance.customerServicePhone}
                     onChange={(e) => setNewInsurance(prev => ({ ...prev, customerServicePhone: e.target.value }))}
                     placeholder={t('insurance.customerServicePlaceholder')}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
               </div>
@@ -857,7 +857,7 @@ const InsurancePage: React.FC = () => {
                       type="number"
                       value={newInsurance.copayPrimary}
                       onChange={(e) => setNewInsurance(prev => ({ ...prev, copayPrimary: e.target.value }))}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
@@ -867,7 +867,7 @@ const InsurancePage: React.FC = () => {
                       type="number"
                       value={newInsurance.copaySpecialist}
                       onChange={(e) => setNewInsurance(prev => ({ ...prev, copaySpecialist: e.target.value }))}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
@@ -877,7 +877,7 @@ const InsurancePage: React.FC = () => {
                       type="number"
                       value={newInsurance.deductible}
                       onChange={(e) => setNewInsurance(prev => ({ ...prev, deductible: e.target.value }))}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     />
                   </div>
                   <div>
@@ -887,7 +887,7 @@ const InsurancePage: React.FC = () => {
                       type="number"
                       value={newInsurance.outOfPocketMax}
                       onChange={(e) => setNewInsurance(prev => ({ ...prev, outOfPocketMax: e.target.value }))}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     />
                   </div>
                 </div>

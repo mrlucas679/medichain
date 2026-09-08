@@ -454,7 +454,7 @@ export default function IVSitePage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={t('docIVSite.searchPatientsPh')}
-                  className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div className="max-h-64 overflow-y-auto space-y-2">
@@ -728,7 +728,7 @@ export default function IVSitePage() {
                               id="iv-location"
                               value={newSite.location}
                               onChange={(e) => setNewSite({ ...newSite, location: e.target.value as SiteLocation })}
-                              className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-blue-500"
+                              className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-blue-500"
                             >
                               {Object.entries(locationLabels).map(([value, label]) => (
                                 <option key={value} value={value}>{label}</option>
@@ -743,7 +743,7 @@ export default function IVSitePage() {
                               value={newSite.locationDetail}
                               onChange={(e) => setNewSite({ ...newSite, locationDetail: e.target.value })}
                               placeholder={t('docIVSite.locationDetailPh')}
-                              className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-blue-500"
+                              className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-blue-500"
                             />
                           </div>
                         </div>
@@ -755,7 +755,7 @@ export default function IVSitePage() {
                               id="iv-catheter-type"
                               value={newSite.catheterType}
                               onChange={(e) => setNewSite({ ...newSite, catheterType: e.target.value as CatheterType })}
-                              className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-blue-500"
+                              className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-blue-500"
                             >
                               {Object.entries(catheterTypes).map(([value, label]) => (
                                 <option key={value} value={value}>{label}</option>
@@ -886,7 +886,7 @@ export default function IVSitePage() {
                                   id="iv-infiltration-grade"
                                   value={newAssessment.infiltrationGrade ?? 0}
                                   onChange={(e) => setNewAssessment({ ...newAssessment, infiltrationGrade: Number(e.target.value) })}
-                                  className="w-full p-3 border border-border-strong rounded-lg"
+                                  className="w-full p-3 border border-border-interactive rounded-lg"
                                 >
                                   {infiltrationGrades.map(({ grade, description }) => (
                                     <option key={grade} value={grade}>{grade} — {description}</option>
@@ -906,7 +906,7 @@ export default function IVSitePage() {
                                     id="iv-dressing-type"
                                     value={newAssessment.dressingType}
                                     onChange={(e) => setNewAssessment({ ...newAssessment, dressingType: e.target.value as DressingType })}
-                                    className="w-full p-3 border border-border-strong rounded-lg"
+                                    className="w-full p-3 border border-border-interactive rounded-lg"
                                   >
                                     <option value="transparent">{t('docIVSite.dressing_transparent')}</option>
                                     <option value="gauze">{t('docIVSite.dressing_gauze')}</option>
@@ -1003,7 +1003,7 @@ export default function IVSitePage() {
                                     value={newAssessment.infusing}
                                     onChange={(e) => setNewAssessment({ ...newAssessment, infusing: e.target.value })}
                                     placeholder={t('docIVSite.currentlyInfusingPh')}
-                                    className="w-full p-3 border border-border-strong rounded-lg"
+                                    className="w-full p-3 border border-border-interactive rounded-lg"
                                   />
                                 </div>
                                 <div>
@@ -1014,7 +1014,7 @@ export default function IVSitePage() {
                                     value={newAssessment.infusionRate}
                                     onChange={(e) => setNewAssessment({ ...newAssessment, infusionRate: e.target.value })}
                                     placeholder={t('docIVSite.infusionRatePh')}
-                                    className="w-full p-3 border border-border-strong rounded-lg"
+                                    className="w-full p-3 border border-border-interactive rounded-lg"
                                   />
                                 </div>
                               </div>
@@ -1027,7 +1027,7 @@ export default function IVSitePage() {
                                   onChange={(e) => setNewAssessment({ ...newAssessment, notes: e.target.value })}
                                   rows={2}
                                   placeholder={t('docIVSite.notesPh')}
-                                  className="w-full p-3 border border-border-strong rounded-lg"
+                                  className="w-full p-3 border border-border-interactive rounded-lg"
                                 />
                               </div>
 

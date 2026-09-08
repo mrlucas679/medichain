@@ -472,7 +472,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   id="coc-patient"
                   value={newCollection.patientId}
                   onChange={(e) => setNewCollection({ ...newCollection, patientId: e.target.value })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="">{t('docChainOfCustody.selectPatientPh')}</option>
                   {patients.map((p) => (
@@ -491,7 +491,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   id="coc-specimen-type"
                   value={newCollection.specimenType}
                   onChange={(e) => setNewCollection({ ...newCollection, specimenType: e.target.value as SpecimenType })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="blood">{t('docChainOfCustody.type_blood')}</option>
                   <option value="urine">{t('docChainOfCustody.type_urine')}</option>
@@ -512,7 +512,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={newCollection.specimenDescription}
                   onChange={(e) => setNewCollection({ ...newCollection, specimenDescription: e.target.value })}
                   placeholder={t('docChainOfCustody.specimenDescriptionPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -525,7 +525,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   type="date"
                   value={newCollection.collectionDate}
                   onChange={(e) => setNewCollection({ ...newCollection, collectionDate: e.target.value })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -538,7 +538,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   type="time"
                   value={newCollection.collectionTime}
                   onChange={(e) => setNewCollection({ ...newCollection, collectionTime: e.target.value })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -552,7 +552,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={newCollection.collectionLocation}
                   onChange={(e) => setNewCollection({ ...newCollection, collectionLocation: e.target.value })}
                   placeholder={t('docChainOfCustody.collectionLocationPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -564,7 +564,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   id="coc-purpose"
                   value={newCollection.purpose}
                   onChange={(e) => setNewCollection({ ...newCollection, purpose: e.target.value as CustodyPurpose })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="legal">{t('docChainOfCustody.purpose_legal')}</option>
                   <option value="toxicology">{t('docChainOfCustody.purpose_toxicology')}</option>
@@ -583,7 +583,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={newCollection.caseNumber}
                   onChange={(e) => setNewCollection({ ...newCollection, caseNumber: e.target.value })}
                   placeholder={t('docChainOfCustody.caseNumberPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -595,7 +595,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={newCollection.investigatingAgency}
                   onChange={(e) => setNewCollection({ ...newCollection, investigatingAgency: e.target.value })}
                   placeholder={t('docChainOfCustody.investigatingAgencyPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -609,7 +609,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={newCollection.sealNumber}
                   onChange={(e) => setNewCollection({ ...newCollection, sealNumber: e.target.value })}
                   placeholder={t('docChainOfCustody.sealNumberPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -621,7 +621,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={newCollection.containerType}
                   onChange={(e) => setNewCollection({ ...newCollection, containerType: e.target.value })}
                   placeholder={t('docChainOfCustody.containerTypePh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -633,7 +633,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={newCollection.quantity}
                   onChange={(e) => setNewCollection({ ...newCollection, quantity: e.target.value })}
                   placeholder={t('docChainOfCustody.quantityPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -645,7 +645,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={newCollection.storageConditions}
                   onChange={(e) => setNewCollection({ ...newCollection, storageConditions: e.target.value })}
                   placeholder={t('docChainOfCustody.storageConditionsPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -656,7 +656,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={newCollection.notes}
                   onChange={(e) => setNewCollection({ ...newCollection, notes: e.target.value })}
                   placeholder={t('docChainOfCustody.notesPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   rows={2}
                 />
               </div>
@@ -749,7 +749,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={transfer.transferredTo}
                   onChange={(e) => setTransfer({ ...transfer, transferredTo: e.target.value })}
                   placeholder={t('docChainOfCustody.transferToPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -763,7 +763,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={transfer.location}
                   onChange={(e) => setTransfer({ ...transfer, location: e.target.value })}
                   placeholder={t('docChainOfCustody.locationPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -775,7 +775,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={transfer.condition}
                   onChange={(e) => setTransfer({ ...transfer, condition: e.target.value })}
                   placeholder={t('docChainOfCustody.conditionPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -798,7 +798,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={transfer.witnessSignature}
                   onChange={(e) => setTransfer({ ...transfer, witnessSignature: e.target.value })}
                   placeholder={t('docChainOfCustody.witnessSignaturePh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -809,7 +809,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   value={transfer.notes}
                   onChange={(e) => setTransfer({ ...transfer, notes: e.target.value })}
                   placeholder={t('docChainOfCustody.transferNotesPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   rows={2}
                 />
               </div>
@@ -847,7 +847,7 @@ const ChainOfCustodyPage: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t('docChainOfCustody.searchPh')}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg"
                   />
                 </div>
               </div>
@@ -857,7 +857,7 @@ const ChainOfCustodyPage: React.FC = () => {
                   id="coc-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as SpecimenStatus | 'all')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="all">{t('docChainOfCustody.filterAllStatuses')}</option>
                   <option value="collected">{t('docChainOfCustody.filterStatus_collected')}</option>

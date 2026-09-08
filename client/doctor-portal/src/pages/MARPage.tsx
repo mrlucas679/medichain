@@ -534,7 +534,7 @@ export default function MARPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={t('docMAR.searchPatientsPh')}
-                  className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500"
                 />
               </div>
               <div className="max-h-96 overflow-y-auto space-y-2">
@@ -570,7 +570,7 @@ export default function MARPage() {
                   value={barcodeInput}
                   onChange={(e) => setBarcodeInput(e.target.value)}
                   placeholder={t('docMAR.barcodeScanPh')}
-                  className="w-full p-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full p-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500"
                   onKeyDown={(e) => e.key === 'Enter' && handleBarcodeSccan()}
                 />
                 <button
@@ -830,7 +830,7 @@ export default function MARPage() {
                       type="time"
                       value={adminForm.administeredTime}
                       onChange={(e) => setAdminForm({ ...adminForm, administeredTime: e.target.value })}
-                      className="w-full p-2 border border-border-strong rounded-lg"
+                      className="w-full p-2 border border-border-interactive rounded-lg"
                     />
                   </div>
                 )}
@@ -842,7 +842,7 @@ export default function MARPage() {
                       id="mar-hold-reason"
                       value={adminForm.holdReason}
                       onChange={(e) => setAdminForm({ ...adminForm, holdReason: e.target.value })}
-                      className="w-full p-2 border border-border-strong rounded-lg"
+                      className="w-full p-2 border border-border-interactive rounded-lg"
                     >
                       <option value="">{t('docMAR.selectReasonPh')}</option>
                       <option value="NPO">{t('docMAR.holdReason_npo')}</option>
@@ -865,7 +865,7 @@ export default function MARPage() {
                       value={adminForm.prnReason}
                       onChange={(e) => setAdminForm({ ...adminForm, prnReason: e.target.value })}
                       placeholder={t('docMAR.prnReasonPh')}
-                      className="w-full p-2 border border-border-strong rounded-lg"
+                      className="w-full p-2 border border-border-interactive rounded-lg"
                     />
                   </div>
                 )}
@@ -877,7 +877,7 @@ export default function MARPage() {
                     value={adminForm.notes}
                     onChange={(e) => setAdminForm({ ...adminForm, notes: e.target.value })}
                     rows={2}
-                    className="w-full p-2 border border-border-strong rounded-lg"
+                    className="w-full p-2 border border-border-interactive rounded-lg"
                     placeholder={t('docMAR.notesPh')}
                   />
                 </div>

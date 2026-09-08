@@ -491,7 +491,7 @@ export function AppointmentsPage() {
                 setBooking(prev => ({ ...prev, providerId }));
                 void refreshSlots(providerId, booking.date);
               }}
-              className="mt-1 w-full px-3 py-2 border border-border-strong rounded-lg"
+              className="mt-1 w-full px-3 py-2 border border-border-interactive rounded-lg"
             >
               <option value="">{t('appointments.bookSelectProvider')}</option>
               {providers.map((provider, index) => (
@@ -515,7 +515,7 @@ export function AppointmentsPage() {
                 setBooking(prev => ({ ...prev, date }));
                 void refreshSlots(booking.providerId, date);
               }}
-              className="mt-1 w-full px-3 py-2 border border-border-strong rounded-lg"
+              className="mt-1 w-full px-3 py-2 border border-border-interactive rounded-lg"
             />
           </label>
 
@@ -541,7 +541,7 @@ export function AppointmentsPage() {
                     aria-pressed={booking.time === slot}
                     className={`px-3 py-1.5 rounded-lg text-sm border ${
                       booking.time === slot
-                        ? 'bg-primary-500 text-white border-brand'
+                        ? 'bg-primary-500 text-brand-fg border-brand'
                         : 'border-border-strong text-content-secondary hover:bg-surface-sunken'
                     }`}
                   >
@@ -557,7 +557,7 @@ export function AppointmentsPage() {
             <select
               value={booking.type}
               onChange={e => setBooking(prev => ({ ...prev, type: e.target.value }))}
-              className="mt-1 w-full px-3 py-2 border border-border-strong rounded-lg"
+              className="mt-1 w-full px-3 py-2 border border-border-interactive rounded-lg"
             >
               {/* Only types the server's `parse_appointment_type` accepts; an
                   unrecognised one is refused with a 400, not defaulted. */}
@@ -574,7 +574,7 @@ export function AppointmentsPage() {
               value={booking.reason}
               onChange={e => setBooking(prev => ({ ...prev, reason: e.target.value }))}
               rows={2}
-              className="mt-1 w-full px-3 py-2 border border-border-strong rounded-lg"
+              className="mt-1 w-full px-3 py-2 border border-border-interactive rounded-lg"
               placeholder={t('appointments.bookReasonPlaceholder')}
             />
           </label>

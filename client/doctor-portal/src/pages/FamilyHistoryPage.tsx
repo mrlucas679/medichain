@@ -437,7 +437,7 @@ const FamilyHistoryPage: React.FC = () => {
                   id="family-patient-filter"
                   value={selectedPatient}
                   onChange={(e) => setSelectedPatient(e.target.value)}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="">{t('docFamilyHistory.allPatients')}</option>
                   {patients.map((p) => (
@@ -457,7 +457,7 @@ const FamilyHistoryPage: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t('docFamilyHistory.searchPlaceholder')}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg"
                   />
                 </div>
               </div>
@@ -467,7 +467,7 @@ const FamilyHistoryPage: React.FC = () => {
                   id="famhx-condition-category"
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value as ConditionCategory | 'all')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="all">{t('docFamilyHistory.allCategories')}</option>
                   <option value="cardiovascular">{t('docFamilyHistory.category_cardiovascular')}</option>
@@ -616,7 +616,7 @@ const FamilyHistoryPage: React.FC = () => {
                   id="famhx-patient"
                   value={newMember.patientId}
                   onChange={(e) => setNewMember({ ...newMember, patientId: e.target.value })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="">{t('docFamilyHistory.selectPatientPlaceholder')}</option>
                   {patients.map((p) => (
@@ -635,7 +635,7 @@ const FamilyHistoryPage: React.FC = () => {
                   id="famhx-relationship"
                   value={newMember.relationship}
                   onChange={(e) => setNewMember({ ...newMember, relationship: e.target.value as RelationshipType })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="mother">{t('docFamilyHistory.relationship_mother')}</option>
                   <option value="father">{t('docFamilyHistory.relationship_father')}</option>
@@ -664,7 +664,7 @@ const FamilyHistoryPage: React.FC = () => {
                   value={newMember.name}
                   onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
                   placeholder={t('docFamilyHistory.familyMemberNamePh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -676,7 +676,7 @@ const FamilyHistoryPage: React.FC = () => {
                   id="famhx-vital-status"
                   value={newMember.vitalStatus}
                   onChange={(e) => setNewMember({ ...newMember, vitalStatus: e.target.value as VitalStatus })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="alive">{t('docFamilyHistory.vitalStatus_alive')}</option>
                   <option value="deceased">{t('docFamilyHistory.vitalStatus_deceased')}</option>
@@ -695,7 +695,7 @@ const FamilyHistoryPage: React.FC = () => {
                     value={newMember.currentAge || ''}
                     onChange={(e) => setNewMember({ ...newMember, currentAge: e.target.value ? parseInt(e.target.value) : undefined })}
                     placeholder={t('docFamilyHistory.yearsPlaceholder')}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
               )}
@@ -712,7 +712,7 @@ const FamilyHistoryPage: React.FC = () => {
                       value={newMember.ageAtDeath || ''}
                       onChange={(e) => setNewMember({ ...newMember, ageAtDeath: e.target.value ? parseInt(e.target.value) : undefined })}
                       placeholder={t('docFamilyHistory.yearsPlaceholder')}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     />
                   </div>
                   <div className="col-span-2">
@@ -723,7 +723,7 @@ const FamilyHistoryPage: React.FC = () => {
                       value={newMember.causeOfDeath}
                       onChange={(e) => setNewMember({ ...newMember, causeOfDeath: e.target.value })}
                       placeholder={t('docFamilyHistory.causeOfDeathPh')}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     />
                   </div>
                 </>
@@ -747,7 +747,7 @@ const FamilyHistoryPage: React.FC = () => {
                   value={newMember.notes}
                   onChange={(e) => setNewMember({ ...newMember, notes: e.target.value })}
                   placeholder={t('docFamilyHistory.generalNotesPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   rows={2}
                 />
               </div>
@@ -765,7 +765,7 @@ const FamilyHistoryPage: React.FC = () => {
                     value={newCondition.conditionName}
                     onChange={(e) => setNewCondition({ ...newCondition, conditionName: e.target.value })}
                     placeholder={t('docFamilyHistory.conditionNamePh')}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
 
@@ -775,7 +775,7 @@ const FamilyHistoryPage: React.FC = () => {
                     id="famhx-category"
                     value={newCondition.category}
                     onChange={(e) => setNewCondition({ ...newCondition, category: e.target.value as ConditionCategory })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   >
                     <option value="cardiovascular">{t('docFamilyHistory.category_cardiovascular')}</option>
                     <option value="cancer">{t('docFamilyHistory.category_cancer')}</option>
@@ -802,7 +802,7 @@ const FamilyHistoryPage: React.FC = () => {
                     value={newCondition.ageOfOnset || ''}
                     onChange={(e) => setNewCondition({ ...newCondition, ageOfOnset: e.target.value ? parseInt(e.target.value) : undefined })}
                     placeholder={t('docFamilyHistory.yearsPlaceholder')}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
 
@@ -812,7 +812,7 @@ const FamilyHistoryPage: React.FC = () => {
                     id="famhx-severity"
                     value={newCondition.severity}
                     onChange={(e) => setNewCondition({ ...newCondition, severity: e.target.value as 'mild' | 'moderate' | 'severe' })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   >
                     <option value="mild">{t('docFamilyHistory.severity_mild')}</option>
                     <option value="moderate">{t('docFamilyHistory.severity_moderate')}</option>
@@ -827,7 +827,7 @@ const FamilyHistoryPage: React.FC = () => {
                     value={newCondition.notes}
                     onChange={(e) => setNewCondition({ ...newCondition, notes: e.target.value })}
                     placeholder={t('docFamilyHistory.conditionNotesPh')}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     rows={2}
                   />
                 </div>
@@ -883,7 +883,7 @@ const FamilyHistoryPage: React.FC = () => {
               id="famhx-risk-patient"
               value={selectedPatient}
               onChange={(e) => setSelectedPatient(e.target.value)}
-              className="w-full border border-border-strong rounded-lg px-3 py-2"
+              className="w-full border border-border-interactive rounded-lg px-3 py-2"
             >
               <option value="">{t('docFamilyHistory.selectPatientPlaceholder')}</option>
               {patients.map((p) => (

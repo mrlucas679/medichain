@@ -284,13 +284,13 @@ export default function CardiacPage() {
                     placeholder={t('docCardiac.searchPatientsPh')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   />
                 </div>
                 <select
                   value={selectedPatient}
                   onChange={(e) => { setSelectedPatient(e.target.value); fetchEmergencyHistory(e.target.value); }}
-                  className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500"
+                  className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500"
                   required
                 >
                   <option value="">{t('docCardiac.selectPatientOption')}</option>
@@ -363,7 +363,7 @@ export default function CardiacPage() {
                 <select
                   value={killipClass}
                   onChange={(e) => setKillipClass(e.target.value)}
-                  className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500"
+                  className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500"
                 >
                   <option value="1">{t('docCardiac.killip_1')}</option>
                   <option value="2">{t('docCardiac.killip_2')}</option>
@@ -403,7 +403,7 @@ export default function CardiacPage() {
                       value={chiefComplaint}
                       onChange={(e) => setChiefComplaint(e.target.value)}
                       placeholder={t('docCardiac.chiefComplaintPh')}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                   <div>
@@ -413,7 +413,7 @@ export default function CardiacPage() {
                       type="datetime-local"
                       value={symptomOnset}
                       onChange={(e) => setSymptomOnset(e.target.value)}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                   <div>
@@ -422,7 +422,7 @@ export default function CardiacPage() {
                       id="cardiac-chest-pain-character"
                       value={chestPainCharacter}
                       onChange={(e) => setChestPainCharacter(e.target.value)}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500"
                     >
                       <option value="">{t('docCardiac.selectCharacter')}</option>
                       <option value="crushing">{t('docCardiac.painChar_crushing')}</option>
@@ -447,7 +447,7 @@ export default function CardiacPage() {
                                 setPainRadiation(painRadiation.filter(l => l !== loc));
                               }
                             }}
-                            className="rounded border-border-strong text-critical-subtle-fg focus:ring-red-500"
+                            className="rounded border-border-interactive text-critical-subtle-fg focus:ring-red-500"
                           />
                           <span className="text-sm text-content-muted">{loc}</span>
                         </label>
@@ -469,7 +469,7 @@ export default function CardiacPage() {
                                 setAssociatedSymptoms(associatedSymptoms.filter(s => s !== sym));
                               }
                             }}
-                            className="rounded border-border-strong text-critical-subtle-fg focus:ring-red-500"
+                            className="rounded border-border-interactive text-critical-subtle-fg focus:ring-red-500"
                           />
                           <span className="text-sm text-content-muted">{sym}</span>
                         </label>
@@ -491,7 +491,7 @@ export default function CardiacPage() {
                       value={heartRate}
                       onChange={(e) => setHeartRate(e.target.value)}
                       placeholder="72"
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                   <div>
@@ -502,7 +502,7 @@ export default function CardiacPage() {
                       value={bloodPressure}
                       onChange={(e) => setBloodPressure(e.target.value)}
                       placeholder="120/80"
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                   <div>
@@ -514,7 +514,7 @@ export default function CardiacPage() {
                       value={troponinLevel}
                       onChange={(e) => setTroponinLevel(e.target.value)}
                       placeholder="0.04"
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500"
                     />
                     {parseFloat(troponinLevel) > 0.04 && (
                       <p className="text-xs text-critical-subtle-fg mt-1 flex items-center">
@@ -530,7 +530,7 @@ export default function CardiacPage() {
                       value={bnpLevel}
                       onChange={(e) => setBnpLevel(e.target.value)}
                       placeholder="100"
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                 </div>
@@ -564,7 +564,7 @@ export default function CardiacPage() {
                             setTreatment(treatment.filter(t => t !== tx.value));
                           }
                         }}
-                        className="rounded border-border-strong text-critical-subtle-fg focus:ring-red-500"
+                        className="rounded border-border-interactive text-critical-subtle-fg focus:ring-red-500"
                       />
                       <span className="text-sm">{tx.label}</span>
                     </label>
@@ -599,7 +599,7 @@ export default function CardiacPage() {
                         id="cardiac-ecg-rhythm"
                         value={newECG.rhythm}
                         onChange={(e) => setNewECG({ ...newECG, rhythm: e.target.value })}
-                        className="w-full p-2 border border-border-strong rounded-lg text-sm"
+                        className="w-full p-2 border border-border-interactive rounded-lg text-sm"
                       >
                         {rhythmTypes.map(r => (
                           <option key={r} value={r}>{r.replace(/_/g, ' ').toUpperCase()}</option>
@@ -613,7 +613,7 @@ export default function CardiacPage() {
                         type="number"
                         value={newECG.rate}
                         onChange={(e) => setNewECG({ ...newECG, rate: parseInt(e.target.value) })}
-                        className="w-full p-2 border border-border-strong rounded-lg text-sm"
+                        className="w-full p-2 border border-border-interactive rounded-lg text-sm"
                       />
                     </div>
                     <div>
@@ -622,7 +622,7 @@ export default function CardiacPage() {
                           type="checkbox"
                           checked={newECG.stElevation}
                           onChange={(e) => setNewECG({ ...newECG, stElevation: e.target.checked })}
-                          className="rounded border-border-strong text-critical-subtle-fg"
+                          className="rounded border-border-interactive text-critical-subtle-fg"
                         />
                         <span className="text-sm font-medium text-content-secondary">{t('docCardiac.stElevationLabel')}</span>
                       </label>
@@ -644,7 +644,7 @@ export default function CardiacPage() {
                                     setNewECG({ ...newECG, leads: leads.filter(l => l !== lead) });
                                   }
                                 }}
-                                className="rounded border-border-strong text-critical-subtle-fg"
+                                className="rounded border-border-interactive text-critical-subtle-fg"
                               />
                               <span className="text-xs">{lead}</span>
                             </label>
@@ -660,7 +660,7 @@ export default function CardiacPage() {
                         onChange={(e) => setNewECG({ ...newECG, interpretation: e.target.value })}
                         placeholder={t('docCardiac.interpretationPh')}
                         rows={2}
-                        className="w-full p-2 border border-border-strong rounded-lg text-sm"
+                        className="w-full p-2 border border-border-interactive rounded-lg text-sm"
                       />
                     </div>
                     <button
@@ -731,7 +731,7 @@ export default function CardiacPage() {
                   aria-labelledby="cardiac-disposition-heading"
                   value={disposition}
                   onChange={(e) => setDisposition(e.target.value)}
-                  className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 mb-4"
+                  className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 mb-4"
                 >
                   <option value="">{t('docCardiac.selectDisposition')}</option>
                   <option value="cath_lab">{t('docCardiac.disp_cath_lab')}</option>
@@ -751,7 +751,7 @@ export default function CardiacPage() {
                     onChange={(e) => setNarrative(e.target.value)}
                     placeholder={t('docCardiac.clinicalNarrativePh')}
                     rows={4}
-                    className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500"
+                    className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500"
                   />
                 </div>
               </div>

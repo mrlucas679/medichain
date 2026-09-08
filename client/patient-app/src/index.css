@@ -90,7 +90,7 @@ body {
   }
 
   .action-btn-primary {
-    @apply action-btn bg-primary-500 text-white hover:bg-primary-600 active:scale-98;
+    @apply action-btn bg-primary-500 text-brand-fg hover:bg-primary-600 active:scale-98;
   }
 
   .action-btn-success {

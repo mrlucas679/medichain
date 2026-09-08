@@ -278,7 +278,7 @@ export function MessagesPage() {
               <div className={`max-w-[80%] ${message.isPatient ? 'order-2' : 'order-1'}`}>
                 <div className={`rounded-2xl px-4 py-3 ${
                   message.isPatient
-                    ? 'bg-primary-500 text-white rounded-br-md'
+                    ? 'bg-primary-500 text-brand-fg rounded-br-md'
                     : 'bg-surface text-content rounded-bl-md shadow-sm'
                 }`}>
                   <p className="text-sm">{message.content}</p>
@@ -311,7 +311,7 @@ export function MessagesPage() {
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && void sendMessage()}
               placeholder={t('messages.typePlaceholder')}
-              className="flex-1 px-4 py-2 border border-border rounded-full focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
+              className="flex-1 px-4 py-2 border border-border-interactive rounded-full focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
             />
             <button
               onClick={() => void sendMessage()}
@@ -355,7 +355,7 @@ export function MessagesPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={t('messages.searchPlaceholder')}
-          className="w-full pl-12 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
+          className="w-full pl-12 pr-4 py-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
         />
       </div>
 

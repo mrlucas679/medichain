@@ -144,7 +144,7 @@ function NFCTapSimulator({ onEmergencyAccess }: NFCTapSimulatorProps = {}) {
           value={deviceId}
           onChange={(event) => setDeviceId(event.target.value)}
           placeholder="Registered device UUID"
-          className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand"
+          className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand"
           disabled={tapState === 'waiting'}
         />
         <p className="mt-1 text-xs text-content-muted">Emergency access is bound to this enrolled device and a new professional work context.</p>
@@ -200,7 +200,7 @@ function NFCTapSimulator({ onEmergencyAccess }: NFCTapSimulatorProps = {}) {
                 value={nfcTagId}
                 onChange={(e) => setNfcTagId(e.target.value)}
                 placeholder="NFC-XXXX-XXXX"
-                className="flex-1 px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand"
+                className="flex-1 px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand"
                 disabled={tapState === 'waiting'}
               />
               <button
@@ -234,7 +234,7 @@ function NFCTapSimulator({ onEmergencyAccess }: NFCTapSimulatorProps = {}) {
               value={qrInput}
               onChange={(e) => setQrInput(e.target.value)}
               placeholder='{"tag_id": "NFC-DEMO-001", ...}'
-              className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand h-24"
+              className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand h-24"
               disabled={tapState === 'waiting'}
             />
           </div>

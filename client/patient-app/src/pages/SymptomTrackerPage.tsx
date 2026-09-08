@@ -509,7 +509,7 @@ export function SymptomTrackerPage() {
                       value={newEntry.duration || ''}
                       onChange={(e) => setNewEntry(prev => ({ ...prev, duration: e.target.value }))}
                       placeholder={t('symptomTracker.durationPlaceholder')}
-                      className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
+                      className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
                     />
                   </div>
 
@@ -524,7 +524,7 @@ export function SymptomTrackerPage() {
                       onChange={(e) => setNewEntry(prev => ({ ...prev, notes: e.target.value }))}
                       placeholder={t('symptomTracker.notesPlaceholder')}
                       rows={3}
-                      className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none resize-none"
+                      className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none resize-none"
                     />
                   </div>
 

@@ -394,7 +394,7 @@ function SettingsPage() {
                   <select
                     value={settings.security.sessionTimeout}
                     onChange={(e) => updateSecurity('sessionTimeout', Number(e.target.value))}
-                    className="w-full max-w-xs px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
+                    className="w-full max-w-xs px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
                   >
                     <option value={15}>{t('docSettings.min15')}</option>
                     <option value={30}>{t('docSettings.min30')}</option>
@@ -490,7 +490,7 @@ function SettingsPage() {
                   <select
                     value={settings.display.language}
                     onChange={(e) => updateDisplay('language', e.target.value)}
-                    className="w-full max-w-xs px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
+                    className="w-full max-w-xs px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
                   >
                     <option value="en">{t('docSettings.langEnglish')}</option>
                     <option value="fr">{t('docSettings.langFrench')}</option>
@@ -512,7 +512,7 @@ function SettingsPage() {
                   <select
                     value={settings.display.dateFormat}
                     onChange={(e) => updateDisplay('dateFormat', e.target.value)}
-                    className="w-full max-w-xs px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
+                    className="w-full max-w-xs px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
                   >
                     <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                     <option value="DD/MM/YYYY">DD/MM/YYYY</option>

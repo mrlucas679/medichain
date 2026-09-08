@@ -326,7 +326,7 @@ const OrderSetsPage: React.FC = () => {
                     placeholder={t('docOrderSets.searchOrderSetsPh')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg"
                   />
                 </div>
               </div>
@@ -336,7 +336,7 @@ const OrderSetsPage: React.FC = () => {
                   id="orderset-filter-type"
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value as OrderSetType | 'all')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="all">{t('docOrderSets.allTypes')}</option>
                   <option value="admission">{t('docOrderSets.type_admission')}</option>
@@ -495,7 +495,7 @@ const OrderSetsPage: React.FC = () => {
                     type="text"
                     value={newOrderSet.name || ''}
                     onChange={(e) => setNewOrderSet({ ...newOrderSet, name: e.target.value })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     placeholder={t('docOrderSets.orderSetNamePh')}
                     required
                   />
@@ -508,7 +508,7 @@ const OrderSetsPage: React.FC = () => {
                     id="orderset-type"
                     value={newOrderSet.type || 'admission'}
                     onChange={(e) => setNewOrderSet({ ...newOrderSet, type: e.target.value as OrderSetType })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   >
                     <option value="admission">{t('docOrderSets.type_admission')}</option>
                     <option value="discharge">{t('docOrderSets.type_discharge')}</option>
@@ -530,7 +530,7 @@ const OrderSetsPage: React.FC = () => {
                     type="text"
                     value={newOrderSet.specialty || ''}
                     onChange={(e) => setNewOrderSet({ ...newOrderSet, specialty: e.target.value })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     placeholder={t('docOrderSets.specialtyPh')}
                     required
                   />
@@ -547,7 +547,7 @@ const OrderSetsPage: React.FC = () => {
                         tags: e.target.value.split(',').map((t) => t.trim()),
                       })
                     }
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     placeholder={t('docOrderSets.tagsFieldPh')}
                   />
                 </div>
@@ -562,7 +562,7 @@ const OrderSetsPage: React.FC = () => {
                   value={newOrderSet.description || ''}
                   onChange={(e) => setNewOrderSet({ ...newOrderSet, description: e.target.value })}
                   rows={3}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   placeholder={t('docOrderSets.descriptionPh')}
                   required
                 />
@@ -575,7 +575,7 @@ const OrderSetsPage: React.FC = () => {
                   value={newOrderSet.indication || ''}
                   onChange={(e) => setNewOrderSet({ ...newOrderSet, indication: e.target.value })}
                   rows={2}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   placeholder={t('docOrderSets.indicationFieldPh')}
                 />
               </div>
@@ -617,7 +617,7 @@ const OrderSetsPage: React.FC = () => {
                         id="orderset-order-type"
                         value={newOrder.type || 'medication'}
                         onChange={(e) => setNewOrder({ ...newOrder, type: e.target.value as OrderType })}
-                        className="w-full border border-border-strong rounded-lg px-3 py-2"
+                        className="w-full border border-border-interactive rounded-lg px-3 py-2"
                       >
                         <option value="medication">{t('docOrderSets.orderTypeOption_medication')}</option>
                         <option value="lab">{t('docOrderSets.orderTypeOption_lab')}</option>
@@ -634,7 +634,7 @@ const OrderSetsPage: React.FC = () => {
                         id="orderset-priority"
                         value={newOrder.priority || 'routine'}
                         onChange={(e) => setNewOrder({ ...newOrder, priority: e.target.value as OrderPriority })}
-                        className="w-full border border-border-strong rounded-lg px-3 py-2"
+                        className="w-full border border-border-interactive rounded-lg px-3 py-2"
                       >
                         <option value="stat">{t('docOrderSets.priority_stat')}</option>
                         <option value="urgent">{t('docOrderSets.priority_urgent')}</option>
@@ -651,7 +651,7 @@ const OrderSetsPage: React.FC = () => {
                       type="text"
                       value={newOrder.description || ''}
                       onChange={(e) => setNewOrder({ ...newOrder, description: e.target.value })}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                       placeholder={t('docOrderSets.orderDescriptionPh')}
                     />
                   </div>
@@ -663,7 +663,7 @@ const OrderSetsPage: React.FC = () => {
                       type="text"
                       value={newOrder.instructions || ''}
                       onChange={(e) => setNewOrder({ ...newOrder, instructions: e.target.value })}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                       placeholder={t('docOrderSets.instructionsPh')}
                     />
                   </div>
@@ -676,7 +676,7 @@ const OrderSetsPage: React.FC = () => {
                         type="text"
                         value={newOrder.route || ''}
                         onChange={(e) => setNewOrder({ ...newOrder, route: e.target.value })}
-                        className="w-full border border-border-strong rounded-lg px-3 py-2"
+                        className="w-full border border-border-interactive rounded-lg px-3 py-2"
                         placeholder={t('docOrderSets.routePh')}
                       />
                     </div>
@@ -687,7 +687,7 @@ const OrderSetsPage: React.FC = () => {
                         type="text"
                         value={newOrder.frequency || ''}
                         onChange={(e) => setNewOrder({ ...newOrder, frequency: e.target.value })}
-                        className="w-full border border-border-strong rounded-lg px-3 py-2"
+                        className="w-full border border-border-interactive rounded-lg px-3 py-2"
                         placeholder={t('docOrderSets.frequencyPh')}
                       />
                     </div>
@@ -698,7 +698,7 @@ const OrderSetsPage: React.FC = () => {
                         type="text"
                         value={newOrder.duration || ''}
                         onChange={(e) => setNewOrder({ ...newOrder, duration: e.target.value })}
-                        className="w-full border border-border-strong rounded-lg px-3 py-2"
+                        className="w-full border border-border-interactive rounded-lg px-3 py-2"
                         placeholder={t('docOrderSets.durationPh')}
                       />
                     </div>

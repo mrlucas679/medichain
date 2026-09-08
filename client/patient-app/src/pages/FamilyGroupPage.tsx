@@ -122,7 +122,7 @@ export function FamilyGroupPage() {
             value={newGroupName}
             onChange={e => setNewGroupName(e.target.value)}
             placeholder={t('family.groupNamePlaceholder')}
-            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
+            className="flex-1 border border-border-interactive rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
             required
           />
           <button
@@ -213,7 +213,7 @@ export function FamilyGroupPage() {
                         value={newMemberHealthId}
                         onChange={e => setNewMemberHealthId(e.target.value)}
                         placeholder={t('family.memberIdPlaceholder')}
-                        className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                        className="w-full border border-border-interactive rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                         required
                       />
                       <label htmlFor={`member-rel-${group.group_id}`} className="sr-only">{t('family.relationship')}</label>
@@ -222,7 +222,7 @@ export function FamilyGroupPage() {
                         value={newMemberRelationship}
                         onChange={e => setNewMemberRelationship(e.target.value)}
                         placeholder={t('family.relationshipPlaceholder')}
-                        className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                        className="w-full border border-border-interactive rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 outline-none"
                       />
                       <div className="flex gap-2">
                         <button

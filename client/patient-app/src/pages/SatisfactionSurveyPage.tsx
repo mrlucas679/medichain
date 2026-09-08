@@ -521,7 +521,7 @@ const SatisfactionSurveyPage: React.FC = () => {
                 onChange={(e) => setAdditionalComments(e.target.value)}
                 placeholder={t('survey.commentsPlaceholder')}
                 rows={4}
-                className="w-full border border-border-strong rounded-lg p-3 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                className="w-full border border-border-interactive rounded-lg p-3 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
               />
             </div>
 

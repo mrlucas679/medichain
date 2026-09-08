@@ -182,6 +182,14 @@ const en_US: TranslationRecord = {
 
   // Emergency
   emergency: {
+    loadingCard: 'Loading your emergency card',
+    cardUnavailable: 'Your emergency card could not be loaded',
+    cardUnavailableHelp:
+      'This is usually a connection problem. If you have opened the card before, a saved copy may still work offline.',
+    cardNotSetUp: 'Your emergency card is not set up yet',
+    cardNotSetUpHelp:
+      'Ask your clinic to add your blood type, allergies and emergency contacts. Until then, this card has nothing to show a paramedic.',
+    retry: 'Try again',
     title: 'Emergency Information',
     scanQR: 'Scan QR Code for Emergency Access',
     emergencyContacts: 'Emergency Contacts',

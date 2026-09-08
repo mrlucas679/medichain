@@ -414,7 +414,7 @@ export default function CarePlanPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={t('docCarePlan.searchPatientsPh')}
-                  className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-teal-500"
+                  className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-teal-500"
                 />
               </div>
               <div className="max-h-96 overflow-y-auto space-y-2">
@@ -525,7 +525,7 @@ export default function CarePlanPage() {
                                 id="careplan-diagnosis"
                                 value={newDiagnosis.diagnosis}
                                 onChange={(e) => setNewDiagnosis({ ...newDiagnosis, diagnosis: e.target.value })}
-                                className="w-full p-3 border border-border-strong rounded-lg"
+                                className="w-full p-3 border border-border-interactive rounded-lg"
                               >
                                 <option value="">{t('docCarePlan.selectDiagnosis')}</option>
                                 {commonDiagnoses.map(cat => (
@@ -545,7 +545,7 @@ export default function CarePlanPage() {
                                 value={newDiagnosis.relatedTo}
                                 onChange={(e) => setNewDiagnosis({ ...newDiagnosis, relatedTo: e.target.value })}
                                 placeholder={t('docCarePlan.relatedToPh')}
-                                className="w-full p-3 border border-border-strong rounded-lg"
+                                className="w-full p-3 border border-border-interactive rounded-lg"
                               />
                             </div>
                             <div>
@@ -556,7 +556,7 @@ export default function CarePlanPage() {
                                 value={newDiagnosis.evidencedBy}
                                 onChange={(e) => setNewDiagnosis({ ...newDiagnosis, evidencedBy: e.target.value })}
                                 placeholder={t('docCarePlan.evidencedByPh')}
-                                className="w-full p-3 border border-border-strong rounded-lg"
+                                className="w-full p-3 border border-border-interactive rounded-lg"
                               />
                             </div>
                             <fieldset>
@@ -668,7 +668,7 @@ export default function CarePlanPage() {
                                 id="careplan-goal-diagnosis"
                                 value={newGoal.diagnosisId}
                                 onChange={(e) => setNewGoal({ ...newGoal, diagnosisId: e.target.value })}
-                                className="w-full p-3 border border-border-strong rounded-lg"
+                                className="w-full p-3 border border-border-interactive rounded-lg"
                               >
                                 <option value="">{t('docCarePlan.selectDiagnosis')}</option>
                                 {diagnoses.map(dx => (
@@ -684,7 +684,7 @@ export default function CarePlanPage() {
                                 onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })}
                                 placeholder={t('docCarePlan.goalDescriptionPh')}
                                 rows={2}
-                                className="w-full p-3 border border-border-strong rounded-lg"
+                                className="w-full p-3 border border-border-interactive rounded-lg"
                               />
                             </div>
                             <div>
@@ -695,7 +695,7 @@ export default function CarePlanPage() {
                                 value={newGoal.measurableOutcome}
                                 onChange={(e) => setNewGoal({ ...newGoal, measurableOutcome: e.target.value })}
                                 placeholder={t('docCarePlan.measurableOutcomePh')}
-                                className="w-full p-3 border border-border-strong rounded-lg"
+                                className="w-full p-3 border border-border-interactive rounded-lg"
                               />
                             </div>
                             <div>
@@ -705,7 +705,7 @@ export default function CarePlanPage() {
                                 type="date"
                                 value={newGoal.targetDate}
                                 onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })}
-                                className="w-full p-3 border border-border-strong rounded-lg"
+                                className="w-full p-3 border border-border-interactive rounded-lg"
                               />
                             </div>
                           </div>
@@ -812,7 +812,7 @@ export default function CarePlanPage() {
                                 id="careplan-intervention-goal"
                                 value={newIntervention.goalId}
                                 onChange={(e) => setNewIntervention({ ...newIntervention, goalId: e.target.value })}
-                                className="w-full p-3 border border-border-strong rounded-lg"
+                                className="w-full p-3 border border-border-interactive rounded-lg"
                               >
                                 <option value="">{t('docCarePlan.selectGoal')}</option>
                                 {goals.map(g => (
@@ -828,7 +828,7 @@ export default function CarePlanPage() {
                                 onChange={(e) => setNewIntervention({ ...newIntervention, description: e.target.value })}
                                 placeholder={t('docCarePlan.interventionPh')}
                                 rows={2}
-                                className="w-full p-3 border border-border-strong rounded-lg"
+                                className="w-full p-3 border border-border-interactive rounded-lg"
                               />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -838,7 +838,7 @@ export default function CarePlanPage() {
                                   id="careplan-intervention-frequency"
                                   value={newIntervention.frequency}
                                   onChange={(e) => setNewIntervention({ ...newIntervention, frequency: e.target.value })}
-                                  className="w-full p-3 border border-border-strong rounded-lg"
+                                  className="w-full p-3 border border-border-interactive rounded-lg"
                                 >
                                   <option value="">{t('docCarePlan.selectFrequency')}</option>
                                   {frequencies.map(f => (
@@ -852,7 +852,7 @@ export default function CarePlanPage() {
                                   id="careplan-responsible-party"
                                   value={newIntervention.responsibleParty}
                                   onChange={(e) => setNewIntervention({ ...newIntervention, responsibleParty: e.target.value })}
-                                  className="w-full p-3 border border-border-strong rounded-lg"
+                                  className="w-full p-3 border border-border-interactive rounded-lg"
                                 >
                                   <option value="">{t('docCarePlan.selectOption')}</option>
                                   <option value="RN">RN</option>

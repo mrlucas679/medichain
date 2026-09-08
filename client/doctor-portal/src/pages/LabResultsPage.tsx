@@ -290,7 +290,7 @@ function LabResultsPage() {
               placeholder={t('docLabResults.searchPh')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
           
@@ -302,7 +302,7 @@ function LabResultsPage() {
               id="labresults-status-filter"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
-              className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="px-4 py-2 border border-border-interactive rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
               <option value="pending">{t('docLabResults.optPending')}</option>
               <option value="approved">{t('docLabResults.approved')}</option>
@@ -519,7 +519,7 @@ function LabResultsPage() {
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder={t('docLabResults.rejectPh')}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-border-interactive rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
               rows={4}
             />
             <div className="flex justify-end gap-3 mt-4">

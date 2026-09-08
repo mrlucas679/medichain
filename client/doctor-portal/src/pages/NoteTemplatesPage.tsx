@@ -289,7 +289,7 @@ const NoteTemplatesPage: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t('docNoteTemplates.searchTemplatesPh')}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -299,7 +299,7 @@ const NoteTemplatesPage: React.FC = () => {
                   id="notetmpl-filter-type"
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value as TemplateType | 'all')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="all">{t('docNoteTemplates.allTypes')}</option>
                   <option value="soap">{t('docNoteTemplates.type_soap')}</option>
@@ -470,7 +470,7 @@ const NoteTemplatesPage: React.FC = () => {
                   value={newTemplate.name}
                   onChange={(e) => setNewTemplate({ ...newTemplate, name: e.target.value })}
                   placeholder={t('docNoteTemplates.templateNamePh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -481,7 +481,7 @@ const NoteTemplatesPage: React.FC = () => {
                   id="notetmpl-type"
                   value={newTemplate.type}
                   onChange={(e) => setNewTemplate({ ...newTemplate, type: e.target.value as TemplateType })}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="soap">{t('docNoteTemplates.type_soap')}</option>
                   <option value="history-physical">{t('docNoteTemplates.type_history-physical')}</option>
@@ -503,7 +503,7 @@ const NoteTemplatesPage: React.FC = () => {
                   id="notetmpl-category"
                   value={newTemplate.category}
                   onChange={(e) => setNewTemplate({ ...newTemplate, category: e.target.value as TemplateCategory })}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="general">{t('docNoteTemplates.category_general')}</option>
                   <option value="emergency">{t('docNoteTemplates.category_emergency')}</option>
@@ -521,7 +521,7 @@ const NoteTemplatesPage: React.FC = () => {
                   value={newTemplate.tags?.join(', ')}
                   onChange={(e) => setNewTemplate({ ...newTemplate, tags: e.target.value.split(',').map(t => t.trim()) })}
                   placeholder={t('docNoteTemplates.tagsFieldPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -536,7 +536,7 @@ const NoteTemplatesPage: React.FC = () => {
                 onChange={(e) => setNewTemplate({ ...newTemplate, description: e.target.value })}
                 placeholder={t('docNoteTemplates.descriptionPh')}
                 rows={3}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
 
@@ -583,7 +583,7 @@ const NoteTemplatesPage: React.FC = () => {
                         value={newSection.title}
                         onChange={(e) => setNewSection({ ...newSection, title: e.target.value })}
                         placeholder={t('docNoteTemplates.sectionTitlePh')}
-                        className="w-full px-3 py-2 border border-border-strong rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-border-interactive rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       />
                     </div>
                     <div className="flex items-end">
@@ -607,7 +607,7 @@ const NoteTemplatesPage: React.FC = () => {
                       onChange={(e) => setNewSection({ ...newSection, content: e.target.value })}
                       placeholder={t('docNoteTemplates.sectionContentPh')}
                       rows={4}
-                      className="w-full px-3 py-2 border border-border-strong rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-sm"
+                      className="w-full px-3 py-2 border border-border-interactive rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono text-sm"
                     />
                   </div>
                   <button

@@ -531,7 +531,7 @@ export function MyRecordsPage() {
               onClick={() => setFilterType(type)}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                 filterType === type
-                  ? 'bg-primary-500 text-white'
+                  ? 'bg-primary-500 text-brand-fg'
                   : 'bg-surface-sunken text-content-muted hover:bg-surface-sunken'
               }`}
             >
@@ -652,7 +652,7 @@ export function MyRecordsPage() {
 
               {/* IPFS Hash */}
               <div className="p-4 bg-info-light rounded-xl">
-                <p className="text-sm text-info-dark mb-1 font-medium flex items-center gap-2">
+                <p className="text-sm text-info-dark mb-1 font-medium flex items-center gap-2 inline-flex items-center min-h-[24px] py-1">
                   <Shield className="w-4 h-4" />
                   {t('records.documentHash')}
                 </p>

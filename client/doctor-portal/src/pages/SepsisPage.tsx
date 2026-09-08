@@ -401,7 +401,7 @@ export default function SepsisPage() {
                     placeholder={t('docSepsis.searchPatientsPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </div>
                 <label htmlFor="sepsis-patient-select" className="sr-only">{t('docSepsis.selectPatient')}</label>
@@ -409,7 +409,7 @@ export default function SepsisPage() {
                   id="sepsis-patient-select"
                   value={selectedPatient}
                   onChange={(e) => { setSelectedPatient(e.target.value); fetchEmergencyHistory(e.target.value); }}
-                  className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                  className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                   required
                 >
                   <option value="">{t('docSepsis.selectAPatient')}</option>
@@ -627,7 +627,7 @@ export default function SepsisPage() {
                     value={newLactate}
                     onChange={(e) => setNewLactate(e.target.value)}
                     placeholder={t('docSepsis.lactatePlaceholder')}
-                    className="flex-1 p-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="flex-1 p-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                   />
                   <button
                     type="button"
@@ -682,7 +682,7 @@ export default function SepsisPage() {
                   id="sepsis-infection-source"
                   value={infectionSource}
                   onChange={(e) => setInfectionSource(e.target.value)}
-                  className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500 mb-4"
+                  className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500 mb-4"
                 >
                   <option value="">{t('docSepsis.selectSource')}</option>
                   {infectionSources.map(src => (
@@ -696,7 +696,7 @@ export default function SepsisPage() {
                   value={suspectedOrganism}
                   onChange={(e) => setSuspectedOrganism(e.target.value)}
                   placeholder={t('docSepsis.suspectedOrganismPlaceholder')}
-                  className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                  className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -726,7 +726,7 @@ export default function SepsisPage() {
                             setAntibioticsGiven(antibioticsGiven.filter(a => a !== abx));
                           }
                         }}
-                        className="rounded border-border-strong text-content-secondary focus:ring-orange-500"
+                        className="rounded border-border-interactive text-content-secondary focus:ring-orange-500"
                       />
                       <span className="text-sm">{abx}</span>
                     </label>
@@ -756,7 +756,7 @@ export default function SepsisPage() {
                         }
                       }}
                       placeholder={t('docSepsis.fluidVolumePlaceholder')}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                     />
                     {selectedPatientData && fluidVolume > 0 && (
                       <p className="text-xs text-content-muted mt-1">
@@ -777,7 +777,7 @@ export default function SepsisPage() {
                           toggleBundleItem('hour1', 'vasopressors');
                         }
                       }}
-                      className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                      className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                     >
                       <option value="">{t('docSepsis.none')}</option>
                       <option value="norepinephrine">Norepinephrine (1st line)</option>
@@ -837,7 +837,7 @@ export default function SepsisPage() {
                   onChange={(e) => setNarrative(e.target.value)}
                   placeholder={t('docSepsis.narrativePlaceholder')}
                   rows={5}
-                  className="w-full p-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-orange-500"
+                  className="w-full p-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-orange-500"
                 />
               </div>
             </div>

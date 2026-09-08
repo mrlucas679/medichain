@@ -375,7 +375,7 @@ export function DashboardPage() {
             <Clock className="w-5 h-5 text-content-muted" />
             {t('dashboard.recentActivity')}
           </h3>
-          <Link to="/consent" className="text-sm text-primary-500 hover:text-brand font-medium">
+          <Link to="/consent" className="text-sm text-primary-500 hover:text-brand font-medium inline-flex items-center min-h-[24px] py-1">
             {t('dashboard.viewAll')}
           </Link>
         </div>
@@ -412,12 +412,12 @@ export function DashboardPage() {
       {/* Last Visit Info */}
       <div className="info-card flex items-center justify-between">
         <div>
-          <p className="text-sm text-info-dark font-medium">{t('dashboard.lastVisit')}</p>
+          <p className="text-sm text-info-dark font-medium inline-flex items-center min-h-[24px] py-1">{t('dashboard.lastVisit')}</p>
           <p className="text-info">{patientData?.lastVisit ? formatDate(patientData.lastVisit) : 'N/A'}</p>
         </div>
         <Link
           to="/records"
-          className="text-sm text-info font-medium hover:underline flex items-center gap-1"
+          className="text-sm text-info font-medium hover:underline flex items-center gap-1 inline-flex items-center min-h-[24px] py-1"
         >
           {t('dashboard.viewDetails')} <ChevronRight className="w-4 h-4" />
         </Link>

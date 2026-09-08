@@ -442,7 +442,7 @@ export default function BurnPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t('docBurn.searchPatientsPh')}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg"
                   />
                 </div>
                 <div className="max-h-48 overflow-y-auto space-y-2">
@@ -476,7 +476,7 @@ export default function BurnPage() {
                       id="burn-mechanism"
                       value={mechanism}
                       onChange={(e) => setMechanism(e.target.value as BurnMechanism)}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     >
                       {mechanismOptions.map(opt => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -491,7 +491,7 @@ export default function BurnPage() {
                       value={agentSource}
                       onChange={(e) => setAgentSource(e.target.value)}
                       placeholder={t('docBurn.agentSourcePh')}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     />
                   </div>
                   <div>
@@ -501,7 +501,7 @@ export default function BurnPage() {
                       type="time"
                       value={injuryTime}
                       onChange={(e) => setInjuryTime(e.target.value)}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     />
                   </div>
                   <div>
@@ -511,7 +511,7 @@ export default function BurnPage() {
                       type="number"
                       value={weight}
                       onChange={(e) => setWeight(Number(e.target.value))}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     />
                   </div>
                   <label htmlFor="burn-is-child" className="flex items-center space-x-2 cursor-pointer">
@@ -520,7 +520,7 @@ export default function BurnPage() {
                       type="checkbox"
                       checked={isChild}
                       onChange={() => setIsChild(!isChild)}
-                      className="rounded border-border-strong text-critical-subtle-fg"
+                      className="rounded border-border-interactive text-critical-subtle-fg"
                     />
                     <span className="text-sm">{t('docBurn.pediatricPatientLabel')}</span>
                   </label>
@@ -536,7 +536,7 @@ export default function BurnPage() {
                       id="burn-tetanus-status"
                       value={tetanusStatus}
                       onChange={(e) => setTetanusStatus(e.target.value)}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     >
                       <option value="unknown">{t('docBurn.tetanus_unknown')}</option>
                       <option value="current">{t('docBurn.tetanus_current')}</option>
@@ -606,7 +606,7 @@ export default function BurnPage() {
                               step="0.5"
                               value={currentPercent}
                               onChange={(e) => updateBurnArea(region.id, 'percentage', Math.min(maxPercent, Number(e.target.value)))}
-                              className="w-full p-1 border border-border-strong rounded text-sm"
+                              className="w-full p-1 border border-border-interactive rounded text-sm"
                             />
                           </div>
                           <div>
@@ -616,7 +616,7 @@ export default function BurnPage() {
                               value={currentDepth}
                               onChange={(e) => updateBurnArea(region.id, 'depth', e.target.value as BurnDepth)}
                               disabled={currentPercent === 0}
-                              className="w-full p-1 border border-border-strong rounded text-sm"
+                              className="w-full p-1 border border-border-interactive rounded text-sm"
                             >
                               {depthOptions.map(d => (
                                 <option key={d.value} value={d.value}>{d.label}</option>
@@ -655,7 +655,7 @@ export default function BurnPage() {
                     type="checkbox"
                     checked={inhalationInjury.suspected}
                     onChange={() => setInhalationInjury(prev => ({ ...prev, suspected: !prev.suspected }))}
-                    className="rounded border-border-strong text-critical-subtle-fg"
+                    className="rounded border-border-interactive text-critical-subtle-fg"
                   />
                   <span className="font-medium">{t('docBurn.inhalationSuspectedLabel')}</span>
                 </label>
@@ -674,7 +674,7 @@ export default function BurnPage() {
                           type="checkbox"
                           checked={inhalationInjury[key as keyof typeof inhalationInjury] as boolean}
                           onChange={() => setInhalationInjury(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }))}
-                          className="rounded border-border-strong text-critical-subtle-fg"
+                          className="rounded border-border-interactive text-critical-subtle-fg"
                         />
                         <span className="text-sm">{label}</span>
                       </label>
@@ -688,7 +688,7 @@ export default function BurnPage() {
                           value={inhalationInjury.coLevel || ''}
                           onChange={(e) => setInhalationInjury(prev => ({ ...prev, coLevel: Number(e.target.value) }))}
                           placeholder={t('docBurn.coLevelPh')}
-                          className="w-full p-2 border border-border-strong rounded"
+                          className="w-full p-2 border border-border-interactive rounded"
                         />
                       </div>
                     )}
@@ -708,7 +708,7 @@ export default function BurnPage() {
                     type="checkbox"
                     checked={circumferential.present}
                     onChange={() => setCircumferential(prev => ({ ...prev, present: !prev.present }))}
-                    className="rounded border-border-strong text-content-secondary"
+                    className="rounded border-border-interactive text-content-secondary"
                   />
                   <span className="font-medium">{t('docBurn.circumferentialPresentLabel')}</span>
                 </label>
@@ -739,7 +739,7 @@ export default function BurnPage() {
                         type="checkbox"
                         checked={circumferential.escharotomyNeeded}
                         onChange={() => setCircumferential(prev => ({ ...prev, escharotomyNeeded: !prev.escharotomyNeeded }))}
-                        className="rounded border-border-strong text-critical-subtle-fg"
+                        className="rounded border-border-interactive text-critical-subtle-fg"
                       />
                       <span className="text-sm font-medium text-critical-subtle-fg">{t('docBurn.escharotomyNeededLabel')}</span>
                     </label>
@@ -779,7 +779,7 @@ export default function BurnPage() {
                           type="checkbox"
                           checked={interventions.includes(intervention)}
                           onChange={() => toggleIntervention(intervention)}
-                          className="rounded border-border-strong text-ok-subtle-fg"
+                          className="rounded border-border-interactive text-ok-subtle-fg"
                         />
                         <span className="text-sm">{intervention}</span>
                       </label>
@@ -797,7 +797,7 @@ export default function BurnPage() {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={t('docBurn.notesPh')}
                   rows={4}
-                  className="w-full p-3 border border-border-strong rounded-lg"
+                  className="w-full p-3 border border-border-interactive rounded-lg"
                 />
               </div>
 
@@ -844,7 +844,7 @@ export default function BurnPage() {
                         type="number"
                         value={weight}
                         onChange={(e) => setWeight(Number(e.target.value))}
-                        className="w-full p-2 border border-border-strong rounded"
+                        className="w-full p-2 border border-border-interactive rounded"
                       />
                     </div>
                     <div>
@@ -865,7 +865,7 @@ export default function BurnPage() {
                         type="time"
                         value={fluidStartTime}
                         onChange={(e) => setFluidStartTime(e.target.value)}
-                        className="w-full p-2 border border-border-strong rounded"
+                        className="w-full p-2 border border-border-interactive rounded"
                       />
                     </div>
                   </div>

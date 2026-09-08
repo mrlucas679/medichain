@@ -274,7 +274,7 @@ function PatientSearchPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('docPatientSearch.searchPlaceholder')}
-              className="w-full pl-12 pr-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none transition-all"
             />
           </div>
           <button
@@ -306,7 +306,7 @@ function PatientSearchPage() {
               <select
                 value={filterBloodType}
                 onChange={(e) => setFilterBloodType(e.target.value)}
-                className="px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="px-3 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
               >
                 <option value="all">{t('docPatientSearch.allBloodTypes')}</option>
                 <option value="A+">A+</option>
@@ -324,7 +324,7 @@ function PatientSearchPage() {
               <select
                 value={filterGender}
                 onChange={(e) => setFilterGender(e.target.value)}
-                className="px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500"
+                className="px-3 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500"
               >
                 <option value="all">{t('docPatientSearch.allGenders')}</option>
                 <option value="male">{t('docPatientSearch.male')}</option>

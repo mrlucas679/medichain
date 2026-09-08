@@ -154,7 +154,7 @@ export function LoginPage() {
                     value={walletAddress}
                     onChange={(e) => setWalletAddress(e.target.value)}
                     placeholder={t('auth.walletPlaceholder')}
-                    className="block w-full pl-12 pr-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-brand transition-colors font-mono text-sm"
+                    className="block w-full pl-12 pr-4 py-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-brand transition-colors font-mono text-sm"
                     disabled={isLoading}
                   />
                 </div>

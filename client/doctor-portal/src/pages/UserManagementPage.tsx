@@ -358,7 +358,7 @@ const UserManagementPage: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t('docUserManagement.searchPlaceholder')}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg"
                   />
                 </div>
               </div>
@@ -368,7 +368,7 @@ const UserManagementPage: React.FC = () => {
                   id="user-role-filter"
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value as UserRole | 'all')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="all">{t('docUserManagement.allRoles')}</option>
                   <option value="admin">{t('docUserManagement.role_admin')}</option>
@@ -384,7 +384,7 @@ const UserManagementPage: React.FC = () => {
                   id="user-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as UserStatus | 'all')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="all">{t('docUserManagement.allStatuses')}</option>
                   <option value="active">{t('docUserManagement.status_active')}</option>
@@ -604,7 +604,7 @@ const UserManagementPage: React.FC = () => {
                   value={newUser.walletAddress}
                   onChange={(e) => setNewUser({ ...newUser, walletAddress: e.target.value })}
                   placeholder="SS58 wallet address"
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   required
                 />
               </div>
@@ -618,7 +618,7 @@ const UserManagementPage: React.FC = () => {
                   value={newUser.name}
                   onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
                   placeholder={t('docUserManagement.fullNamePlaceholder')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   required
                 />
               </div>
@@ -629,7 +629,7 @@ const UserManagementPage: React.FC = () => {
                   type="text"
                   value={newUser.username}
                   onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
               <div>
@@ -640,7 +640,7 @@ const UserManagementPage: React.FC = () => {
                   id="new-user-role"
                   value={newUser.role}
                   onChange={(e) => setNewUser({ ...newUser, role: e.target.value as UserRole })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   required
                 >
                   <option value="doctor">{t('docUserManagement.role_doctor')}</option>
@@ -662,7 +662,7 @@ const UserManagementPage: React.FC = () => {
                   value={newUser.email}
                   onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                   placeholder={t('docUserManagement.emailPlaceholder')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   required
                 />
               </div>
@@ -676,7 +676,7 @@ const UserManagementPage: React.FC = () => {
                   value={newUser.phone}
                   onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
                   placeholder={t('docUserManagement.phonePlaceholder')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   required
                 />
               </div>
@@ -691,7 +691,7 @@ const UserManagementPage: React.FC = () => {
                   value={newUser.department}
                   onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
                   placeholder={t('docUserManagement.departmentPlaceholder')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
               <div>
@@ -702,7 +702,7 @@ const UserManagementPage: React.FC = () => {
                   value={newUser.licenseNumber}
                   onChange={(e) => setNewUser({ ...newUser, licenseNumber: e.target.value })}
                   placeholder={t('docUserManagement.licenseNumberPlaceholder')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
             </div>
@@ -716,7 +716,7 @@ const UserManagementPage: React.FC = () => {
                   value={newUser.specialization}
                   onChange={(e) => setNewUser({ ...newUser, specialization: e.target.value })}
                   placeholder={t('docUserManagement.specializationPlaceholder')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
               <div>
@@ -727,7 +727,7 @@ const UserManagementPage: React.FC = () => {
                   value={newUser.emergencyContact}
                   onChange={(e) => setNewUser({ ...newUser, emergencyContact: e.target.value })}
                   placeholder={t('docUserManagement.emergencyContactPlaceholder')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
             </div>
@@ -740,7 +740,7 @@ const UserManagementPage: React.FC = () => {
                 onChange={(e) => setNewUser({ ...newUser, notes: e.target.value })}
                 placeholder={t('docUserManagement.notesPlaceholder')}
                 rows={3}
-                className="w-full border border-border-strong rounded-lg px-3 py-2"
+                className="w-full border border-border-interactive rounded-lg px-3 py-2"
               />
             </div>
 
@@ -856,7 +856,7 @@ const UserManagementPage: React.FC = () => {
                     type="text"
                     value={selectedUser.name}
                     onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
                 <div>
@@ -865,7 +865,7 @@ const UserManagementPage: React.FC = () => {
                     id="usermgmt-role"
                     value={selectedUser.role}
                     onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value as UserRole })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   >
                     <option value="admin">{t('docUserManagement.role_admin')}</option>
                     <option value="doctor">{t('docUserManagement.role_doctor')}</option>
@@ -884,7 +884,7 @@ const UserManagementPage: React.FC = () => {
                     type="email"
                     value={selectedUser.email}
                     onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
                 <div>
@@ -894,7 +894,7 @@ const UserManagementPage: React.FC = () => {
                     type="tel"
                     value={selectedUser.phone}
                     onChange={(e) => setSelectedUser({ ...selectedUser, phone: e.target.value })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
               </div>
@@ -907,7 +907,7 @@ const UserManagementPage: React.FC = () => {
                     type="text"
                     value={selectedUser.department || ''}
                     onChange={(e) => setSelectedUser({ ...selectedUser, department: e.target.value })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
                 <div>
@@ -917,7 +917,7 @@ const UserManagementPage: React.FC = () => {
                     type="text"
                     value={selectedUser.licenseNumber || ''}
                     onChange={(e) => setSelectedUser({ ...selectedUser, licenseNumber: e.target.value })}
-                    className="w-full border border-border-strong rounded-lg px-3 py-2"
+                    className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   />
                 </div>
               </div>
@@ -929,7 +929,7 @@ const UserManagementPage: React.FC = () => {
                   type="text"
                   value={selectedUser.specialization || ''}
                   onChange={(e) => setSelectedUser({ ...selectedUser, specialization: e.target.value })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -940,7 +940,7 @@ const UserManagementPage: React.FC = () => {
                   value={selectedUser.notes || ''}
                   onChange={(e) => setSelectedUser({ ...selectedUser, notes: e.target.value })}
                   rows={3}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 

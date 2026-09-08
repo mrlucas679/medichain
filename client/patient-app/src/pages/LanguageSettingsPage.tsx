@@ -236,7 +236,7 @@ const LanguageSettingsPage: React.FC = () => {
             placeholder={t('languageSettings.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full pl-10 pr-4 py-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
       </div>
@@ -326,7 +326,7 @@ const LanguageSettingsPage: React.FC = () => {
                 id="lang-date-format"
                 value={regionalSettings.dateFormat}
                 onChange={(e) => setRegionalSettings(prev => ({ ...prev, dateFormat: e.target.value }))}
-                className="w-full border border-border-strong rounded-lg px-3 py-2"
+                className="w-full border border-border-interactive rounded-lg px-3 py-2"
               >
                 {dateFormats.map(df => (
                   <option key={df.value} value={df.value}>
@@ -374,7 +374,7 @@ const LanguageSettingsPage: React.FC = () => {
                 id="lang-first-day"
                 value={regionalSettings.firstDayOfWeek}
                 onChange={(e) => setRegionalSettings(prev => ({ ...prev, firstDayOfWeek: e.target.value as typeof regionalSettings.firstDayOfWeek }))}
-                className="w-full border border-border-strong rounded-lg px-3 py-2"
+                className="w-full border border-border-interactive rounded-lg px-3 py-2"
               >
                 <option value="sunday">{t('languageSettings.sunday')}</option>
                 <option value="monday">{t('languageSettings.monday')}</option>

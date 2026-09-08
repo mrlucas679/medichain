@@ -456,7 +456,7 @@ export default function ShiftHandoffPage() {
                       id="handoff-shift-type"
                       value={handoff.shiftType}
                       onChange={(e) => setHandoff({ ...handoff, shiftType: e.target.value as ShiftType })}
-                      className="w-full p-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full p-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500"
                     >
                       {Object.entries(shiftTypes).map(([value, { label }]) => (
                         <option key={value} value={value}>{label}</option>
@@ -472,7 +472,7 @@ export default function ShiftHandoffPage() {
                         type="date"
                         value={handoff.handoffDate}
                         onChange={(e) => setHandoff({ ...handoff, handoffDate: e.target.value })}
-                        className="w-full p-2 border border-border-strong rounded-lg"
+                        className="w-full p-2 border border-border-interactive rounded-lg"
                       />
                     </div>
                     <div>
@@ -482,7 +482,7 @@ export default function ShiftHandoffPage() {
                         type="time"
                         value={handoff.handoffTime}
                         onChange={(e) => setHandoff({ ...handoff, handoffTime: e.target.value })}
-                        className="w-full p-2 border border-border-strong rounded-lg"
+                        className="w-full p-2 border border-border-interactive rounded-lg"
                       />
                     </div>
                   </div>
@@ -493,7 +493,7 @@ export default function ShiftHandoffPage() {
                       id="handoff-unit"
                       value={handoff.unit}
                       onChange={(e) => setHandoff({ ...handoff, unit: e.target.value })}
-                      className="w-full p-2 border border-border-strong rounded-lg"
+                      className="w-full p-2 border border-border-interactive rounded-lg"
                     >
                       {units.map(u => (
                         <option key={u} value={u}>{t(`docShiftHandoff.unit_${UNIT_KEYS[u]}`)}</option>
@@ -508,7 +508,7 @@ export default function ShiftHandoffPage() {
                       type="text"
                       value={handoff.outgoingNurse}
                       onChange={(e) => setHandoff({ ...handoff, outgoingNurse: e.target.value })}
-                      className="w-full p-2 border border-border-strong rounded-lg bg-surface-sunken"
+                      className="w-full p-2 border border-border-interactive rounded-lg bg-surface-sunken"
                       readOnly
                     />
                   </div>
@@ -521,7 +521,7 @@ export default function ShiftHandoffPage() {
                       value={handoff.incomingNurse}
                       onChange={(e) => setHandoff({ ...handoff, incomingNurse: e.target.value })}
                       placeholder={t('docShiftHandoff.incomingNursePlaceholder')}
-                      className="w-full p-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full p-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
                 </div>
@@ -589,7 +589,7 @@ export default function ShiftHandoffPage() {
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder={t('docShiftHandoff.searchPatientsPlaceholder')}
-                      className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg"
+                      className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg"
                     />
                   </div>
                   <div className="max-h-48 overflow-y-auto space-y-2 mb-4">
@@ -623,7 +623,7 @@ export default function ShiftHandoffPage() {
                             value={newPatientHandoff.room}
                             onChange={(e) => setNewPatientHandoff({ ...newPatientHandoff, room: e.target.value })}
                             placeholder={t('docShiftHandoff.roomPlaceholder')}
-                            className="w-full p-2 border border-border-strong rounded"
+                            className="w-full p-2 border border-border-interactive rounded"
                           />
                         </div>
                         <div>
@@ -632,7 +632,7 @@ export default function ShiftHandoffPage() {
                             id="handoff-new-patient-priority"
                             value={newPatientHandoff.priority}
                             onChange={(e) => setNewPatientHandoff({ ...newPatientHandoff, priority: e.target.value as Priority })}
-                            className="w-full p-2 border border-border-strong rounded"
+                            className="w-full p-2 border border-border-interactive rounded"
                           >
                             <option value="routine">{t('docShiftHandoff.priority_routine')}</option>
                             <option value="urgent">{t('docShiftHandoff.priority_urgent')}</option>
@@ -648,7 +648,7 @@ export default function ShiftHandoffPage() {
                           value={newPatientHandoff.diagnosis}
                           onChange={(e) => setNewPatientHandoff({ ...newPatientHandoff, diagnosis: e.target.value })}
                           placeholder={t('docShiftHandoff.diagnosisPlaceholder')}
-                          className="w-full p-2 border border-border-strong rounded"
+                          className="w-full p-2 border border-border-interactive rounded"
                         />
                       </div>
                       <button
@@ -772,7 +772,7 @@ export default function ShiftHandoffPage() {
                               id={`handoff-code-status-${patient.patientId}`}
                               value={patient.codeStatus}
                               onChange={(e) => updatePatientHandoff(patient.patientId, { codeStatus: e.target.value })}
-                              className="w-full p-2 border border-border-strong rounded text-sm"
+                              className="w-full p-2 border border-border-interactive rounded text-sm"
                             >
                               {codeStatuses.map(s => (
                                 <option key={s} value={s}>{t(`docShiftHandoff.codeStatus_${CODE_STATUS_KEYS[s]}`)}</option>
@@ -787,7 +787,7 @@ export default function ShiftHandoffPage() {
                               value={patient.ivAccess}
                               onChange={(e) => updatePatientHandoff(patient.patientId, { ivAccess: e.target.value })}
                               placeholder={t('docShiftHandoff.ivAccessPlaceholder')}
-                              className="w-full p-2 border border-border-strong rounded text-sm"
+                              className="w-full p-2 border border-border-interactive rounded text-sm"
                             />
                           </div>
                           <div>
@@ -798,7 +798,7 @@ export default function ShiftHandoffPage() {
                               value={patient.diet}
                               onChange={(e) => updatePatientHandoff(patient.patientId, { diet: e.target.value })}
                               placeholder={t('docShiftHandoff.dietPlaceholder')}
-                              className="w-full p-2 border border-border-strong rounded text-sm"
+                              className="w-full p-2 border border-border-interactive rounded text-sm"
                             />
                           </div>
                           <div>
@@ -809,7 +809,7 @@ export default function ShiftHandoffPage() {
                               value={patient.activity}
                               onChange={(e) => updatePatientHandoff(patient.patientId, { activity: e.target.value })}
                               placeholder={t('docShiftHandoff.activityPlaceholder')}
-                              className="w-full p-2 border border-border-strong rounded text-sm"
+                              className="w-full p-2 border border-border-interactive rounded text-sm"
                             />
                           </div>
                           <div>
@@ -820,7 +820,7 @@ export default function ShiftHandoffPage() {
                               value={patient.pendingLabs}
                               onChange={(e) => updatePatientHandoff(patient.patientId, { pendingLabs: e.target.value })}
                               placeholder={t('docShiftHandoff.pendingLabsPlaceholder')}
-                              className="w-full p-2 border border-border-strong rounded text-sm"
+                              className="w-full p-2 border border-border-interactive rounded text-sm"
                             />
                           </div>
                           <div>
@@ -831,7 +831,7 @@ export default function ShiftHandoffPage() {
                               value={patient.pendingTests}
                               onChange={(e) => updatePatientHandoff(patient.patientId, { pendingTests: e.target.value })}
                               placeholder={t('docShiftHandoff.pendingTestsPlaceholder')}
-                              className="w-full p-2 border border-border-strong rounded text-sm"
+                              className="w-full p-2 border border-border-interactive rounded text-sm"
                             />
                           </div>
                         </div>
@@ -913,7 +913,7 @@ export default function ShiftHandoffPage() {
                               value={patient.pendingOrders}
                               onChange={(e) => updatePatientHandoff(patient.patientId, { pendingOrders: e.target.value })}
                               placeholder={t('docShiftHandoff.pendingOrdersPlaceholder')}
-                              className="w-full p-2 border border-border-strong rounded text-sm"
+                              className="w-full p-2 border border-border-interactive rounded text-sm"
                             />
                           </div>
                           <div>
@@ -924,7 +924,7 @@ export default function ShiftHandoffPage() {
                               value={patient.familyUpdates}
                               onChange={(e) => updatePatientHandoff(patient.patientId, { familyUpdates: e.target.value })}
                               placeholder={t('docShiftHandoff.familyUpdatesPlaceholder')}
-                              className="w-full p-2 border border-border-strong rounded text-sm"
+                              className="w-full p-2 border border-border-interactive rounded text-sm"
                             />
                           </div>
                         </div>
@@ -937,7 +937,7 @@ export default function ShiftHandoffPage() {
                             onChange={(e) => updatePatientHandoff(patient.patientId, { additionalNotes: e.target.value })}
                             placeholder={t('docShiftHandoff.additionalNotesPlaceholder')}
                             rows={2}
-                            className="w-full p-2 border border-border-strong rounded text-sm"
+                            className="w-full p-2 border border-border-interactive rounded text-sm"
                           />
                         </div>
                       </div>

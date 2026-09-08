@@ -443,8 +443,8 @@ export function MyProfilePage() {
       <div className="flex items-start gap-3 p-4 bg-info-light rounded-xl border border-info/20">
         <Info className="w-5 h-5 text-info mt-0.5 flex-shrink-0" />
         <div>
-          <p className="text-sm font-medium text-info-dark">{t('profile.viewOnly')}</p>
-          <p className="text-sm text-info-dark/80">
+          <p className="text-sm font-medium text-info-dark inline-flex items-center min-h-[24px] py-1">{t('profile.viewOnly')}</p>
+          <p className="text-sm text-info-dark/80 inline-flex items-center min-h-[24px] py-1">
             {t('profile.viewOnlyNote')}
           </p>
         </div>
@@ -652,7 +652,7 @@ export function MyProfilePage() {
                   id="profile-phone"
                   value={detailsDraft.phone}
                   onChange={(e) => setDetailsDraft({ ...detailsDraft, phone: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder={t('profile.phonePlaceholder')}
                 />
               </div>
@@ -664,7 +664,7 @@ export function MyProfilePage() {
                   id="profile-gender"
                   value={detailsDraft.gender}
                   onChange={(e) => setDetailsDraft({ ...detailsDraft, gender: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="">{t('profile.genderUnspecified')}</option>
                   <option value="female">{t('profile.genderFemale')}</option>
@@ -681,7 +681,7 @@ export function MyProfilePage() {
                   id="profile-languages"
                   value={detailsDraft.languages}
                   onChange={(e) => setDetailsDraft({ ...detailsDraft, languages: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder={t('profile.spokenLanguagesHint')}
                 />
               </div>
@@ -766,7 +766,7 @@ export function MyProfilePage() {
                   id="address-street"
                   value={addressDraft.street}
                   onChange={(e) => setAddressDraft({ ...addressDraft, street: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -779,7 +779,7 @@ export function MyProfilePage() {
                   id="address-city"
                   value={addressDraft.city}
                   onChange={(e) => setAddressDraft({ ...addressDraft, city: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -791,7 +791,7 @@ export function MyProfilePage() {
                   id="address-state"
                   value={addressDraft.state}
                   onChange={(e) => setAddressDraft({ ...addressDraft, state: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -803,7 +803,7 @@ export function MyProfilePage() {
                   id="address-country"
                   value={addressDraft.country}
                   onChange={(e) => setAddressDraft({ ...addressDraft, country: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="ZA"
                 />
               </div>
@@ -816,7 +816,7 @@ export function MyProfilePage() {
                   id="address-postal"
                   value={addressDraft.postalCode}
                   onChange={(e) => setAddressDraft({ ...addressDraft, postalCode: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
               </div>
@@ -888,7 +888,7 @@ export function MyProfilePage() {
                   id="insurance-provider"
                   value={insuranceDraft.provider}
                   onChange={(e) => setInsuranceDraft({ ...insuranceDraft, provider: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -900,7 +900,7 @@ export function MyProfilePage() {
                   id="insurance-policy"
                   value={insuranceDraft.policyNumber}
                   onChange={(e) => setInsuranceDraft({ ...insuranceDraft, policyNumber: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -912,7 +912,7 @@ export function MyProfilePage() {
                   id="insurance-group"
                   value={insuranceDraft.groupNumber}
                   onChange={(e) => setInsuranceDraft({ ...insuranceDraft, groupNumber: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -928,7 +928,7 @@ export function MyProfilePage() {
                       coverageType: e.target.value as PatientInsurance['coverageType'],
                     })
                   }
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="Public">{t('profile.coveragePublic')}</option>
                   <option value="Private">{t('profile.coveragePrivate')}</option>
@@ -947,7 +947,7 @@ export function MyProfilePage() {
                   id="insurance-from"
                   value={insuranceDraft.validFrom}
                   onChange={(e) => setInsuranceDraft({ ...insuranceDraft, validFrom: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -959,7 +959,7 @@ export function MyProfilePage() {
                   id="insurance-to"
                   value={insuranceDraft.validTo}
                   onChange={(e) => setInsuranceDraft({ ...insuranceDraft, validTo: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -968,7 +968,7 @@ export function MyProfilePage() {
                 type="checkbox"
                 checked={insuranceDraft.isActive}
                 onChange={(e) => setInsuranceDraft({ ...insuranceDraft, isActive: e.target.checked })}
-                className="w-4 h-4 rounded border-border-strong text-brand focus:ring-primary-500"
+                className="w-4 h-4 rounded border-border-interactive text-brand focus:ring-primary-500"
               />
               {t('profile.insuranceActive')}
             </label>
@@ -1049,7 +1049,7 @@ export function MyProfilePage() {
                   id="emergency-contact-name"
                   value={newContact.name}
                   onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-success-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-success-500 focus:border-transparent"
                   placeholder={t('profile.namePlaceholder')}
                 />
               </div>
@@ -1060,7 +1060,7 @@ export function MyProfilePage() {
                   id="emergency-contact-phone"
                   value={newContact.phone}
                   onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-success-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-success-500 focus:border-transparent"
                   placeholder={t('profile.phonePlaceholder')}
                 />
               </div>
@@ -1070,7 +1070,7 @@ export function MyProfilePage() {
                   id="emergency-contact-relationship"
                   value={newContact.relationship}
                   onChange={(e) => setNewContact({ ...newContact, relationship: e.target.value })}
-                  className="w-full p-3 border border-border rounded-xl focus:ring-2 focus:ring-success-500 focus:border-transparent"
+                  className="w-full p-3 border border-border-interactive rounded-xl focus:ring-2 focus:ring-success-500 focus:border-transparent"
                 >
                   <option value="">{t('profile.selectRelationship')}</option>
                   <option value="Spouse">{t('profile.relSpouse')}</option>
@@ -1088,7 +1088,7 @@ export function MyProfilePage() {
                   onChange={(e) =>
                     setNewContact({ ...newContact, canMakeMedicalDecisions: e.target.checked })
                   }
-                  className="w-4 h-4 rounded border-border-strong text-success-600 focus:ring-success-500"
+                  className="w-4 h-4 rounded border-border-interactive text-success-600 focus:ring-success-500"
                 />
                 {t('profile.canMakeDecisions')}
               </label>

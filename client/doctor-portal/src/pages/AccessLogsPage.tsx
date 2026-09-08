@@ -256,7 +256,7 @@ function AccessLogsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('docAccessLogs.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
+              className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
             />
           </div>
           
@@ -265,7 +265,7 @@ function AccessLogsPage() {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value as typeof filterType)}
-              className="px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
+              className="px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none"
             >
               <option value="all">{t('docAccessLogs.filterAll')}</option>
               <option value="emergency">{t('docAccessLogs.filterEmergency')}</option>

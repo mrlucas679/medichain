@@ -186,7 +186,7 @@ export default function PatientSelect({
               disabled={disabled}
               className={`
                 w-full pl-10 pr-10 py-2.5 
-                border border-border-strong dark:border-slate-600 rounded-lg 
+                border border-border-interactive dark:border-slate-600 rounded-lg 
                 bg-surface dark:bg-slate-800 
                 text-content dark:text-white
                 placeholder-gray-400 dark:placeholder-gray-500

@@ -336,13 +336,13 @@ const AMAPage: React.FC = () => {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder={t('docAMA.searchPh')}
-                      className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     />
                   </div>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value as AMAStatus | 'all')}
-                    className="px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   >
                     <option value="all">{t('docAMA.filterAll')}</option>
                 <option value="draft">{t('docAMA.status_draft')}</option>
@@ -579,7 +579,7 @@ const AMAPage: React.FC = () => {
                           setPatientName(p.full_name);
                         }
                       }}
-                      className="w-full border border-border-strong rounded-lg p-3 focus:ring-2 focus:ring-red-500"
+                      className="w-full border border-border-interactive rounded-lg p-3 focus:ring-2 focus:ring-red-500"
                     >
                       <option value="">{t('docAMA.selectExistingPatient')}</option>
                       {availablePatients.map(p => (
@@ -597,7 +597,7 @@ const AMAPage: React.FC = () => {
                       value={patientId}
                       onChange={(e) => setPatientId(e.target.value)}
                       placeholder={t('docAMA.patientIdPh')}
-                      className="w-full border border-border-strong rounded-lg p-3 focus:ring-2 focus:ring-red-500"
+                      className="w-full border border-border-interactive rounded-lg p-3 focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                   <div>
@@ -610,7 +610,7 @@ const AMAPage: React.FC = () => {
                       value={patientName}
                       onChange={(e) => setPatientName(e.target.value)}
                       placeholder={t('docAMA.patientNamePh')}
-                      className="w-full border border-border-strong rounded-lg p-3 focus:ring-2 focus:ring-red-500"
+                      className="w-full border border-border-interactive rounded-lg p-3 focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                   <div>
@@ -623,7 +623,7 @@ const AMAPage: React.FC = () => {
                       value={mrn}
                       onChange={(e) => setMrn(e.target.value)}
                       placeholder={t('docAMA.mrnPh')}
-                      className="w-full border border-border-strong rounded-lg p-3 focus:ring-2 focus:ring-red-500"
+                      className="w-full border border-border-interactive rounded-lg p-3 focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                 </div>
@@ -657,7 +657,7 @@ const AMAPage: React.FC = () => {
                       value={diagnosis}
                       onChange={(e) => setDiagnosis(e.target.value)}
                       placeholder={t('docAMA.diagnosisPh')}
-                      className="w-full border border-border-strong rounded-lg p-3 focus:ring-2 focus:ring-red-500"
+                      className="w-full border border-border-interactive rounded-lg p-3 focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                   <div>
@@ -670,7 +670,7 @@ const AMAPage: React.FC = () => {
                       onChange={(e) => setRecommendedTreatment(e.target.value)}
                       rows={3}
                       placeholder={t('docAMA.recommendedTreatmentPh')}
-                      className="w-full border border-border-strong rounded-lg p-3 focus:ring-2 focus:ring-red-500"
+                      className="w-full border border-border-interactive rounded-lg p-3 focus:ring-2 focus:ring-red-500"
                     />
                   </div>
                   <div>
@@ -744,7 +744,7 @@ const AMAPage: React.FC = () => {
                       type="checkbox"
                       checked={hasCapacity}
                       onChange={() => setHasCapacity(!hasCapacity)}
-                      className="mt-1 rounded border-border-strong text-critical-subtle-fg"
+                      className="mt-1 rounded border-border-interactive text-critical-subtle-fg"
                     />
                     <span className="text-sm font-medium text-content">
                       {t('docAMA.capacityLabel')}
@@ -759,7 +759,7 @@ const AMAPage: React.FC = () => {
                     onChange={(e) => setCapacityBasis(e.target.value)}
                     rows={2}
                     placeholder={t('docAMA.capacityBasisPh')}
-                    className="mt-2 w-full border border-border-strong rounded-lg p-2 text-sm focus:ring-2 focus:ring-red-500"
+                    className="mt-2 w-full border border-border-interactive rounded-lg p-2 text-sm focus:ring-2 focus:ring-red-500"
                   />
                 </fieldset>
 
@@ -798,7 +798,7 @@ const AMAPage: React.FC = () => {
                     onChange={(e) => setPatientStatement(e.target.value)}
                     rows={3}
                     placeholder={t('docAMA.patientStatementPh')}
-                    className="w-full border border-border-strong rounded-lg p-3 focus:ring-2 focus:ring-red-500"
+                    className="w-full border border-border-interactive rounded-lg p-3 focus:ring-2 focus:ring-red-500"
                   />
                 </div>
                 <div className="flex gap-3 mt-6">
@@ -860,7 +860,7 @@ const AMAPage: React.FC = () => {
                       value={witnessName}
                       onChange={(e) => setWitnessName(e.target.value)}
                       placeholder={t('docAMA.witnessNamePh')}
-                      className="w-full border border-border-strong rounded-lg p-2 mb-2 focus:ring-2 focus:ring-red-500"
+                      className="w-full border border-border-interactive rounded-lg p-2 mb-2 focus:ring-2 focus:ring-red-500"
                     />
                     <div className="h-24 bg-surface-sunken rounded border border-border flex items-center justify-center">
                       <p className="text-content-muted">{t('docAMA.tapToCaptureSignature')}</p>

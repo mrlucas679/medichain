@@ -499,7 +499,7 @@ const CDSAlertsPage: React.FC = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={t('docCDS.searchPh')}
-                  className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
               </div>
 
@@ -510,7 +510,7 @@ const CDSAlertsPage: React.FC = () => {
                   id="cds-category-filter"
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value as AlertCategory | 'all')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 >
                   <option value="all">{t('docCDS.filterAllCategories')}</option>
                   <option value="medication">{t('docCDS.category_medication')}</option>
@@ -530,7 +530,7 @@ const CDSAlertsPage: React.FC = () => {
                   id="cds-severity-filter"
                   value={severityFilter}
                   onChange={(e) => setSeverityFilter(e.target.value as AlertSeverity | 'all')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 >
                   <option value="all">{t('docCDS.filterAllSeverities')}</option>
                   <option value="critical">{t('docCDS.severity_critical')}</option>
@@ -550,7 +550,7 @@ const CDSAlertsPage: React.FC = () => {
                   id="cds-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as AlertStatus | 'all')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 >
                   <option value="all">{t('docCDS.filterAllStatuses')}</option>
                   <option value="active">{t('docCDS.status_active')}</option>
@@ -819,7 +819,7 @@ const CDSAlertsPage: React.FC = () => {
                     value={newRule.name || ''}
                     onChange={(e) => setNewRule({ ...newRule, name: e.target.value })}
                     placeholder={t('docCDS.ruleNamePh')}
-                    className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   />
                 </div>
 
@@ -829,7 +829,7 @@ const CDSAlertsPage: React.FC = () => {
                     id="cds-category"
                     value={newRule.category || 'medication'}
                     onChange={(e) => setNewRule({ ...newRule, category: e.target.value as AlertCategory })}
-                    className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   >
                     <option value="medication">{t('docCDS.category_medication')}</option>
                     <option value="allergy">{t('docCDS.category_allergy')}</option>
@@ -849,7 +849,7 @@ const CDSAlertsPage: React.FC = () => {
                     id="cds-severity"
                     value={newRule.severity || 'medium'}
                     onChange={(e) => setNewRule({ ...newRule, severity: e.target.value as AlertSeverity })}
-                    className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   >
                     <option value="critical">{t('docCDS.severity_critical')}</option>
                     <option value="high">{t('docCDS.severity_high')}</option>
@@ -869,7 +869,7 @@ const CDSAlertsPage: React.FC = () => {
                     id="cds-evidence-level"
                     value={newRule.evidenceLevel || ''}
                     onChange={(e) => setNewRule({ ...newRule, evidenceLevel: e.target.value })}
-                    className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   >
                     <option value="">{t('docCDS.evidence_unspecified')}</option>
                     <option value="A">{t('docCDS.evidence_a')}</option>
@@ -884,7 +884,7 @@ const CDSAlertsPage: React.FC = () => {
                     id="cds-trigger-type"
                     value={newRule.triggerType || 'threshold'}
                     onChange={(e) => setNewRule({ ...newRule, triggerType: e.target.value as TriggerType })}
-                    className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   >
                     <option value="threshold">{t('docCDS.trigger_threshold')}</option>
                     <option value="pattern">{t('docCDS.trigger_pattern')}</option>
@@ -903,7 +903,7 @@ const CDSAlertsPage: React.FC = () => {
                     max="10"
                     value={newRule.priority || 5}
                     onChange={(e) => setNewRule({ ...newRule, priority: parseInt(e.target.value) || 5 })}
-                    className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -918,7 +918,7 @@ const CDSAlertsPage: React.FC = () => {
                   onChange={(e) => setNewRule({ ...newRule, description: e.target.value })}
                   placeholder={t('docCDS.descriptionPh')}
                   rows={3}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
               </div>
 
@@ -929,7 +929,7 @@ const CDSAlertsPage: React.FC = () => {
                     type="checkbox"
                     checked={newRule.isEnabled || false}
                     onChange={(e) => setNewRule({ ...newRule, isEnabled: e.target.checked })}
-                    className="rounded border-border-strong text-critical-subtle-fg focus:ring-red-500"
+                    className="rounded border-border-interactive text-critical-subtle-fg focus:ring-red-500"
                   />
                   <span className="text-sm font-medium text-content-secondary">{t('docCDS.enableRuleLabel')}</span>
                 </label>
@@ -939,7 +939,7 @@ const CDSAlertsPage: React.FC = () => {
                     type="checkbox"
                     checked={newRule.testMode !== undefined ? newRule.testMode : true}
                     onChange={(e) => setNewRule({ ...newRule, testMode: e.target.checked })}
-                    className="rounded border-border-strong text-critical-subtle-fg focus:ring-red-500"
+                    className="rounded border-border-interactive text-critical-subtle-fg focus:ring-red-500"
                   />
                   <span className="text-sm font-medium text-content-secondary">{t('docCDS.testModeLabel')}</span>
                 </label>

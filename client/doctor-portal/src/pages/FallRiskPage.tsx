@@ -411,7 +411,7 @@ export default function FallRiskPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t('docFallRisk.searchPatientsPh')}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg"
                   />
                 </div>
                 <div className="max-h-64 overflow-y-auto space-y-2">
@@ -451,7 +451,7 @@ export default function FallRiskPage() {
                         type="checkbox"
                         checked={medications[key as keyof typeof medications]}
                         onChange={() => setMedications(prev => ({ ...prev, [key]: !prev[key as keyof typeof medications] }))}
-                        className="rounded border-border-strong text-content-secondary focus:ring-orange-500"
+                        className="rounded border-border-interactive text-content-secondary focus:ring-orange-500"
                       />
                       <span className="text-sm text-content-secondary">{label}</span>
                     </label>
@@ -478,7 +478,7 @@ export default function FallRiskPage() {
                         type="checkbox"
                         checked={mobility[key as keyof typeof mobility]}
                         onChange={() => setMobility(prev => ({ ...prev, [key]: !prev[key as keyof typeof mobility] }))}
-                        className="rounded border-border-strong text-content-secondary focus:ring-orange-500"
+                        className="rounded border-border-interactive text-content-secondary focus:ring-orange-500"
                       />
                       <span className="text-sm text-content-secondary">{label}</span>
                     </label>
@@ -718,7 +718,7 @@ export default function FallRiskPage() {
                     type="checkbox"
                     checked={recentFall.occurred}
                     onChange={() => setRecentFall(prev => ({ ...prev, occurred: !prev.occurred }))}
-                    className="rounded border-border-strong text-content-secondary focus:ring-orange-500"
+                    className="rounded border-border-interactive text-content-secondary focus:ring-orange-500"
                   />
                   <span className="font-medium">{t('docFallRisk.recentFallCheckbox')}</span>
                 </label>
@@ -731,7 +731,7 @@ export default function FallRiskPage() {
                         type="date"
                         value={recentFall.date}
                         onChange={(e) => setRecentFall(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full p-2 border border-border-strong rounded"
+                        className="w-full p-2 border border-border-interactive rounded"
                       />
                     </div>
                     <div>
@@ -742,7 +742,7 @@ export default function FallRiskPage() {
                         onChange={(e) => setRecentFall(prev => ({ ...prev, circumstances: e.target.value }))}
                         placeholder={t('docFallRisk.circumstancesPh')}
                         rows={2}
-                        className="w-full p-2 border border-border-strong rounded"
+                        className="w-full p-2 border border-border-interactive rounded"
                       />
                     </div>
                     <div>
@@ -753,7 +753,7 @@ export default function FallRiskPage() {
                         value={recentFall.injuries}
                         onChange={(e) => setRecentFall(prev => ({ ...prev, injuries: e.target.value }))}
                         placeholder={t('docFallRisk.injuriesPh')}
-                        className="w-full p-2 border border-border-strong rounded"
+                        className="w-full p-2 border border-border-interactive rounded"
                       />
                     </div>
                   </div>
@@ -824,7 +824,7 @@ export default function FallRiskPage() {
                         type="checkbox"
                         checked={interventions.includes(intervention)}
                         onChange={() => toggleIntervention(intervention)}
-                        className="rounded border-border-strong text-ok-subtle-fg focus:ring-green-500"
+                        className="rounded border-border-interactive text-ok-subtle-fg focus:ring-green-500"
                       />
                       <span className="text-sm text-content-secondary">{intervention}</span>
                     </label>
@@ -841,7 +841,7 @@ export default function FallRiskPage() {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={t('docFallRisk.notesPh')}
                   rows={4}
-                  className="w-full p-3 border border-border-strong rounded-lg"
+                  className="w-full p-3 border border-border-interactive rounded-lg"
                 />
               </div>
 

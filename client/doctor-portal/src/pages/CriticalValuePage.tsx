@@ -654,7 +654,7 @@ const CriticalValuePage: React.FC = () => {
                           notificationMethod: e.target.value as NotificationMethod,
                         })
                       }
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     >
                       <option value="phone">{t('docCriticalValue.method_phone')}</option>
                       <option value="in-person">{t('docCriticalValue.method_in-person')}</option>
@@ -679,7 +679,7 @@ const CriticalValuePage: React.FC = () => {
                         })
                       }
                       placeholder={t('docCriticalValue.providerNotifiedPh')}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     />
                   </div>
 
@@ -706,7 +706,7 @@ const CriticalValuePage: React.FC = () => {
                         })
                       }
                       placeholder={t('docCriticalValue.readBackPh', { analyte: selectedNotification.analyte, value: selectedNotification.value, unit: selectedNotification.unit })}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                     />
                     <p className="text-xs text-content-muted mt-1">
                       {t('docCriticalValue.readBackExample')}
@@ -728,7 +728,7 @@ const CriticalValuePage: React.FC = () => {
                         })
                       }
                       placeholder={t('docCriticalValue.providerResponsePh')}
-                      className="w-full border border-border-strong rounded-lg px-3 py-2"
+                      className="w-full border border-border-interactive rounded-lg px-3 py-2"
                       rows={3}
                     />
                   </div>
@@ -774,7 +774,7 @@ const CriticalValuePage: React.FC = () => {
                   id="critval-patient"
                   value={newCritical.patientId}
                   onChange={(e) => setNewCritical({ ...newCritical, patientId: e.target.value })}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="">{t('docCriticalValue.selectPatientPh')}</option>
                   {patients.map((patient) => (
@@ -801,7 +801,7 @@ const CriticalValuePage: React.FC = () => {
                       unit: selected?.unit || '',
                     });
                   }}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="">{t('docCriticalValue.selectAnalytePh')}</option>
                   {CRITICAL_THRESHOLDS.map((threshold) => (
@@ -824,7 +824,7 @@ const CriticalValuePage: React.FC = () => {
                   value={newCritical.value}
                   onChange={(e) => setNewCritical({ ...newCritical, value: e.target.value })}
                   placeholder={t('docCriticalValue.resultValuePh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
 
@@ -839,7 +839,7 @@ const CriticalValuePage: React.FC = () => {
                   value={newCritical.unit}
                   onChange={(e) => setNewCritical({ ...newCritical, unit: e.target.value })}
                   placeholder={t('docCriticalValue.unitPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                   readOnly={!!newCritical.analyte}
                 />
               </div>
@@ -857,7 +857,7 @@ const CriticalValuePage: React.FC = () => {
                     setNewCritical({ ...newCritical, orderingProvider: e.target.value })
                   }
                   placeholder={t('docCriticalValue.providerNotifiedPh')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 />
               </div>
             </div>
@@ -939,7 +939,7 @@ const CriticalValuePage: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t('docCriticalValue.searchPh')}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg"
                   />
                 </div>
               </div>
@@ -949,7 +949,7 @@ const CriticalValuePage: React.FC = () => {
                   id="critval-status"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as NotificationStatus | 'all')}
-                  className="w-full border border-border-strong rounded-lg px-3 py-2"
+                  className="w-full border border-border-interactive rounded-lg px-3 py-2"
                 >
                   <option value="all">{t('docCriticalValue.filterAllStatuses')}</option>
                   <option value="pending">{t('docCriticalValue.filterStatus_pending')}</option>

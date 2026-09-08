@@ -476,7 +476,7 @@ export default function PreOpPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder={t('docPreOp.searchPatientsPh')}
-                    className="w-full pl-10 pr-4 py-2 border border-border-strong rounded-lg"
+                    className="w-full pl-10 pr-4 py-2 border border-border-interactive rounded-lg"
                   />
                 </div>
                 <div className="max-h-48 overflow-y-auto space-y-2">
@@ -512,7 +512,7 @@ export default function PreOpPage() {
                       value={scheduledSurgery}
                       onChange={(e) => setScheduledSurgery(e.target.value)}
                       placeholder={t('docPreOp.scheduledProcedurePh')}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     />
                   </div>
                   <div>
@@ -523,7 +523,7 @@ export default function PreOpPage() {
                       value={surgeon}
                       onChange={(e) => setSurgeon(e.target.value)}
                       placeholder={t('docPreOp.surgeonPh')}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -534,7 +534,7 @@ export default function PreOpPage() {
                         type="date"
                         value={scheduledDate}
                         onChange={(e) => setScheduledDate(e.target.value)}
-                        className="w-full p-2 border border-border-strong rounded"
+                        className="w-full p-2 border border-border-interactive rounded"
                       />
                     </div>
                     <div>
@@ -544,7 +544,7 @@ export default function PreOpPage() {
                         type="time"
                         value={scheduledTime}
                         onChange={(e) => setScheduledTime(e.target.value)}
-                        className="w-full p-2 border border-border-strong rounded"
+                        className="w-full p-2 border border-border-interactive rounded"
                       />
                     </div>
                   </div>
@@ -554,7 +554,7 @@ export default function PreOpPage() {
                       id="preop-anesthesia-type"
                       value={anesthesiaType}
                       onChange={(e) => setAnesthesiaType(e.target.value as AnesthesiaType)}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     >
                       {anesthesiaTypes.map(type => (
                         <option key={type.value} value={type.value}>{type.label}</option>
@@ -578,7 +578,7 @@ export default function PreOpPage() {
                       type="datetime-local"
                       value={npoStatus.lastSolid}
                       onChange={(e) => setNpoStatus(prev => ({ ...prev, lastSolid: e.target.value }))}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     />
                   </div>
                   <div>
@@ -588,7 +588,7 @@ export default function PreOpPage() {
                       type="datetime-local"
                       value={npoStatus.lastClear}
                       onChange={(e) => setNpoStatus(prev => ({ ...prev, lastClear: e.target.value }))}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     />
                   </div>
                   <label htmlFor="preop-npo-compliant" className="flex items-center space-x-2 cursor-pointer">
@@ -597,7 +597,7 @@ export default function PreOpPage() {
                       type="checkbox"
                       checked={npoStatus.compliant}
                       onChange={() => setNpoStatus(prev => ({ ...prev, compliant: !prev.compliant }))}
-                      className="rounded border-border-strong text-ok-subtle-fg"
+                      className="rounded border-border-interactive text-ok-subtle-fg"
                     />
                     <span className={`font-medium ${npoStatus.compliant ? 'text-ok-subtle-fg' : 'text-critical-subtle-fg'}`}>
                       {npoStatus.compliant ? t('docPreOp.npoCompliant') : t('docPreOp.npoNotCompliant')}
@@ -648,7 +648,7 @@ export default function PreOpPage() {
                     type="checkbox"
                     checked={asaEmergency}
                     onChange={() => setAsaEmergency(!asaEmergency)}
-                    className="rounded border-border-strong text-critical-subtle-fg"
+                    className="rounded border-border-interactive text-critical-subtle-fg"
                   />
                   <span className="font-medium text-critical-subtle-fg">
                     {t('docPreOp.emergencyCaseCheckbox')}
@@ -691,7 +691,7 @@ export default function PreOpPage() {
                       id="preop-mouth-opening"
                       value={airwayAssessment.mouthOpening}
                       onChange={(e) => setAirwayAssessment(prev => ({ ...prev, mouthOpening: e.target.value }))}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     >
                       <option value=">3cm">{t('docPreOp.mouthOpening_normal')}</option>
                       <option value="2-3cm">{t('docPreOp.mouthOpening_limited')}</option>
@@ -704,7 +704,7 @@ export default function PreOpPage() {
                       id="preop-thyromental-distance"
                       value={airwayAssessment.thyromental}
                       onChange={(e) => setAirwayAssessment(prev => ({ ...prev, thyromental: e.target.value }))}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     >
                       <option value=">6cm">{t('docPreOp.thyromental_normal')}</option>
                       <option value="6-6.5cm">{t('docPreOp.thyromental_borderline')}</option>
@@ -717,7 +717,7 @@ export default function PreOpPage() {
                       id="preop-neck-mobility"
                       value={airwayAssessment.neckMobility}
                       onChange={(e) => setAirwayAssessment(prev => ({ ...prev, neckMobility: e.target.value }))}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     >
                       <option value="full">{t('docPreOp.neckMobility_full')}</option>
                       <option value="limited">{t('docPreOp.neckMobility_limited')}</option>
@@ -730,7 +730,7 @@ export default function PreOpPage() {
                       id="preop-dentition"
                       value={airwayAssessment.dentition}
                       onChange={(e) => setAirwayAssessment(prev => ({ ...prev, dentition: e.target.value }))}
-                      className="w-full p-2 border border-border-strong rounded"
+                      className="w-full p-2 border border-border-interactive rounded"
                     >
                       <option value="intact">{t('docPreOp.dentition_intact')}</option>
                       <option value="loose">{t('docPreOp.dentition_loose')}</option>
@@ -747,7 +747,7 @@ export default function PreOpPage() {
                       type="checkbox"
                       checked={airwayAssessment.beardPresent}
                       onChange={() => setAirwayAssessment(prev => ({ ...prev, beardPresent: !prev.beardPresent }))}
-                      className="rounded border-border-strong text-content-secondary"
+                      className="rounded border-border-interactive text-content-secondary"
                     />
                     <span className="text-sm">{t('docPreOp.beardPresentCheckbox')}</span>
                   </label>
@@ -757,7 +757,7 @@ export default function PreOpPage() {
                       type="checkbox"
                       checked={airwayAssessment.obeseNeck}
                       onChange={() => setAirwayAssessment(prev => ({ ...prev, obeseNeck: !prev.obeseNeck }))}
-                      className="rounded border-border-strong text-content-secondary"
+                      className="rounded border-border-interactive text-content-secondary"
                     />
                     <span className="text-sm">{t('docPreOp.obeseNeckCheckbox')}</span>
                   </label>
@@ -767,7 +767,7 @@ export default function PreOpPage() {
                       type="checkbox"
                       checked={airwayAssessment.difficultyPredicted}
                       onChange={() => setAirwayAssessment(prev => ({ ...prev, difficultyPredicted: !prev.difficultyPredicted }))}
-                      className="rounded border-border-strong text-critical-subtle-fg"
+                      className="rounded border-border-interactive text-critical-subtle-fg"
                     />
                     <span className="text-sm text-critical-subtle-fg font-medium">{t('docPreOp.difficultAirwayCheckbox')}</span>
                   </label>
@@ -789,7 +789,7 @@ export default function PreOpPage() {
                           type="checkbox"
                           checked={medicalHistory.includes(condition)}
                           onChange={() => toggleMedicalHistory(condition)}
-                          className="rounded border-border-strong text-content-secondary"
+                          className="rounded border-border-interactive text-content-secondary"
                         />
                         <span className="text-sm">{condition}</span>
                       </label>
@@ -810,7 +810,7 @@ export default function PreOpPage() {
                       value={newAllergy}
                       onChange={(e) => setNewAllergy(e.target.value)}
                       placeholder={t('docPreOp.addAllergyPh')}
-                      className="flex-1 p-2 border border-border-strong rounded text-sm"
+                      className="flex-1 p-2 border border-border-interactive rounded text-sm"
                       onKeyPress={(e) => e.key === 'Enter' && addAllergy()}
                     />
                     <button
@@ -860,7 +860,7 @@ export default function PreOpPage() {
                       value={newMedication}
                       onChange={(e) => setNewMedication(e.target.value)}
                       placeholder={t('docPreOp.addMedicationPh')}
-                      className="flex-1 p-2 border border-border-strong rounded text-sm"
+                      className="flex-1 p-2 border border-border-interactive rounded text-sm"
                       onKeyPress={(e) => e.key === 'Enter' && addMedication()}
                     />
                     <button
@@ -904,7 +904,7 @@ export default function PreOpPage() {
                           type="checkbox"
                           checked={holdMedications.includes(med)}
                           onChange={() => toggleHoldMedication(med)}
-                          className="rounded border-border-strong text-content-secondary"
+                          className="rounded border-border-interactive text-content-secondary"
                         />
                         <span className="text-sm">{med}</span>
                       </label>
@@ -955,7 +955,7 @@ export default function PreOpPage() {
                           type="checkbox"
                           checked={consents[key as keyof typeof consents]}
                           onChange={() => setConsents(prev => ({ ...prev, [key]: !prev[key as keyof typeof prev] }))}
-                          className="rounded border-border-strong text-content-secondary"
+                          className="rounded border-border-interactive text-content-secondary"
                         />
                         <span className="text-sm">{label}</span>
                       </label>
@@ -973,7 +973,7 @@ export default function PreOpPage() {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder={t('docPreOp.additionalNotesPh')}
                   rows={4}
-                  className="w-full p-3 border border-border-strong rounded-lg"
+                  className="w-full p-3 border border-border-interactive rounded-lg"
                 />
               </div>
 
@@ -1036,7 +1036,7 @@ export default function PreOpPage() {
                       type="checkbox"
                       checked={preOpChecklist[key]}
                       onChange={() => setPreOpChecklist(prev => ({ ...prev, [key]: !prev[key] }))}
-                      className="rounded border-border-strong text-ok-subtle-fg mr-3"
+                      className="rounded border-border-interactive text-ok-subtle-fg mr-3"
                     />
                     <span className={`flex-1 ${preOpChecklist[key] ? 'line-through text-ok-subtle-fg' : ''}`}>
                       {label}

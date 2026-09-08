@@ -481,7 +481,7 @@ export function SettingsPage() {
             <select
               value={appSettings.language}
               onChange={(e) => setAppSettings(s => ({ ...s, language: e.target.value }))}
-              className="w-full px-4 py-3 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-border-interactive rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               {languages.map(lang => (
                 <option key={lang.code} value={lang.code}>
@@ -508,7 +508,7 @@ export function SettingsPage() {
                   onClick={() => setAppSettings(s => ({ ...s, fontSize: size }))}
                   className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
                     appSettings.fontSize === size
-                      ? 'bg-primary-500 text-white'
+                      ? 'bg-primary-500 text-brand-fg'
                       : 'bg-surface-sunken text-content-muted hover:bg-surface-sunken'
                   }`}
                 >

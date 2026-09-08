@@ -479,7 +479,7 @@ const DrugInteractionsPage: React.FC = () => {
                 value={drugSearch}
                 onChange={(e) => setDrugSearch(e.target.value)}
                 placeholder={t('docDrugInteractions.searchPh')}
-                className="w-full pl-10 pr-4 py-3 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
 
               {/* Search Results Dropdown */}
@@ -584,7 +584,7 @@ const DrugInteractionsPage: React.FC = () => {
                   value={patientContext.patientId}
                   onChange={(e) => setPatientContext({ ...patientContext, patientId: e.target.value })}
                   placeholder={t('docDrugInteractions.patientIdPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500"
                 />
               </div>
               <div>
@@ -595,7 +595,7 @@ const DrugInteractionsPage: React.FC = () => {
                   value={patientContext.age || ''}
                   onChange={(e) => setPatientContext({ ...patientContext, age: parseInt(e.target.value) || 0 })}
                   placeholder={t('docDrugInteractions.agePh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500"
                 />
               </div>
               <div>
@@ -606,7 +606,7 @@ const DrugInteractionsPage: React.FC = () => {
                   value={patientContext.weight || ''}
                   onChange={(e) => setPatientContext({ ...patientContext, weight: parseFloat(e.target.value) || 0 })}
                   placeholder={t('docDrugInteractions.weightPh')}
-                  className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500"
                 />
               </div>
             </div>
@@ -625,7 +625,7 @@ const DrugInteractionsPage: React.FC = () => {
                   })
                 }
                 placeholder={t('docDrugInteractions.allergiesPh')}
-                className="w-full px-4 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500"
+                className="w-full px-4 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500"
               />
             </div>
           </div>
@@ -642,7 +642,7 @@ const DrugInteractionsPage: React.FC = () => {
                     <select
                       value={severityFilter}
                       onChange={(e) => setSeverityFilter(e.target.value as InteractionSeverity | 'all')}
-                      className="px-3 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
+                      className="px-3 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
                     >
                       <option value="all">{t('docDrugInteractions.filterAllSeverities')}</option>
                       <option value="contraindicated">{t('docDrugInteractions.severity_contraindicated')}</option>
@@ -653,7 +653,7 @@ const DrugInteractionsPage: React.FC = () => {
                     <select
                       value={typeFilter}
                       onChange={(e) => setTypeFilter(e.target.value as InteractionType | 'all')}
-                      className="px-3 py-2 border border-border-strong rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
+                      className="px-3 py-2 border border-border-interactive rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
                     >
                       <option value="all">{t('docDrugInteractions.filterAllTypes')}</option>
                       <option value="drug-drug">{t('docDrugInteractions.type_drug-drug')}</option>
