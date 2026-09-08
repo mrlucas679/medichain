@@ -1,5 +1,22 @@
 use super::*;
 
+/// A worklist must never turn a repository outage into an empty shift queue.
+macro_rules! required_worklist_read {
+    ($result:expr, $area:literal) => {
+        match $result {
+            Ok(value) => value,
+            Err(error) => {
+                log::error!("{} read failed: {error}", $area);
+                return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                    success: false,
+                    error: "Clinical worklist data is temporarily unavailable".to_string(),
+                    code: "WORKLIST_DATA_UNAVAILABLE".to_string(),
+                });
+            }
+        }
+    };
+}
+
 // ============================================================================
 // NOTIFICATION SYSTEM
 // ============================================================================
@@ -34,12 +51,10 @@ pub async fn get_notifications(data: web::Data<AppState>, http_req: HttpRequest)
     // For doctors/nurses/admins - check for critical values
     if current_user.role.can_view_medical_records() {
         // Via repository (was: in-memory data.critical_values HashMap)
-        let critical_values = data
-            .repositories
-            .critical_values
-            .list_all()
-            .await
-            .unwrap_or_default();
+        let critical_values = required_worklist_read!(
+            data.repositories.critical_values.list_all().await,
+            "critical-value notification"
+        );
         for cv in critical_values.iter().take(5) {
             notifications.push(serde_json::json!({
                 "id": cv.id,
@@ -53,16 +68,14 @@ pub async fn get_notifications(data: web::Data<AppState>, http_req: HttpRequest)
 
         // Check for pending lab approvals (doctors only)
         if matches!(current_user.role, crate::Role::Doctor | crate::Role::Admin) {
-            let pending_count = data
-                .repositories
-                .lab_result_submissions
-                .list_all()
-                .await
-                .unwrap_or_default()
-                .into_iter()
-                .filter_map(|r| serde_json::from_value::<crate::LabResultSubmission>(r.data).ok())
-                .filter(|s| s.status == crate::LabResultStatus::Pending)
-                .count();
+            let pending_count = required_worklist_read!(
+                data.repositories.lab_result_submissions.list_all().await,
+                "pending lab notification"
+            )
+            .into_iter()
+            .filter_map(|r| serde_json::from_value::<crate::LabResultSubmission>(r.data).ok())
+            .filter(|s| s.status == crate::LabResultStatus::Pending)
+            .count();
             if pending_count > 0 {
                 notifications.push(serde_json::json!({
                     "id": "pending-labs",
@@ -76,12 +89,10 @@ pub async fn get_notifications(data: web::Data<AppState>, http_req: HttpRequest)
         }
 
         // Check for recent code blues - Use repository
-        let code_blues = data
-            .repositories
-            .code_blue
-            .list_all()
-            .await
-            .unwrap_or_default();
+        let code_blues = required_worklist_read!(
+            data.repositories.code_blue.list_all().await,
+            "code-blue notification"
+        );
         for cb in code_blues.iter().take(3) {
             notifications.push(serde_json::json!({
                 "id": cb.id,
@@ -96,17 +107,18 @@ pub async fn get_notifications(data: web::Data<AppState>, http_req: HttpRequest)
 
     // For patients - check for new lab results
     if matches!(current_user.role, crate::Role::Patient) {
-        let approved_results: Vec<crate::LabResultSubmission> = data
-            .repositories
-            .lab_result_submissions
-            .get_by_owner(&current_user_id)
-            .await
-            .unwrap_or_default()
-            .into_iter()
-            .filter_map(|r| serde_json::from_value::<crate::LabResultSubmission>(r.data).ok())
-            .filter(|s| s.status == crate::LabResultStatus::Approved)
-            .take(5)
-            .collect();
+        let approved_results: Vec<crate::LabResultSubmission> = required_worklist_read!(
+            data.repositories
+                .lab_result_submissions
+                .get_by_owner(&current_user_id)
+                .await,
+            "patient lab notification"
+        )
+        .into_iter()
+        .filter_map(|r| serde_json::from_value::<crate::LabResultSubmission>(r.data).ok())
+        .filter(|s| s.status == crate::LabResultStatus::Approved)
+        .take(5)
+        .collect();
 
         for result in approved_results {
             notifications.push(serde_json::json!({
@@ -194,12 +206,13 @@ pub async fn get_medication_reminders(
         return HttpResponse::Forbidden().finish();
     }
 
-    let all_records = data
-        .repositories
-        .medication_reminders
-        .get_by_patient(&patient_id)
-        .await
-        .unwrap_or_default();
+    let all_records = required_worklist_read!(
+        data.repositories
+            .medication_reminders
+            .get_by_patient(&patient_id)
+            .await,
+        "patient medication reminder"
+    );
     let reminders: Vec<_> = all_records.into_iter().filter(|m| m.is_active).collect();
 
     HttpResponse::Ok().json(serde_json::json!({
@@ -263,12 +276,13 @@ pub async fn get_nurse_tasks(data: web::Data<AppState>, http_req: HttpRequest) -
     }
 
     // Medication administration tasks from repository
-    let all_reminders = data
-        .repositories
-        .medication_reminders
-        .list_all_active()
-        .await
-        .unwrap_or_default();
+    let all_reminders = required_worklist_read!(
+        data.repositories
+            .medication_reminders
+            .list_all_active()
+            .await,
+        "nurse medication task"
+    );
     let med_tasks: Vec<_> = all_reminders
         .into_iter()
         .filter(|m| m.is_active)
@@ -302,38 +316,39 @@ pub async fn get_nurse_tasks(data: web::Data<AppState>, http_req: HttpRequest) -
     // The real source is the physician order book: `order_type = 'nursing'`
     // orders that are still outstanding are exactly the recurring nursing work
     // (observations, wound care, positioning) a shift queue exists to surface.
-    let monitoring_tasks: Vec<serde_json::Value> = data
-        .repositories
-        .physician_orders
-        .get_pending_orders()
-        .await
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|o| o.order_type.eq_ignore_ascii_case("nursing"))
-        .map(|o| {
-            // `last_done` is the last recorded execution; a never-executed order
-            // falls back to when it was due to start, so an overdue first
-            // observation still sorts as outstanding rather than as done now.
-            let last_done = o
-                .executed_at
-                .or(o.start_datetime)
-                .unwrap_or(o.order_datetime)
-                .timestamp();
-            serde_json::json!({
-                "id": o.id,
-                "type": nursing_task_kind(&o),
-                "patient_id": o.patient_id,
-                "frequency": o.frequency.clone().unwrap_or_else(|| "as ordered".to_string()),
-                "last_done": last_done,
-                "priority": match o.priority.to_lowercase().as_str() {
-                    "stat" | "urgent" | "asap" => "high",
-                    "routine" | "scheduled" => "medium",
-                    _ => "low",
-                },
-                "instructions": o.special_instructions
-            })
+    let monitoring_tasks: Vec<serde_json::Value> = required_worklist_read!(
+        data.repositories
+            .physician_orders
+            .get_pending_orders()
+            .await,
+        "nurse monitoring task"
+    )
+    .into_iter()
+    .filter(|o| o.order_type.eq_ignore_ascii_case("nursing"))
+    .map(|o| {
+        // `last_done` is the last recorded execution; a never-executed order
+        // falls back to when it was due to start, so an overdue first
+        // observation still sorts as outstanding rather than as done now.
+        let last_done = o
+            .executed_at
+            .or(o.start_datetime)
+            .unwrap_or(o.order_datetime)
+            .timestamp();
+        serde_json::json!({
+            "id": o.id,
+            "type": nursing_task_kind(&o),
+            "patient_id": o.patient_id,
+            "frequency": o.frequency.clone().unwrap_or_else(|| "as ordered".to_string()),
+            "last_done": last_done,
+            "priority": match o.priority.to_lowercase().as_str() {
+                "stat" | "urgent" | "asap" => "high",
+                "routine" | "scheduled" => "medium",
+                _ => "low",
+            },
+            "instructions": o.special_instructions
         })
-        .collect();
+    })
+    .collect();
 
     let mut tasks = med_tasks;
     tasks.extend(monitoring_tasks);

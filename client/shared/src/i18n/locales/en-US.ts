@@ -1905,6 +1905,7 @@ const en_US: TranslationRecord = {
   },
 
   docRegisterPatient: {
+    fixBeforeSaving: 'Fix the following before saving:',
     invalidPhone: 'Enter a valid phone number (e.g. +234 801 234 5678).',
     requiredPhone: 'Emergency contact phone is required.',
     regFailed: 'Registration failed',

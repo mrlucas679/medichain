@@ -1,5 +1,22 @@
 use super::*;
 
+/// Dashboard counts and queues are clinical claims, not optional decoration.
+macro_rules! required_dashboard_read {
+    ($result:expr, $area:literal) => {
+        match $result {
+            Ok(value) => value,
+            Err(error) => {
+                log::error!("{} read failed: {error}", $area);
+                return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                    success: false,
+                    error: "Dashboard data is temporarily unavailable".to_string(),
+                    code: "DASHBOARD_DATA_UNAVAILABLE".to_string(),
+                });
+            }
+        }
+    };
+}
+
 // ============================================================================
 // DASHBOARD ENDPOINTS
 // ============================================================================
@@ -30,72 +47,66 @@ pub async fn patient_dashboard(data: web::Data<AppState>, http_req: HttpRequest)
     };
 
     // Get patient profile from repository
-    let patient_profile = data
-        .repositories
-        .patients
-        .get_by_id(&current_user_id)
-        .await
-        .ok();
+    let patient_profile = Some(required_dashboard_read!(
+        data.repositories.patients.get_by_id(&current_user_id).await,
+        "patient dashboard profile"
+    ));
 
     // Get recent lab results (approved only for patients) from repository
     let pagination = Pagination::new(0, 10);
-    let lab_results: Vec<_> = match data
-        .repositories
-        .lab_submissions
-        .get_by_patient(&current_user_id, pagination)
-        .await
-    {
-        Ok(result) => result
-            .items
-            .into_iter()
-            .filter(|s| current_user.role.can_view_medical_records() || s.status == "approved")
-            .collect(),
-        Err(_) => Vec::new(),
-    };
+    let lab_results: Vec<_> = required_dashboard_read!(
+        data.repositories
+            .lab_submissions
+            .get_by_patient(&current_user_id, pagination)
+            .await,
+        "patient dashboard lab results"
+    )
+    .items
+    .into_iter()
+    .filter(|s| current_user.role.can_view_medical_records() || s.status == "approved")
+    .collect();
 
     // Get medical records from repository
     let pagination = Pagination::new(0, 50);
-    let medical_records: Vec<_> = match data
-        .repositories
-        .medical_records
-        .get_by_patient(&current_user_id, pagination)
-        .await
-    {
-        Ok(result) => result.items,
-        Err(_) => Vec::new(),
-    };
+    let medical_records = required_dashboard_read!(
+        data.repositories
+            .medical_records
+            .get_by_patient(&current_user_id, pagination)
+            .await,
+        "patient dashboard medical records"
+    )
+    .items;
 
     // Get latest vital signs from repository
-    let vital_signs = data
-        .repositories
-        .vital_signs
-        .get_latest_by_patient(&current_user_id)
-        .await
-        .unwrap_or_default();
+    let vital_signs = required_dashboard_read!(
+        data.repositories
+            .vital_signs
+            .get_latest_by_patient(&current_user_id)
+            .await,
+        "patient dashboard vital signs"
+    );
 
     // Get SOAP notes (Progress notes) from repository
     let pagination = Pagination::new(0, 5);
-    let soap_notes: Vec<_> = match data
-        .repositories
-        .progress_notes
-        .get_by_patient(&current_user_id, pagination)
-        .await
-    {
-        Ok(result) => result.items,
-        Err(_) => Vec::new(),
-    };
+    let soap_notes = required_dashboard_read!(
+        data.repositories
+            .progress_notes
+            .get_by_patient(&current_user_id, pagination)
+            .await,
+        "patient dashboard progress notes"
+    )
+    .items;
 
     // Get triage assessments from repository
     let pagination = Pagination::new(0, 5);
-    let triage_history: Vec<_> = match data
-        .repositories
-        .triage_assessments
-        .get_by_patient(&current_user_id, pagination)
-        .await
-    {
-        Ok(result) => result.items,
-        Err(_) => Vec::new(),
-    };
+    let triage_history = required_dashboard_read!(
+        data.repositories
+            .triage_assessments
+            .get_by_patient(&current_user_id, pagination)
+            .await,
+        "patient dashboard triage history"
+    )
+    .items;
 
     HttpResponse::Ok().json(serde_json::json!({
         "user_id": current_user_id,
@@ -189,28 +200,30 @@ pub async fn doctor_dashboard(data: web::Data<AppState>, http_req: HttpRequest) 
     };
     let current_user_id = current_user.wallet_address.clone();
 
-    let patients: Vec<DashboardPatient> = data
-        .repositories
-        .patients
-        .list(Pagination::new(0, 20))
-        .await
-        .map(|r| r.items)
-        .unwrap_or_default()
-        .iter()
-        .map(|e| dashboard_patient(e, &data.encryption_keyring))
-        .collect();
+    let patients: Vec<DashboardPatient> = required_dashboard_read!(
+        data.repositories
+            .patients
+            .list(Pagination::new(0, 20))
+            .await,
+        "doctor dashboard patients"
+    )
+    .items
+    .iter()
+    .map(|e| dashboard_patient(e, &data.encryption_keyring))
+    .collect();
 
-    let recent_notes: Vec<_> = data
-        .repositories
-        .progress_notes
-        .list_all(Pagination::new(0, 10))
-        .await
-        .map(|r| r.items)
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|n| n.created_by == current_user_id)
-        .take(10)
-        .collect();
+    let recent_notes: Vec<_> = required_dashboard_read!(
+        data.repositories
+            .progress_notes
+            .list_all(Pagination::new(0, 10))
+            .await,
+        "doctor dashboard progress notes"
+    )
+    .items
+    .into_iter()
+    .filter(|n| n.created_by == current_user_id)
+    .take(10)
+    .collect();
 
     // `lab_result_submissions`, NOT `lab_submissions`. The two names are one
     // letter apart and name different domain objects:
@@ -230,45 +243,41 @@ pub async fn doctor_dashboard(data: web::Data<AppState>, http_req: HttpRequest) 
     //
     // Same source and same predicate as `GET /api/lab/pending`, so the tile and
     // the review screen cannot disagree.
-    let pending_labs: Vec<crate::LabResultSubmission> = data
-        .repositories
-        .lab_result_submissions
-        .list_all()
-        .await
-        .unwrap_or_default()
-        .into_iter()
-        .filter_map(|r| serde_json::from_value::<crate::LabResultSubmission>(r.data).ok())
-        .filter(|s| s.status == crate::LabResultStatus::Pending)
-        .collect();
+    let pending_labs: Vec<crate::LabResultSubmission> = required_dashboard_read!(
+        data.repositories.lab_result_submissions.list_all().await,
+        "doctor dashboard pending labs"
+    )
+    .into_iter()
+    .filter_map(|r| serde_json::from_value::<crate::LabResultSubmission>(r.data).ok())
+    .filter(|s| s.status == crate::LabResultStatus::Pending)
+    .collect();
 
-    let critical_values = data
-        .repositories
-        .critical_values
-        .get_unacknowledged()
-        .await
-        .unwrap_or_default();
+    let critical_values = required_dashboard_read!(
+        data.repositories.critical_values.get_unacknowledged().await,
+        "doctor dashboard critical values"
+    );
 
-    let code_blues = data
-        .repositories
-        .code_blue
-        .list_all()
-        .await
-        .unwrap_or_default();
+    let code_blues = required_dashboard_read!(
+        data.repositories.code_blue.list_all().await,
+        "doctor dashboard code-blue events"
+    );
 
-    let active_orders = data
-        .repositories
-        .physician_orders
-        .get_pending_orders()
-        .await
-        .unwrap_or_default();
+    let active_orders = required_dashboard_read!(
+        data.repositories
+            .physician_orders
+            .get_pending_orders()
+            .await,
+        "doctor dashboard active orders"
+    );
 
-    let pending_consults = data
-        .repositories
-        .consultation_notes
-        .get_by_status("pending", Pagination::new(0, 10))
-        .await
-        .map(|r| r.items)
-        .unwrap_or_default();
+    let pending_consults = required_dashboard_read!(
+        data.repositories
+            .consultation_notes
+            .get_by_status("pending", Pagination::new(0, 10))
+            .await,
+        "doctor dashboard pending consults"
+    )
+    .items;
 
     HttpResponse::Ok().json(serde_json::json!({
         "role": current_user.role.to_string(),
@@ -301,62 +310,68 @@ pub async fn nurse_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -
         Err(resp) => return resp,
     };
 
-    let patients: Vec<DashboardPatient> = data
-        .repositories
-        .patients
-        .list(Pagination::new(0, 15))
-        .await
-        .map(|r| r.items)
-        .unwrap_or_default()
-        .iter()
-        .map(|e| dashboard_patient(e, &data.encryption_keyring))
-        .collect();
+    let patients: Vec<DashboardPatient> = required_dashboard_read!(
+        data.repositories
+            .patients
+            .list(Pagination::new(0, 15))
+            .await,
+        "nurse dashboard patients"
+    )
+    .items
+    .iter()
+    .map(|e| dashboard_patient(e, &data.encryption_keyring))
+    .collect();
 
-    let medication_records: Vec<_> = data
-        .repositories
-        .medication_reminders
-        .list_all_active()
-        .await
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|m| m.is_active)
-        .take(10)
-        .collect();
+    let medication_records: Vec<_> = required_dashboard_read!(
+        data.repositories
+            .medication_reminders
+            .list_all_active()
+            .await,
+        "nurse dashboard medication reminders"
+    )
+    .into_iter()
+    .filter(|m| m.is_active)
+    .take(10)
+    .collect();
 
-    let critical_alerts: Vec<_> = data
-        .repositories
-        .cds_alerts
-        .list_all(Pagination::new(0, 20))
-        .await
-        .map(|r| r.items)
-        .unwrap_or_default()
-        .into_iter()
-        .filter(|a| a.severity == "critical")
-        .take(5)
-        .collect();
+    let critical_alerts: Vec<_> = required_dashboard_read!(
+        data.repositories
+            .cds_alerts
+            .list_all(Pagination::new(0, 20))
+            .await,
+        "nurse dashboard critical alerts"
+    )
+    .items
+    .into_iter()
+    .filter(|a| a.severity == "critical")
+    .take(5)
+    .collect();
 
     // The latest reading per patient on the ward, keeping only those flagged
     // critical: there is no ward-wide vitals listing on the repository.
     let mut vitals_needing_attention = Vec::new();
     for patient in &patients {
-        if let Ok(Some(latest)) = data
-            .repositories
-            .vital_signs
-            .get_latest_by_patient(&patient.patient_id)
-            .await
-        {
+        let latest = required_dashboard_read!(
+            data.repositories
+                .vital_signs
+                .get_latest_by_patient(&patient.patient_id)
+                .await,
+            "nurse dashboard patient vital signs"
+        );
+        if let Some(latest) = latest {
             if latest.is_critical {
                 vitals_needing_attention.push(latest);
             }
         }
     }
 
-    let fall_risk_patients = data
-        .repositories
-        .fall_risk_assessments
-        .get_high_risk_patients()
-        .await
-        .unwrap_or_default();
+    let fall_risk_patients = required_dashboard_read!(
+        data.repositories
+            .fall_risk_assessments
+            .get_high_risk_patients()
+            .await,
+        "nurse dashboard fall-risk patients"
+    );
 
     // Intake/output has no ward-wide listing; the entries a nurse records are
     // shown on the Intake & Output screen itself.
@@ -389,12 +404,13 @@ pub async fn lab_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -> 
         Err(resp) => return resp,
     };
 
-    let submissions = data
-        .repositories
-        .lab_submissions
-        .get_pending_by_priority()
-        .await
-        .unwrap_or_default();
+    let submissions = required_dashboard_read!(
+        data.repositories
+            .lab_submissions
+            .get_pending_by_priority()
+            .await,
+        "lab dashboard submissions"
+    );
 
     // The queue shows a person and a test, not a row of ids: sending the raw
     // entity rendered every line as "Unknown / Unknown Test".
@@ -440,12 +456,10 @@ pub async fn lab_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -> 
         .filter(|s| s.status == "approved")
         .count();
 
-    let qc_records = data
-        .repositories
-        .lab_qc_records
-        .list_all()
-        .await
-        .unwrap_or_default();
+    let qc_records = required_dashboard_read!(
+        data.repositories.lab_qc_records.list_all().await,
+        "lab dashboard quality-control records"
+    );
     // A rejected specimen the technician cannot identify is unusable: the whole
     // point of the panel is to recollect, and you cannot recollect from a
     // patient you cannot name. The stored record carries `patient_id` and
@@ -456,12 +470,10 @@ pub async fn lab_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -> 
     // Resolved here rather than in the client, for the same reason as the
     // pharmacy queue: the name is encrypted at rest and only the API holds the
     // keyring.
-    let rejection_records = data
-        .repositories
-        .specimen_rejections
-        .list_all()
-        .await
-        .unwrap_or_default();
+    let rejection_records = required_dashboard_read!(
+        data.repositories.specimen_rejections.list_all().await,
+        "lab dashboard specimen rejections"
+    );
 
     let mut rejection_names: std::collections::HashMap<String, String> =
         std::collections::HashMap::new();
@@ -509,12 +521,10 @@ pub async fn lab_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -> 
 
     // A critical result nobody has acknowledged is the one thing on this screen
     // that must never be silently empty.
-    let critical_notifications = data
-        .repositories
-        .critical_values
-        .get_unacknowledged()
-        .await
-        .unwrap_or_default();
+    let critical_notifications = required_dashboard_read!(
+        data.repositories.critical_values.get_unacknowledged().await,
+        "lab dashboard critical notifications"
+    );
     let open_recollections = match data.repositories.specimen_recollections.list_open().await {
         Ok(values) => values,
         Err(error) => {
@@ -562,17 +572,21 @@ pub async fn admin_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -
         return HttpResponse::Forbidden().finish();
     }
 
-    let patient_count = data.repositories.patients.count().await.unwrap_or(0);
+    let patient_count = required_dashboard_read!(
+        data.repositories.patients.count().await,
+        "admin dashboard patient count"
+    );
     // Counted from the repository, so it survives a restart. Read from a
     // process-memory map before, which reported 0 after every deploy.
-    let record_count = data.repositories.medical_records.count().await.unwrap_or(0);
-    let tx_count = data
-        .repositories
-        .chain_of_custody
-        .list_all()
-        .await
-        .unwrap_or_default()
-        .len();
+    let record_count = required_dashboard_read!(
+        data.repositories.medical_records.count().await,
+        "admin dashboard record count"
+    );
+    let tx_count = required_dashboard_read!(
+        data.repositories.chain_of_custody.list_all().await,
+        "admin dashboard chain-of-custody count"
+    )
+    .len();
 
     let users: Vec<crate::types::User> = data
         .users
@@ -581,27 +595,26 @@ pub async fn admin_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -
         .unwrap_or_default();
     let count_role = |role: crate::types::Role| users.iter().filter(|u| u.role == role).count();
 
-    let recent_access_logs = data
-        .repositories
-        .access_logs
-        .get_by_date_range(
-            crate::repositories::traits::DateRange {
-                from: Some(Utc::now() - chrono::Duration::days(7)),
-                to: Some(Utc::now()),
-            },
-            Pagination::new(0, 20),
-        )
-        .await
-        .map(|r| r.items)
-        .unwrap_or_default();
+    let recent_access_logs = required_dashboard_read!(
+        data.repositories
+            .access_logs
+            .get_by_date_range(
+                crate::repositories::traits::DateRange {
+                    from: Some(Utc::now() - chrono::Duration::days(7)),
+                    to: Some(Utc::now()),
+                },
+                Pagination::new(0, 20),
+            )
+            .await,
+        "admin dashboard access log"
+    )
+    .items;
 
-    let code_blues = data
-        .repositories
-        .code_blue
-        .list_all()
-        .await
-        .unwrap_or_default()
-        .len();
+    let code_blues = required_dashboard_read!(
+        data.repositories.code_blue.list_all().await,
+        "admin dashboard code-blue count"
+    )
+    .len();
 
     // Stroke, trauma and sepsis assessments and NFC cards are only queryable per
     // patient, so they are counted in one pass over the roster rather than
@@ -610,49 +623,54 @@ pub async fn admin_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -
     let mut traumas = 0usize;
     let mut sepsis_cases = 0usize;
     let mut nfc_cards = Vec::new();
-    for entity in data
-        .repositories
-        .patients
-        .list(Pagination::new(0, 100))
-        .await
-        .map(|r| r.items)
-        .unwrap_or_default()
-    {
-        if let Ok(result) = data
-            .repositories
-            .stroke_assessments_repo
-            .get_by_patient(&entity.id, Pagination::new(0, 100))
-            .await
-        {
-            strokes += result.items.len();
-        }
-        if let Ok(result) = data
-            .repositories
-            .trauma_assessments_repo
-            .get_by_patient(&entity.id, Pagination::new(0, 100))
-            .await
-        {
-            traumas += result.items.len();
-        }
-        if let Ok(result) = data
-            .repositories
-            .sepsis_assessments_repo
-            .get_by_patient(&entity.id, Pagination::new(0, 100))
-            .await
-        {
-            sepsis_cases += result.items.len();
-        }
-        if let Ok(tags) = data.repositories.nfc_tags.get_by_patient(&entity.id).await {
-            nfc_cards.extend(tags);
-        }
+    let roster = required_dashboard_read!(
+        data.repositories
+            .patients
+            .list(Pagination::new(0, 100))
+            .await,
+        "admin dashboard patient roster"
+    );
+    for entity in roster.items {
+        strokes += required_dashboard_read!(
+            data.repositories
+                .stroke_assessments_repo
+                .get_by_patient(&entity.id, Pagination::new(0, 100))
+                .await,
+            "admin dashboard stroke assessments"
+        )
+        .items
+        .len();
+        traumas += required_dashboard_read!(
+            data.repositories
+                .trauma_assessments_repo
+                .get_by_patient(&entity.id, Pagination::new(0, 100))
+                .await,
+            "admin dashboard trauma assessments"
+        )
+        .items
+        .len();
+        sepsis_cases += required_dashboard_read!(
+            data.repositories
+                .sepsis_assessments_repo
+                .get_by_patient(&entity.id, Pagination::new(0, 100))
+                .await,
+            "admin dashboard sepsis assessments"
+        )
+        .items
+        .len();
+        nfc_cards.extend(required_dashboard_read!(
+            data.repositories.nfc_tags.get_by_patient(&entity.id).await,
+            "admin dashboard NFC cards"
+        ));
     }
 
-    let submissions = data
-        .repositories
-        .lab_submissions
-        .get_pending_by_priority()
-        .await
-        .unwrap_or_default();
+    let submissions = required_dashboard_read!(
+        data.repositories
+            .lab_submissions
+            .get_pending_by_priority()
+            .await,
+        "admin dashboard lab submissions"
+    );
     let labs_pending = submissions.iter().filter(|s| s.status == "pending").count();
     let labs_approved = submissions
         .iter()
@@ -732,12 +750,10 @@ pub async fn pharmacist_dashboard(
         Err(resp) => return resp,
     };
 
-    let records = data
-        .repositories
-        .e_prescriptions_v2
-        .list_all()
-        .await
-        .unwrap_or_default();
+    let records = required_dashboard_read!(
+        data.repositories.e_prescriptions_v2.list_all().await,
+        "pharmacy dashboard prescriptions"
+    );
     // Flattened for the queue table, which reads `medication_name`, `dosage`,
     // `patient_name` and `priority` directly. The stored document nests the drug
     // under `medication`, so passing it through raw threw on
@@ -763,11 +779,24 @@ pub async fn pharmacist_dashboard(
         if pid.is_empty() || names.contains_key(&pid) {
             continue;
         }
-        if let Ok(entity) = data.repositories.patients.get_by_id(&pid).await {
-            if let Some(profile) =
-                crate::patient_entity_to_profile(&entity, &data.encryption_keyring)
-            {
-                names.insert(pid, profile.full_name);
+        match data.repositories.patients.get_by_id(&pid).await {
+            Ok(entity) => {
+                if let Some(profile) =
+                    crate::patient_entity_to_profile(&entity, &data.encryption_keyring)
+                {
+                    names.insert(pid, profile.full_name);
+                }
+            }
+            // Older prescription fixtures can legitimately outlive a removed
+            // synthetic patient; the row still carries its patient id.
+            Err(RepositoryError::NotFound(_)) => {}
+            Err(error) => {
+                log::error!("Pharmacy dashboard patient identity read failed: {error}");
+                return HttpResponse::ServiceUnavailable().json(ErrorResponse {
+                    success: false,
+                    error: "Dashboard data is temporarily unavailable".to_string(),
+                    code: "DASHBOARD_DATA_UNAVAILABLE".to_string(),
+                });
             }
         }
     }
@@ -830,10 +859,9 @@ pub async fn pharmacist_dashboard(
     // filtering on strings the domain never produces and were structurally
     // always zero, exactly like the doctor's "Pending Lab Reviews" tile was.
     //
-    // Both still read zero today, and that is now the truth rather than a
-    // coincidence: nothing can reach a dispensing state because no endpoint
-    // performs the transition (see SCR-012). They will start reporting the
-    // moment one exists.
+    // The lifecycle endpoints now drive these states; keeping the predicate in
+    // terms of the domain tokens prevents the tiles drifting from that state
+    // machine again.
     let in_progress = list
         .iter()
         .filter(|v| matches!(status_of(v).as_str(), "Received" | "InProgress"))
@@ -845,22 +873,21 @@ pub async fn pharmacist_dashboard(
 
     let mut drug_interactions = Vec::new();
     let mut allergy_alerts = Vec::new();
-    for entity in data
-        .repositories
-        .patients
-        .list(Pagination::new(0, 50))
-        .await
-        .map(|r| r.items)
-        .unwrap_or_default()
-    {
-        if let Ok(items) = data
-            .repositories
-            .drug_interactions
-            .get_unacknowledged(&entity.id)
-            .await
-        {
-            drug_interactions.extend(items);
-        }
+    let safety_roster = required_dashboard_read!(
+        data.repositories
+            .patients
+            .list(Pagination::new(0, 50))
+            .await,
+        "pharmacy dashboard safety roster"
+    );
+    for entity in safety_roster.items {
+        drug_interactions.extend(required_dashboard_read!(
+            data.repositories
+                .drug_interactions
+                .get_unacknowledged(&entity.id)
+                .await,
+            "pharmacy dashboard drug interactions"
+        ));
         // An allergy the pharmacy should see before dispensing.
         if let Some(profile) = patient_entity_to_profile(&entity, &data.encryption_keyring) {
             for allergy in &profile.emergency_info.allergies {

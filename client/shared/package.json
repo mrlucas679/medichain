@@ -25,7 +25,8 @@
     "@polkadot/util-crypto": "^12.6.0",
     "clsx": "^2.1.0",
     "firebase": "^12.16.0",
-    "lucide-react": "^0.312.0"
+    "lucide-react": "^0.312.0",
+    "zod": "^4.5.4"
   },
   "license": "SEE LICENSE IN LICENSE",
   "author": "Lukau Invasion (Pty) Ltd"

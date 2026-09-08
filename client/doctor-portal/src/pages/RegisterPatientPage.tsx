@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store';
-import { apiUrl, getApiClient, getApiErrorMessage, isValidPhoneNumber, useTranslation } from '@medichain/shared';
+import {
+  apiUrl,
+  getApiClient,
+  getApiErrorMessage,
+  useTranslation,
+  Input,
+  useValidatedForm,
+  patientRegistrationSchema,
+} from '@medichain/shared';
 import { 
   UserPlus, 
   CheckCircle, 
@@ -57,7 +65,11 @@ function RegisterPatientPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ patientId: string; nfcTagId: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [phoneError, setPhoneError] = useState<string | null>(null);
+  // Schema-driven, per field. This page previously validated exactly one field
+  // (the emergency phone) by hand; every other input reached the API unchecked,
+  // so a date of birth in the future or a malformed wallet address was caught
+  // only by a 400 with no indication of which field was wrong.
+  const form = useValidatedForm(patientRegistrationSchema);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -70,19 +82,16 @@ function RegisterPatientPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setPhoneError(null);
 
-    // Reject blank or malformed emergency-contact numbers before submit — a
-    // broken number is worse than none in an emergency. `required` on the
-    // input covers native browser submission, but this still runs for
-    // whitespace-only input or a programmatic submit, so distinguish the two
-    // messages rather than showing "invalid" for a simply-empty field.
-    if (!formData.emergencyContactPhone.trim()) {
-      setPhoneError(t('docRegisterPatient.requiredPhone'));
-      return;
-    }
-    if (!isValidPhoneNumber(formData.emergencyContactPhone)) {
-      setPhoneError(t('docRegisterPatient.invalidPhone'));
+    // Validate the whole form, not just the one field somebody remembered.
+    // `validate` returns null and populates per-field messages, which the
+    // inputs below render and associate via aria-describedby.
+    if (!form.validate(formData)) {
+      // Move focus to the first invalid control so a keyboard or screen-reader
+      // user is taken to the problem rather than left at the submit button
+      // wondering what happened.
+      const firstInvalid = document.querySelector<HTMLElement>('[aria-invalid="true"]');
+      firstInvalid?.focus();
       return;
     }
 
@@ -208,6 +217,45 @@ function RegisterPatientPage() {
         <div className="mb-6 bg-emergency-50 border border-emergency-200 rounded-lg p-4 flex items-center gap-3">
           <AlertTriangle className="text-critical-subtle-fg" size={20} />
           <p className="text-critical-subtle-fg">{error}</p>
+        </div>
+      )}
+
+      {/*
+        Error summary. Every field is schema-validated, but most inputs on this
+        page are still hand-rolled markup with nowhere to show a message — so
+        without this, a bad wallet address or a future date of birth would make
+        submit do nothing at all, with no explanation. Converting the remaining
+        fields to <Input> is tracked in docs/OUTSTANDING_WORK.md §2.1; until
+        then this guarantees the failure is at least visible and actionable.
+
+        A summary is good practice regardless: it gives one place to see
+        everything wrong, and each entry moves focus to its field.
+      */}
+      {form.hasErrors && (
+        <div
+          role="alert"
+          className="mb-6 p-4 bg-critical-subtle border border-critical rounded-lg"
+        >
+          <p className="font-medium text-critical-subtle-fg mb-2">
+            {t('docRegisterPatient.fixBeforeSaving')}
+          </p>
+          <ul className="list-disc list-inside space-y-1">
+            {Object.entries(form.errors).map(([field, message]) => (
+              <li key={field} className="text-sm text-critical-subtle-fg">
+                <button
+                  type="button"
+                  className="underline min-h-[24px] text-left"
+                  onClick={() => {
+                    document
+                      .querySelector<HTMLElement>(`[name="${field}"]`)
+                      ?.focus();
+                  }}
+                >
+                  {message}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -401,25 +449,28 @@ function RegisterPatientPage() {
               />
             </div>
             
-            <div>
-              <label htmlFor="register-emergency-contact-phone" className="block text-sm font-medium text-content-secondary mb-1">{t('docRegisterPatient.phone')}</label>
-              <input
-                type="tel"
-                id="register-emergency-contact-phone"
-                name="emergencyContactPhone"
-                value={formData.emergencyContactPhone}
-                onChange={(e) => { setPhoneError(null); handleChange(e); }}
-                required
-                aria-invalid={phoneError ? true : undefined}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-brand outline-none ${
-                  phoneError ? 'border-critical' : 'border-border'
-                }`}
-                placeholder={t('docRegisterPatient.phonePlaceholder')}
-              />
-              {phoneError && (
-                <p className="mt-1 text-sm text-critical-subtle-fg">{phoneError}</p>
-              )}
-            </div>
+            {/*
+              The shared control, which carries the label association,
+              aria-invalid, aria-describedby, role="alert" and the error icon.
+              This field used to hand-roll all of that and get half of it: the
+              message was adjacent to the input but not associated with it, so a
+              screen-reader user heard an error and could not tell which field
+              it belonged to.
+            */}
+            <Input
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              id="register-emergency-contact-phone"
+              name="emergencyContactPhone"
+              label={t('docRegisterPatient.phone')}
+              value={formData.emergencyContactPhone}
+              onChange={(e) => { form.clearField('emergencyContactPhone'); handleChange(e); }}
+              onBlur={() => form.validateField('emergencyContactPhone', formData)}
+              required
+              error={form.errors.emergencyContactPhone}
+              placeholder={t('docRegisterPatient.phonePlaceholder')}
+            />
             
             <div>
               <label htmlFor="register-emergency-contact-relationship" className="block text-sm font-medium text-content-secondary mb-1">{t('docRegisterPatient.relationship')}</label>

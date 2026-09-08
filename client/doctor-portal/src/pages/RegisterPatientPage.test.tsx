@@ -46,6 +46,12 @@ describe('RegisterPatientPage', () => {
 
     fireEvent.change(screen.getByLabelText(/Full Name \*/i), { target: { value: 'John Doe' } });
     fireEvent.change(screen.getByLabelText(/Date of Birth \*/i), { target: { value: '1990-01-01' } });
+    // The wallet address is marked `required` on the form and was never
+    // filled by this test. It passed anyway because nothing validated the
+    // form -- the fixture was incomplete and no one could tell.
+    fireEvent.change(screen.getByLabelText(/Wallet Address/i), {
+      target: { value: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY' },
+    });
     fireEvent.change(screen.getByLabelText(/National ID \*/i), { target: { value: 'NIN-123' } });
     fireEvent.change(screen.getByLabelText(/Blood Type \*/i), { target: { value: 'O+' } });
     fireEvent.change(screen.getByLabelText(/Contact Name \*/i), { target: { value: 'Jane Doe' } });
@@ -77,6 +83,12 @@ describe('RegisterPatientPage', () => {
 
     fireEvent.change(screen.getByLabelText(/Full Name \*/i), { target: { value: 'John Doe' } });
     fireEvent.change(screen.getByLabelText(/Date of Birth \*/i), { target: { value: '1990-01-01' } });
+    // The wallet address is marked `required` on the form and was never
+    // filled by this test. It passed anyway because nothing validated the
+    // form -- the fixture was incomplete and no one could tell.
+    fireEvent.change(screen.getByLabelText(/Wallet Address/i), {
+      target: { value: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY' },
+    });
     fireEvent.change(screen.getByLabelText(/National ID \*/i), { target: { value: 'NIN-123' } });
     fireEvent.change(screen.getByLabelText(/Blood Type \*/i), { target: { value: 'O+' } });
     fireEvent.change(screen.getByLabelText(/Contact Name \*/i), { target: { value: 'Jane Doe' } });

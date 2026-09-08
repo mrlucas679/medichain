@@ -74,3 +74,11 @@ export * from './components/ErrorBoundary';
 export * from './components/RestrictedSection';
 export * from './components/JitsiMeetComponent';
 export * from './utils/contrast';
+
+// Form validation. `clinical` holds the physiological ranges and the reasoning
+// behind each bound; `useValidatedForm` binds a schema to per-field errors in
+// the shape Input/Select/Textarea already accept.
+export * from './validation/clinical';
+export * from './validation/useValidatedForm';
+export * from './components/field';
+export * from './components/FieldParts';
