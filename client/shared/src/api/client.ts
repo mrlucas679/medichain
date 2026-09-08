@@ -125,6 +125,25 @@ export function getApiErrorMessage(data: unknown, fallback = 'Request failed'): 
   return parseErrorBody(data).message ?? fallback;
 }
 
+/**
+ * Extract the machine-readable error code from a thrown API error.
+ *
+ * Callers branch on codes like `DISPENSE_RACE_DETECTED` to explain what
+ * happened in clinical terms, and they were reaching into the thrown value with
+ * `catch (error: any)` and an optional-chain guess at two possible shapes. The
+ * two shapes are real -- the typed client throws a flat `{ code }`, while a
+ * raw `fetch` path surfaces the body under `response.data.error` -- so the
+ * knowledge belongs here, once, rather than in each catch block.
+ */
+export function getApiErrorCode(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object') return undefined;
+  const flat = (error as { code?: unknown }).code;
+  if (typeof flat === 'string') return flat;
+  const nested = (error as { response?: { data?: { error?: { code?: unknown } } } })
+    .response?.data?.error?.code;
+  return typeof nested === 'string' ? nested : undefined;
+}
+
 export class ApiClient {
   private baseUrl: string;
   private userId?: string;

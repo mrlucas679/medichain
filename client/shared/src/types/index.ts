@@ -714,24 +714,101 @@ export interface DoctorDashboardResponse {
  * Nurse Dashboard Response
  * GET /api/dashboard/nurse
  */
+/**
+ * One patient row on the nurse dashboard.
+ *
+ * This is `DashboardPatient` on the API side, serialised as-is. The optional
+ * fields below are read by NurseDashboardPage and are **not returned by
+ * `/api/dashboard/nurse`** — they are optional here because that is the truth,
+ * not because they are sometimes absent. Typing them as required would let the
+ * page keep reading fields that can never arrive.
+ *
+ * See docs/TECHNICAL_DEBT_REGISTER.md, "Nurse dashboard ward fields".
+ */
+export interface NurseDashboardPatient {
+  patient_id: string;
+  health_id: string;
+  full_name: string;
+  date_of_birth: string;
+  gender: string;
+  blood_type?: string | null;
+  allergies: string[];
+  current_medications: string[];
+  medical_conditions: string[];
+  emergency_contact?: unknown;
+  /** False when the row exists but its PHI could not be decrypted. */
+  content_available: boolean;
+
+  // --- Not returned by the API. ---
+  /** Ward/bed. */
+  room?: string;
+  /** Emergency Severity Index, 1–5. */
+  esi_level?: number;
+  fall_risk?: boolean;
+  iv_site?: boolean;
+  wound_care_due?: boolean;
+}
+
+/**
+ * One medication row. `MedicationReminder` on the API side.
+ *
+ * `route` and `scheduled_time` are read by the dashboard and not returned. The
+ * page used to default `route` to `'PO'`, which told a nurse that every drug on
+ * the ward list was oral — including the ones that are not.
+ */
+export interface NurseDashboardMedication {
+  reminder_id: string;
+  patient_id: string;
+  medication_name: string;
+  dosage: string;
+  reminder_times?: string[];
+  instructions?: string | null;
+
+  // --- Not returned by the API. ---
+  patient_name?: string;
+  route?: string;
+  scheduled_time?: string;
+}
+
+/** One flagged vital-signs reading. */
+export interface NurseDashboardVital {
+  flowsheet_id?: string;
+  patient_id: string;
+  patient_name?: string;
+  abnormal_values?: string[];
+  is_critical?: boolean;
+}
+
+/** One intake/output row. The API currently returns this array empty. */
+export interface NurseDashboardIoRecord {
+  patient_name?: string;
+  total_intake?: number;
+  total_output?: number;
+}
+
+/**
+ * Nurse dashboard payload, as `/api/dashboard/nurse` actually returns it.
+ *
+ * The previous shape declared `role`, `care_plans`, `wound_assessments`,
+ * `iv_assessments`, `recent_incidents`, `tasks.meds_due` and
+ * `tasks.wounds_to_assess` — none of which the handler sends — and omitted
+ * `critical_alerts`, which it does. Cross-checked against
+ * `api/src/clinical_endpoints/workflow/dashboards.rs::nurse_dashboard`.
+ */
 export interface NurseDashboardResponse {
-  role: 'Nurse';
+  nurse_id: string;
   patients: {
     total: number;
-    list: PatientProfile[];
+    list: NurseDashboardPatient[];
   };
-  care_plans: unknown[];
-  vitals_needing_attention: unknown[];
-  medication_records: unknown[];
-  io_records: unknown[];
-  wound_assessments: unknown[];
-  iv_assessments: unknown[];
+  vitals_needing_attention: NurseDashboardVital[];
   fall_risk_patients: unknown[];
-  recent_incidents: unknown[];
+  io_records: NurseDashboardIoRecord[];
+  medication_records: NurseDashboardMedication[];
+  /** CDS alerts of severity "critical". Returned, and currently not rendered. */
+  critical_alerts: unknown[];
   tasks: {
     vitals_due: number;
-    meds_due: number;
-    wounds_to_assess: number;
     ivs_to_check: number;
   };
 }
@@ -740,25 +817,121 @@ export interface NurseDashboardResponse {
  * Lab Technician Dashboard Response
  * GET /api/dashboard/lab
  */
+/**
+ * One row in the pending-test queue.
+ *
+ * Built field-by-field in the handler rather than serialised from an entity,
+ * because the queue shows a person and a test: sending the raw row rendered
+ * every line as "Unknown / Unknown Test".
+ */
+export interface LabQueueItem {
+  id: string;
+  accession_number: string;
+  patient_id: string;
+  patient_name: string;
+  test_name: string;
+  priority: string;
+  status: string;
+  time_in_lab: string;
+}
+
+/**
+ * One rejected specimen. The serialised entity, plus `patient_name` and
+ * `accession_number`, which the handler adds: the name is encrypted at rest and
+ * only the API holds the keyring, and the entity's identifier for the specimen
+ * is `specimen_id`.
+ */
+export interface LabRejection {
+  id: string;
+  specimen_id: string;
+  patient_id: string;
+  rejection_reason: string;
+  rejection_category: string;
+  detailed_notes?: string | null;
+  rejected_by: string;
+  rejected_at: string;
+  recollection_required: boolean;
+  notified_ordering_provider: boolean;
+  /** Added by the handler: the entity's identifier for the specimen is `specimen_id`. */
+  accession_number: string;
+  /** Added by the handler: encrypted at rest, and only the API holds the keyring. */
+  patient_name?: string;
+}
+
+/** One open recollection request. */
+export interface LabRecollection {
+  id: string;
+  rejection_id: string;
+  original_specimen_id: string;
+  reason: string;
+  status: string;
+}
+
+/**
+ * One quality-control record — `LabQcRecordEntity`, serialised as-is.
+ *
+ * The dashboard read `analyzer_name`, `last_qc_time` and `status`. None of the
+ * three exists: the entity calls them `instrument_name`, `performed_at` and
+ * `passed`, so every row in the QC panel rendered blank.
+ */
+export interface LabQcRecord {
+  id: string;
+  instrument_id: string;
+  instrument_name: string;
+  qc_level: string;
+  test_code: string;
+  test_name: string;
+  measured_value: number;
+  unit: string;
+  passed: boolean;
+  performed_by: string;
+  performed_at: string;
+}
+
+/**
+ * One unacknowledged critical value — `CriticalValueEntity`, serialised as-is.
+ *
+ * The dashboard read `critical_value_id`, which does not exist (`id` does), so
+ * every alert fell back to `String(Math.random())` for its React key.
+ *
+ * `patient_name` is genuinely absent: the entity carries only `patient_id`, and
+ * the name is encrypted at rest. The handler already performs exactly this
+ * enrichment for the rejections array a few lines above; doing the same here is
+ * an API change, recorded in docs/TECHNICAL_DEBT_REGISTER.md under "Critical
+ * value alerts do not name the patient".
+ */
+export interface LabCriticalNotification {
+  id: string;
+  patient_id: string;
+  test_name: string;
+  value: string;
+  unit: string;
+  severity: string;
+  created_at: string;
+  /** Not returned. See above. */
+  patient_name?: string;
+}
+
+/**
+ * Laboratory dashboard payload, as `/api/dashboard/lab` actually returns it.
+ *
+ * The previous shape declared `role`, `specimens`, `chain_of_custody`,
+ * `available_panels`, `test_queue.approved_today` and an `alerts` block — none
+ * of which the handler sends — and omitted `open_recollections`, which it does.
+ * Cross-checked against
+ * `api/src/clinical_endpoints/workflow/dashboards.rs::lab_dashboard`.
+ */
 export interface LabDashboardResponse {
-  role: 'LabTechnician';
+  lab_tech_id: string;
   test_queue: {
-    pending: LabResultSubmission[];
-    approved_today: LabResultSubmission[];
+    pending: LabQueueItem[];
     pending_count: number;
     approved_count: number;
   };
-  specimens: unknown[];
-  rejections: unknown[];
-  qc_records: unknown[];
-  critical_notifications: unknown[];
-  chain_of_custody: unknown[];
-  available_panels: unknown[];
-  alerts: {
-    pending_tests: number;
-    critical_values: number;
-    rejections_today: number;
-  };
+  qc_records: LabQcRecord[];
+  rejections: LabRejection[];
+  open_recollections: LabRecollection[];
+  critical_notifications: LabCriticalNotification[];
 }
 
 /**
@@ -834,8 +1007,18 @@ export interface NotificationsResponse {
  * GET /api/dashboard/pharmacist
  * Note: This endpoint needs to be created in the backend
  */
+/**
+ * Pharmacist dashboard payload, as `/api/dashboard/pharmacist` actually returns
+ * it.
+ *
+ * The previous shape declared `role`, `refill_requests`,
+ * `controlled_substance_log`, `inventory_alerts` and an `alerts` block — none of
+ * which the handler sends — and omitted `allergy_alerts`, which it does. The
+ * sidebar read `alerts.pending_rx_count` and threw. Cross-checked against
+ * `api/src/clinical_endpoints/workflow/dashboards.rs::pharmacist_dashboard`.
+ */
 export interface PharmacistDashboardResponse {
-  role: 'Pharmacist';
+  pharmacist_id: string;
   prescriptions: {
     pending_fill: number;
     in_progress: number;
@@ -843,14 +1026,7 @@ export interface PharmacistDashboardResponse {
     list: unknown[];
   };
   drug_interactions: unknown[];
-  refill_requests: unknown[];
-  controlled_substance_log: unknown[];
-  inventory_alerts: unknown[];
-  alerts: {
-    pending_rx_count: number;
-    interactions_count: number;
-    low_inventory_count: number;
-  };
+  allergy_alerts: unknown[];
 }
 
 // ============================================================================

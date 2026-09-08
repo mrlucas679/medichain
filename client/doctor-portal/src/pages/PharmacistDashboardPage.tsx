@@ -28,6 +28,7 @@ import {
   decidePrescriptionVerification,
   getDispenseEvents,
   reverseDispense,
+  getApiErrorCode,
 } from '@medichain/shared';
 
 interface SecondaryVerification {
@@ -249,8 +250,8 @@ export default function PharmacistDashboardPage() {
       }
       setRxResult((p) => ({ ...p, [prescriptionId]: message }));
       await loadDashboard();
-    } catch (error: any) {
-      const code = error?.code ?? error?.response?.data?.error?.code;
+    } catch (error) {
+      const code = getApiErrorCode(error);
       const friendly =
         code === 'DISPENSE_RACE_DETECTED'
           ? t('docPharmDashboard.raceDetected')
@@ -259,7 +260,7 @@ export default function PharmacistDashboardPage() {
             : code === 'PRESCRIPTION_NOT_IN_EXPECTED_STATE' ||
                 code === 'PRESCRIPTION_NOT_DISPENSABLE'
               ? t('docPharmDashboard.stateChanged')
-              : (error?.message ?? t('docPharmDashboard.actionFailed'));
+              : (error instanceof Error ? error.message : t('docPharmDashboard.actionFailed'));
       setRxResult((p) => ({ ...p, [prescriptionId]: friendly }));
       // The row's state is no longer trustworthy after a conflict; reload it.
       await loadDashboard();
@@ -277,10 +278,10 @@ export default function PharmacistDashboardPage() {
         ...previous,
         [prescriptionId]: response.dispense_events as unknown as DispenseEvent[],
       }));
-    } catch (error: any) {
+    } catch (error) {
       setRxResult((previous) => ({
         ...previous,
-        [prescriptionId]: error?.message ?? t('docPharmDashboard.historyFailed'),
+        [prescriptionId]: error instanceof Error ? error.message : t('docPharmDashboard.historyFailed'),
       }));
     } finally {
       setBusyRx(null);
@@ -301,10 +302,10 @@ export default function PharmacistDashboardPage() {
       await reverseDispense(prescriptionId, eventId, reason);
       setRxResult((previous) => ({ ...previous, [prescriptionId]: t('docPharmDashboard.reversed') }));
       await Promise.all([loadDashboard(), loadDispenseHistory(prescriptionId)]);
-    } catch (error: any) {
+    } catch (error) {
       setRxResult((previous) => ({
         ...previous,
-        [prescriptionId]: error?.message ?? t('docPharmDashboard.actionFailed'),
+        [prescriptionId]: error instanceof Error ? error.message : t('docPharmDashboard.actionFailed'),
       }));
     } finally {
       setBusyRx(null);

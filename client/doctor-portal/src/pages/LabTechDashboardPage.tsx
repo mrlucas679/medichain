@@ -20,6 +20,8 @@ import {
   requestSpecimenRecollection,
   completeSpecimenRecollection,
   useTranslation,
+  getApiErrorCode,
+  type LabDashboardResponse,
 } from '@medichain/shared';
 import {
   StatCard,
@@ -29,38 +31,10 @@ import {
   type QuickAction,
 } from '../components/dashboard';
 
-interface LabDashboardData {
-  role: string;
-  test_queue: {
-    pending: any[];
-    approved_today: any[];
-    pending_count: number;
-    approved_count: number;
-  };
-  specimens: any[];
-  rejections: any[];
-  open_recollections: Array<{
-    id: string;
-    rejection_id: string;
-    original_specimen_id: string;
-    reason: string;
-    status: string;
-  }>;
-  qc_records: any[];
-  critical_notifications: any[];
-  chain_of_custody: any[];
-  available_panels: any[];
-  alerts: {
-    pending_tests: number;
-    critical_values: number;
-    rejections_today: number;
-  };
-}
-
 export default function LabTechDashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [data, setData] = useState<LabDashboardData | null>(null);
+  const [data, setData] = useState<LabDashboardResponse | null>(null);
   /** Which rejection is mid-request, so its button can be disabled. */
   const [notifyingId, setNotifyingId] = useState<string | null>(null);
   const [notifyResult, setNotifyResult] = useState<Record<string, string>>({});
@@ -79,7 +53,7 @@ export default function LabTechDashboardPage() {
     try {
       setLoading(true);
       const response = await getLabDashboard();
-      setData(response as LabDashboardData);
+      setData(response);
     } catch (error) {
       console.error('Failed to load lab dashboard:', error);
     } finally {
@@ -87,8 +61,8 @@ export default function LabTechDashboardPage() {
     }
   };
 
-  const criticalAlerts: CriticalAlert[] = data?.critical_notifications?.map((c: any) => ({
-    id: c.critical_value_id || String(Math.random()),
+  const criticalAlerts: CriticalAlert[] = data?.critical_notifications?.map((c) => ({
+    id: c.id,
     type: 'critical_value' as const,
     title: `${c.test_name}: ${c.value} ${c.unit}`,
     description: t('docLabDashboard.criticalDesc'),
@@ -104,14 +78,14 @@ export default function LabTechDashboardPage() {
     { id: 'call-critical', label: t('docLabDashboard.qaCallCritical'), icon: AlertTriangle, href: '/critical-value', color: 'emergency' },
   ];
 
-  const statQueue = data?.test_queue?.pending?.filter((q: any) => q.priority === 'STAT').map((q: any) => ({
+  const statQueue = data?.test_queue?.pending?.filter((q) => q.priority === 'STAT').map((q) => ({
     test_name: q.test_name || t('docLabDashboard.unknownTest'),
     patient_name: q.patient_name || t('docLabDashboard.unknown'),
     time_in_lab: q.time_in_lab || t('docLabDashboard.justArrived'),
     priority: q.priority || 'STAT',
   })) || [];
 
-  const pendingQueue = data?.test_queue?.pending?.map((q: any) => ({
+  const pendingQueue = data?.test_queue?.pending?.map((q) => ({
     accession: q.accession_number || q.id,
     patient_name: q.patient_name || t('docLabDashboard.unknown'),
     test_name: q.test_name || t('docLabDashboard.unknownTest'),
@@ -144,12 +118,12 @@ export default function LabTechDashboardPage() {
     try {
       await requestSpecimenRecollection(rejectionId, reason.trim());
       setRecollectResult((p) => ({ ...p, [rejectionId]: t('docLabDashboard.recollectionRequested') }));
-    } catch (error: any) {
-      const code = error?.code ?? error?.response?.data?.error?.code;
+    } catch (error) {
+      const code = getApiErrorCode(error);
       const friendly =
         code === 'RECOLLECTION_ALREADY_OPEN'
           ? t('docLabDashboard.recollectionAlreadyOpen')
-          : (error?.message ?? t('docLabDashboard.recollectionFailed'));
+          : (error instanceof Error ? error.message : t('docLabDashboard.recollectionFailed'));
       setRecollectResult((p) => ({ ...p, [rejectionId]: friendly }));
     } finally {
       setRecollectingId(null);
@@ -163,7 +137,7 @@ export default function LabTechDashboardPage() {
       await notifyRejectionOrderingProvider(rejectionId);
       setNotifyResult((p) => ({ ...p, [rejectionId]: t('docLabDashboard.notified') }));
       const fresh = await getLabDashboard();
-      setData(fresh as LabDashboardData);
+      setData(fresh);
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       // The two refusals worth naming rather than showing raw: one means
@@ -222,7 +196,7 @@ export default function LabTechDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label={t('docLabDashboard.statSpecimens')}
-          value={data?.test_queue?.pending?.filter((t: any) => t.priority === 'STAT').length || 0}
+          value={data?.test_queue?.pending?.filter((t) => t.priority === 'STAT').length || 0}
           icon={<AlertTriangle className="text-critical-subtle-fg" size={24} />}
           color="bg-critical-subtle"
           onClick={() => navigate('/specimen')}
@@ -297,25 +271,21 @@ export default function LabTechDashboardPage() {
           </h3>
           {data?.qc_records && data.qc_records.length > 0 ? (
             <div className="space-y-2">
-              {data.qc_records.slice(0, 4).map((qc: any, idx: number) => (
+              {data.qc_records.slice(0, 4).map((qc, idx) => (
                 <div key={idx} className="flex items-center justify-between p-2 border rounded">
                   <div>
-                    <p className="text-sm font-medium">{qc.analyzer_name || t('docLabDashboard.unknownAnalyzer')}</p>
-                    <p className="text-xs text-content-muted">{t('docLabDashboard.lastQc', { time: qc.last_qc_time || t('docLabDashboard.pending') })}</p>
+                    <p className="text-sm font-medium">{qc.instrument_name || t('docLabDashboard.unknownAnalyzer')}</p>
+                    <p className="text-xs text-content-muted">{t('docLabDashboard.lastQc', { time: qc.performed_at || t('docLabDashboard.pending') })}</p>
                   </div>
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded ${
-                      qc.status === 'passed'
+                      qc.passed
                         ? 'bg-ok-subtle text-ok-subtle-fg'
-                        : qc.status === 'due'
-                        ? 'bg-caution-subtle text-caution-subtle-fg'
                         : 'bg-critical-subtle text-critical-subtle-fg'
                     }`}
                   >
-                    {qc.status === 'passed' ? (
+                    {qc.passed ? (
                       <span className="inline-flex items-center gap-1"><CheckCircle size={12} aria-hidden="true" /> {t('docLabDashboard.qcPassed')}</span>
-                    ) : qc.status === 'due' ? (
-                      <span className="inline-flex items-center gap-1"><AlertTriangle size={12} aria-hidden="true" /> {t('docLabDashboard.qcDue')}</span>
                     ) : (
                       <span className="inline-flex items-center gap-1"><XCircle size={12} aria-hidden="true" /> {t('docLabDashboard.qcFailed')}</span>
                     )}
@@ -430,7 +400,7 @@ export default function LabTechDashboardPage() {
           </h3>
           {data?.rejections && data.rejections.length > 0 ? (
             <div className="space-y-2">
-              {data.rejections.map((rej: any, idx: number) => (
+              {data.rejections.map((rej, idx) => (
                 <div key={idx} className="p-3 bg-critical-subtle border border-critical rounded">
                   <p className="text-sm font-medium text-critical-subtle-fg">
                     {rej.accession_number || t('docLabDashboard.unknown')} - {rej.rejection_reason || t('docLabDashboard.unknownReason')}

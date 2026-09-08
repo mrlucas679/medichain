@@ -15,7 +15,9 @@ import {
   ClipboardList,
   FileText,
 } from 'lucide-react';
-import { getNurseDashboard, useTranslation } from '@medichain/shared';
+import { getNurseDashboard, useTranslation,
+  type NurseDashboardResponse,
+} from '@medichain/shared';
 import {
   StatCard,
   CriticalAlertsBanner,
@@ -26,29 +28,10 @@ import {
 } from '../components/dashboard';
 import type { PatientListItem } from '../components/dashboard/PatientListPanel';
 
-interface NurseDashboardData {
-  role: string;
-  patients: { total: number; list: any[] };
-  care_plans: any[];
-  vitals_needing_attention: any[];
-  medication_records: any[];
-  io_records: any[];
-  wound_assessments: any[];
-  iv_assessments: any[];
-  fall_risk_patients: any[];
-  recent_incidents: any[];
-  tasks: {
-    vitals_due: number;
-    meds_due: number;
-    wounds_to_assess: number;
-    ivs_to_check: number;
-  };
-}
-
 export default function NurseDashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [data, setData] = useState<NurseDashboardData | null>(null);
+  const [data, setData] = useState<NurseDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,7 +42,7 @@ export default function NurseDashboardPage() {
     try {
       setLoading(true);
       const response = await getNurseDashboard();
-      setData(response as NurseDashboardData);
+      setData(response);
     } catch (error) {
       console.error('Failed to load nurse dashboard:', error);
     } finally {
@@ -67,13 +50,19 @@ export default function NurseDashboardPage() {
     }
   };
 
-  const medicationsDue = data?.medication_records?.slice(0, 5).map((med: any) => ({
-    id: med.record_id,
+  // `record_id`, `medication`, `dose`, `route` and `scheduled_time` were all
+  // read here and none of them exist on the record `/api/dashboard/nurse`
+  // returns. The `||` fallbacks hid it, and one of them was actively dangerous:
+  // `route: med.route || 'PO'` told a nurse that every drug on the ward list was
+  // oral, including the ones that are given IV or IM. An unknown route now shows
+  // as unknown, which is a question rather than a wrong answer.
+  const medicationsDue = data?.medication_records?.slice(0, 5).map((med) => ({
+    id: med.reminder_id,
     patient_name: med.patient_name || t('docNurseDashboard.unknown'),
-    medication: med.medication_name || med.medication,
-    time_due: med.scheduled_time || t('docNurseDashboard.now'),
-    route: med.route || 'PO',
-    dose: med.dosage || med.dose,
+    medication: med.medication_name,
+    time_due: med.scheduled_time || med.reminder_times?.[0] || t('docNurseDashboard.unknown'),
+    route: med.route || t('docNurseDashboard.unknown'),
+    dose: med.dosage,
   })) || [];
 
   const quickActions: QuickAction[] = [
@@ -83,10 +72,15 @@ export default function NurseDashboardPage() {
     { id: 'care-plan', label: t('docNurseDashboard.qaUpdateCarePlan'), icon: ClipboardList, href: '/care-plan', color: 'purple' },
   ];
 
-  const patients: PatientListItem[] = data?.patients?.list?.map((p: any) => ({
+  // room / esi_level / fall_risk / iv_site / wound_care_due are not returned by
+  // `/api/dashboard/nurse` either — see docs/TECHNICAL_DEBT_REGISTER.md, "Nurse
+  // dashboard ward fields". They are passed through as undefined so the list
+  // renders them as absent rather than as a fabricated default; `room` used to
+  // read "Pending" for every bed on the ward.
+  const patients: PatientListItem[] = data?.patients?.list?.map((p) => ({
     patient_id: p.patient_id,
     full_name: p.full_name,
-    room: p.room || t('docNurseDashboard.pending'),
+    room: p.room,
     esi_level: p.esi_level,
     flags: {
       fall_risk: p.fall_risk,
@@ -95,7 +89,7 @@ export default function NurseDashboardPage() {
     },
   })) || [];
 
-  const criticalAlerts: CriticalAlert[] = data?.vitals_needing_attention?.map((v: any) => ({
+  const criticalAlerts: CriticalAlert[] = data?.vitals_needing_attention?.map((v) => ({
     id: v.flowsheet_id || String(Math.random()),
     type: 'critical_value' as const,
     title: t('docNurseDashboard.abnormalVitals'),
@@ -122,7 +116,7 @@ export default function NurseDashboardPage() {
   // specific room — are worse than an empty panel: a nurse either acts on
   // them or stops believing the panel, and both outcomes are caused by the
   // screen rather than by the ward.
-  const tasksData = (data?.vitals_needing_attention ?? []).map((v: any) => ({
+  const tasksData = (data?.vitals_needing_attention ?? []).map((v) => ({
     id: v.flowsheet_id ?? v.patient_id ?? v.patient_name,
     task: t('docNurseDashboard.taskVitalsFor'),
     patient: v.patient_name ?? v.patient_id ?? '',
@@ -162,7 +156,7 @@ export default function NurseDashboardPage() {
             </button>
           </div>
           <div className="space-y-2">
-            {medicationsDue.map((med: any) => (
+            {medicationsDue.map((med) => (
               <div
                 key={med.id}
                 className="flex items-center justify-between p-3 bg-surface rounded border border-ok"
@@ -277,7 +271,7 @@ export default function NurseDashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.io_records.slice(0, 5).map((io: any, idx: number) => (
+                  {data.io_records.slice(0, 5).map((io, idx) => (
                     <tr key={idx} className="border-b">
                       <td className="py-2">{io.patient_name || t('docNurseDashboard.unknown')}</td>
                       <td className="py-2">{io.total_intake || 0} mL</td>

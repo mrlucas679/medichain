@@ -1495,3 +1495,96 @@ confirmation. Two things make it worth doing early when someone picks it up:
 * `scripts/check-uncontrolled-defaults.py` does not currently flag it, so the
   gate that exists for this defect class has a blind spot worth closing at the
   same time.
+
+---
+
+## Dashboard payload gaps (recorded 2026-09-09)
+
+Three dashboard response types in `client/shared/src/types/index.ts` had drifted
+from what the handlers in
+`api/src/clinical_endpoints/workflow/dashboards.rs` actually return. They have
+been corrected against the handlers, and the four items below are what the
+correction exposed but does not itself resolve.
+
+### Nurse dashboard ward fields
+
+`NurseDashboardPatient` declares `room`, `esi_level`, `fall_risk`, `iv_site` and
+`wound_care_due` as optional because `/api/dashboard/nurse` does not return
+them — the handler serialises `DashboardPatient`, which carries none of the
+five. `NurseDashboardPage` renders all of them.
+
+They are the ward-orientation half of a nurse's patient list: bed, triage
+acuity, and the three standing tasks. Supplying them means either extending
+`DashboardPatient` or joining the relevant repositories in the handler.
+
+Until then the list shows them as absent. It previously showed `room` as
+"Pending" for every bed, via a `|| t('pending')` fallback.
+
+### Nurse dashboard medication route and time
+
+Same shape: `medication_records` are `MedicationReminder` rows, which have
+`medication_name`, `dosage` and `reminder_times` but no `route`, no
+`scheduled_time` and no `patient_name`.
+
+`route` had a `|| 'PO'` fallback, so the ward medication list stated that every
+drug was oral — including any given IV or IM. It now shows "unknown", which is a
+question rather than a wrong answer, but the field still needs to come from
+somewhere: the MAR record carries a route, the reminder does not.
+
+`tasks.wounds_to_assess` is in the same position — the sidebar badge for it is
+left at 0 rather than displaying a number nobody computes.
+
+### Critical value alerts do not name the patient
+
+`CriticalValueEntity` carries `patient_id` and no name; the name is encrypted at
+rest and only the API holds the keyring. `LabTechDashboardPage`'s critical-alert
+banner reads `patient_name`, so every unacknowledged critical result is
+announced without saying whose it is.
+
+`lab_dashboard` already performs precisely this enrichment for the `rejections`
+array — resolve the ids, decrypt, insert `patient_name` on the serialised value.
+The same block over `critical_notifications` closes it. This is the smallest and
+most clinically valuable of the four.
+
+### Sidebar recent-patients list
+
+`useSidebarData` returns `recentPatients` and `isLoading`, which are the exact
+two props of `RecentPatientsList` — a finished component with loading and empty
+states and **no call site anywhere**. `Layout` used to destructure both and
+render neither, so the roster was polled every 30 seconds for nothing.
+
+Wiring it up is a product decision about sidebar real estate: the sidebar
+already carries collapsible nav sections, quick actions and the user block, and
+has to survive the 320px reflow case. Either render it or stop fetching it.
+
+## Underscore-marked dead bindings (recorded 2026-09-09)
+
+`@typescript-eslint/no-unused-vars` now honours a leading underscore, which this
+codebase already used to mark a binding as deliberately unused. That makes the
+convention mean something to the linter as well as to a reader — it is not an
+amnesty. The bindings are dead code, and they cluster into two kinds:
+
+* **Half-built modals.** `_showEditModal` / `_setShowEditModal` pairs on
+  `CDSAlertsPage`, `NoteTemplatesPage`, `OrderSetsPage`, `IntakeOutputPage`, and
+  `_selectedRule`, `_selectedPlan`, `_selectedSet`, `_selectedCertificate`,
+  `_editingPatient`, `_selectedTemplate`. Each is state for an edit dialog that
+  was never built; the button that would open it does not exist.
+* **Orphaned helpers and data.** `_getCategoryIcon` (twice), `_formatDate`,
+  `_filteredConsults`, `_calculateSOFA`, `_timeSlots`, `_commonMedications`,
+  `_patients`, and the type aliases `_CarePlan`, `_BurnAssessment`,
+  `_Medication`, `_PreOpAssessment`.
+
+`_calculateSOFA` on `SepsisPage` is the one worth a second look before removal:
+SOFA is a real severity score and the setters beside it (`_setBilirubin`,
+`_setCreatinine`, `_setPlatelets`, `_setMap`, `_setPao2fio2`) are its inputs, so
+this is an unfinished feature rather than an abandoned one.
+
+Per the project rule, nothing here is deleted without the owner's confirmation.
+
+## Validation message register: warning vs error (recorded 2026-09-09)
+
+Required-field validation surfaces as `showWarning` on some pages and
+`showError` on others, and `HistoryAndPhysicalPage` calls
+`showError(t('docHistoryPhysical.warningRequiredFields'))` — an error toast
+carrying a string named "warning". Nothing is broken; the register is
+inconsistent. Worth one pass to settle which a blocked submit is.
