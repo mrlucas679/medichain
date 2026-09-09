@@ -100,6 +100,13 @@ jobs:
             - name: No production screen renders data nobody supplied
               run: python scripts/check-fabricated-ui-data.py
 
+            # The translator returns a key's raw text when a variable is
+            # missing, so `t('x.healthId')` against 'Health ID: {{id}}' puts the
+            # literal `{{id}}` on the clinician's screen. Nothing else sees it:
+            # the type checker sees a string and the linter sees a call.
+            - name: No screen renders a raw i18n placeholder
+              run: python scripts/check-uninterpolated-i18n.py
+
             # The idempotency middleware requires a header on every
             # authenticated mutation and was landed without migrating one
             # caller. The breakage surfaced four separate times, days apart,

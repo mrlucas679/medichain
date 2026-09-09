@@ -1416,12 +1416,33 @@ was never wired up at all.
 the form submits and persists the measurements. Remove the old mapper once
 someone confirms nothing else intends to use the structured shape.
 
-## Uninterpolated i18n placeholders (2026-08-19)
+## Uninterpolated i18n placeholders (2026-08-19, CLOSED 2026-09-09)
 
-Patient pickers render `Health ID: {{id}}` because the call site passes no `id`
-variable to `t()`. The translator returns the key's raw text when a variable is
-missing, so the braces reach the screen. Worth a lint that fails when a rendered
-string still contains `{{`.
+Patient pickers rendered `Health ID: {{id}}` because the call site passed no
+`id` variable to `t()`. The translator returns the key's raw text when a
+variable is missing, so the braces reached the screen.
+
+**The lint this entry asked for exists**: `scripts/check-uninterpolated-i18n.py`,
+wired into CI. It reports zero across 125 components and 404 interpolating
+strings — the original defects had been fixed, and nothing had stopped them
+coming back.
+
+It is namespace-scoped, which is the whole difficulty. A naive scan matching key
+*names* across the bundle reports **72 false positives**, because `approved`,
+`patientLabel` and `tabHistory` exist in a dozen namespaces and only some of
+them interpolate. Scoping the lookup to the namespace the call names takes that
+to zero.
+
+Two cases it deliberately does not guess at, documented in the script:
+
+* a call passing a variables object with the **wrong** key
+  (`t('x.y', { name })` against `{{patientName}}`) — the object is present, so
+  the shape looks right;
+* a key built at runtime (``t(`docFoo.status_${s}`)``), which is how several
+  enum labels render.
+
+Self-falsified before being trusted: removing the variables from one live call
+site made it fail with that exact line, and it passed again once restored.
 
 ## Test schemas are never dropped (2026-08-19)
 
@@ -1510,7 +1531,7 @@ level and function-level constant in the codebase.
 
 ---
 
-## Six clinical scales lived in the browser, and four save paths were broken (2026-09-09)
+## Six clinical scales lived in the browser, and seven save paths were broken (2026-09-09)
 
 The working rule from here on: **a page never decides a clinical value.** It
 collects observations; the server scores them; the page displays what came back.
