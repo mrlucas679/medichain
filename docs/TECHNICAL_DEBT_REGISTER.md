@@ -1591,42 +1591,76 @@ inconsistent. Worth one pass to settle which a blocked submit is.
 
 ---
 
-## Per-account browser audit (recorded 2026-09-09)
+## Per-account browser audit (recorded 2026-09-09, closed 2026-09-09)
 
 `client/doctor-portal/e2e/roles.spec.ts` signs in as each of the five staff
 accounts and sweeps every route that account's own sidebar offers, measuring
 contrast in both themes and target size. Before it existed, the browser suites
 signed in as a doctor and audited twelve routes.
 
-The findings it produced were fixed in the same pass. Two were not, and are
-here.
+Its findings were fixed in that pass. Two were recorded here instead. **Both are
+now closed** — and the first was recorded on a false premise, which is the part
+worth keeping.
 
-### An administrator can open clinical screens
+### An administrator could open clinical screens — CLOSED
 
-`/mar` — the medication administration record — renders for an Admin account
-with no refusal. So does the rest of the clinical navigation reachable by URL.
-The endpoints behind those screens enforce their own RBAC, so this is not a data
-exposure: it is a screen that presents its controls and would refuse every one
-of them on submit.
+**What was written here first, and was wrong:**
 
-Whether an administrator should be able to open a clinical screen at all is a
-product decision, not a defect the test suite can assert. The four
-clinician-to-`/user-management` checks are unambiguous and are asserted; this one
-is recorded. Deciding it means choosing between:
+> The endpoints behind those screens enforce their own RBAC, so this is not a
+> data exposure: it is a screen that presents its controls and would refuse
+> every one of them on submit.
 
-* route guards that refuse non-clinical roles at the router, or
-* accepting that an administrator sees everything and the server is the only
-  gate.
+`Role::can_edit_medical_records` is `Admin | Doctor | Nurse`. An administrator's
+clinical writes **succeed**. The screen was not presenting controls that would be
+refused; it was presenting controls that work.
 
-### H&P vital-sign types describe something the API does not send
+That inverts the finding. It was never a cosmetic mismatch between a permissive
+UI and a strict server — it was the navigation and the authorization holding two
+different views of what an administrator does, with the permissive one winning
+silently.
 
-`HistoryAndPhysicalPage`'s local `VitalSigns` interface declares
-`heartRate: number`, `respiratoryRate: number`, `temperature: number`,
-`oxygenSaturation: number`, `bmi: number` and fields named `height`/`weight`.
-`GET /api/clinical/hp` sends every one of them as a **string**, and names the
-last two `heightCm`/`weightKg`.
+It was also recorded as needing a product decision it did not need. `ADMIN_NAV`
+is a curated fourteen routes — user management, access logs, analytics, and the
+medico-legal screens (emergency, MCI, death certificate, autopsy) — and pointedly
+not the bedside clinical set. Somebody had already decided; the router just had
+no notion of who a route was for.
 
-Nothing does arithmetic on them — they are interpolated straight into the
-summary strip — so the mismatch is currently a documentation defect rather than
-a live one. It sat behind two crashes that were live (`patientName` and
-`vitalSigns`, both fixed), and it is the same drift.
+**The fix.** `rolesOwningRoute()` in `src/config/navigation.ts` answers one
+narrow question: has the product assigned this screen to a different role? The
+`Layout` refuses those, keeping the shell rendered so a reader can see where they
+are and navigate away. It refuses 27–57 routes per role. Routes in *no* role's
+navigation — deep routes like `/patients/:id`, the dashboard aliases, a handful
+reachable only by link — are deliberately left alone: the question being answered
+is narrow on purpose.
+
+The API is untouched, so anything that legitimately depends on that authority
+still works. `roles.spec.ts` asserts it for all five accounts now, including the
+Admin case it previously skipped.
+
+**Still open, and genuinely a policy question:** whether
+`can_edit_medical_records` should include `Admin` at all. Separation of duties
+says the account that grants and revokes roles should not also be able to write
+clinical records, because it can grant itself anything and then act while the
+audit trail shows a legitimate role at the time. That is a backend authorization
+change with a wide blast radius — the synthetic e2e harness and the fixture
+seeder both act as the administrator — and it is not something to change as a
+side effect of a browser audit.
+
+### H&P vital-sign types described something nothing produced — CLOSED
+
+`HistoryAndPhysicalPage`'s local `VitalSigns` declared `heartRate`,
+`respiratoryRate`, `temperature`, `oxygenSaturation` and `bmi` as numbers, and
+named the last two fields `height`/`weight`. Nothing produced that shape: every
+field comes from a text input, `handleSaveHp` submits `formData.vitalSigns`
+verbatim, and `GET /api/clinical/hp` returns exactly that back —
+all strings, `heightCm`/`weightKg`.
+
+It survived because the interface was applied only to the *read* side
+(`HistoryAndPhysical.vitalSigns`) while the form's own literal was inferred and
+therefore never checked against it. The two halves of one record described
+different things and neither could tell.
+
+The interface now matches what is written and read, and the form's literal is
+typed with it, so they cannot drift apart again. This sat directly behind two
+crashes that were live — `patientName` and `vitalSigns`, both fixed in the same
+pass — and is the same drift.

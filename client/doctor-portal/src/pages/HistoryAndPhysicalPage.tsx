@@ -43,16 +43,51 @@ import { useToastActions } from '../components/Toast';
 type HPStatus = 'in-progress' | 'complete' | 'signed' | 'addendum';
 type SystemReview = 'normal' | 'abnormal' | 'not-examined';
 
+/**
+ * One set of vitals on an H&P, in the shape that is actually written and read.
+ *
+ * Every field is a string because every one of them comes from a text input and
+ * goes to the server unchanged — `handleSaveHp` submits `formData.vitalSigns`
+ * verbatim, and `GET /api/clinical/hp` returns exactly that back. The only
+ * arithmetic is in `updateVital`, which parses height and weight to derive BMI
+ * and then stores the result as a string too.
+ *
+ * This interface used to declare `heartRate`, `respiratoryRate`, `temperature`,
+ * `oxygenSaturation` and `bmi` as numbers, and to call the last two fields
+ * `height` and `weight`. Nothing produced that shape. It survived because it was
+ * only ever applied to the *read* side (`HistoryAndPhysical.vitalSigns`) while
+ * the form's own literal was inferred and therefore never checked against it —
+ * so the two halves of the same record described different things and neither
+ * could tell.
+ *
+ * Metric names on purpose: `heightCm`/`weightKg` rather than bare `height` and
+ * `weight`. This form used to ask for Fahrenheit and pounds, which in the same
+ * record as kilogram-based vitals is a dosing hazard rather than a cosmetic
+ * quirk, and a unitless field name is how that comes back.
+ */
 interface VitalSigns {
   bloodPressure: string;
-  heartRate: number;
-  respiratoryRate: number;
-  temperature: number;
-  oxygenSaturation: number;
-  height: string;
-  weight: string;
-  bmi: number;
+  heartRate: string;
+  respiratoryRate: string;
+  temperature: string;
+  oxygenSaturation: string;
+  heightCm: string;
+  weightKg: string;
+  /** Derived from height and weight by `updateVital`; never typed by hand. */
+  bmi: string;
 }
+
+/** A blank set, so a record that carries no vitals renders empty rather than throwing. */
+const BLANK_VITALS: VitalSigns = {
+  bloodPressure: '',
+  heartRate: '',
+  respiratoryRate: '',
+  temperature: '',
+  oxygenSaturation: '',
+  heightCm: '',
+  weightKg: '',
+  bmi: '',
+};
 
 interface HistoryAndPhysical {
   id: string;
@@ -85,27 +120,6 @@ interface HistoryAndPhysical {
   status: HPStatus;
   signedAt?: Date;
 }
-
-/**
- * Rendered when a record carries no vitals, so the summary strip stays intact.
- *
- * Note the declared types: this interface says `heartRate: number` and
- * `height`/`weight`, while `GET /api/clinical/hp` sends every vital as a string
- * and names them `heightCm`/`weightKg`. Nothing here does arithmetic on them —
- * they are interpolated straight into the summary — so the mismatch is a
- * documentation defect rather than a live one, and is recorded rather than
- * changed under a browser-audit commit.
- */
-const EMPTY_VITALS: VitalSigns = {
-  bloodPressure: '',
-  heartRate: 0,
-  respiratoryRate: 0,
-  temperature: 0,
-  oxygenSaturation: 0,
-  height: '',
-  weight: '',
-  bmi: 0,
-};
 
 const HistoryAndPhysicalPage: React.FC = () => {
   const { t } = useTranslation();
@@ -144,19 +158,9 @@ const HistoryAndPhysicalPage: React.FC = () => {
       exercise: 'moderate'
     },
     familyHistory: '',
-    // Metric throughout, matching triage and the vitals flowsheet. This form
-    // previously asked for Fahrenheit and pounds, which in the same record as
-    // kilogram-based vitals is a dosing hazard rather than a cosmetic quirk.
-    vitalSigns: {
-      bloodPressure: '',
-      heartRate: '',
-      respiratoryRate: '',
-      temperature: '',
-      oxygenSaturation: '',
-      heightCm: '',
-      weightKg: '',
-      bmi: ''
-    },
+    // Shares `VitalSigns` with the read side, so the form and the record it
+    // produces cannot describe different things — see the type.
+    vitalSigns: { ...BLANK_VITALS },
     reviewOfSystems: {} as Record<string, string>,
     physicalExam: {} as Record<string, { status: string; findings: string }>,
     assessment: '',
@@ -218,7 +222,7 @@ const HistoryAndPhysicalPage: React.FC = () => {
               // took down whichever screen the clinician had moved on to.
               // (Only the outer key differs; the vitals inside are already
               // camelCase.)
-              vitalSigns: row.vitalSigns || row.vital_signs || EMPTY_VITALS,
+              vitalSigns: row.vitalSigns || row.vital_signs || BLANK_VITALS,
               dateOfExam: new Date(row.dateOfExam || row.date_of_exam || Date.now()),
               signedAt: signed ? new Date(signed) : undefined,
             };

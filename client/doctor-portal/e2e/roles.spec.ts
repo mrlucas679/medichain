@@ -46,25 +46,22 @@ import { auditContrast, auditTargetSize, setTheme, reportContrast } from './audi
  * `Admin`-only server-side; `/admin` is the administrator's own dashboard. A
  * clinician who can open either has escaped their role.
  */
-const FORBIDDEN: Partial<Record<RoleName, string>> = {
+const FORBIDDEN: Record<RoleName, string> = {
   Doctor: '/user-management',
   Nurse: '/user-management',
   Pharmacist: '/user-management',
   LabTechnician: '/user-management',
-  // No entry for Admin, deliberately.
+  // `/mar` is the medication administration record — a nurse's screen, and one
+  // `ADMIN_NAV` deliberately omits along with the rest of the bedside clinical
+  // set.
   //
-  // The first version of this checked that an administrator could not open
-  // `/mar`, the medication administration record. It fails — the screen renders
-  // — and that is not a defect this test can assert. An administrator is the
-  // highest-privilege account in the portal, so there is no route that is
-  // unambiguously off-limits to them; whether a non-clinician should be able to
-  // open a clinical screen at all is a policy question for the product, not a
-  // fact about the code.
-  //
-  // Asserting it anyway would have been a test that fails for a reason nobody
-  // can fix without first making that decision. It is recorded in
-  // docs/TECHNICAL_DEBT_REGISTER.md instead. The four clinician-to-admin checks
-  // above are unambiguous, and they pass.
+  // This was skipped at first, on the reasoning that an administrator is the
+  // highest-privilege account so no route is unambiguously theirs to be refused.
+  // That was the wrong frame. The product had already made the decision — twice,
+  // in `ADMIN_NAV` — and the router simply did not enforce it, so the question
+  // was never "should this be refused?" but "why does the navigation say one
+  // thing and the router another?".
+  Admin: '/mar',
 };
 
 /** Read what this account can actually navigate to, from its own sidebar. */
@@ -144,8 +141,6 @@ for (const role of ROLES) {
 
     test('cannot reach a route belonging to another role', async () => {
       const forbidden = FORBIDDEN[role];
-      test.skip(!forbidden, `${role} has no unambiguously forbidden route — see FORBIDDEN above`);
-      if (!forbidden) return;
       expect(
         routes,
         `${role}'s sidebar offers ${forbidden}, which belongs to another role`

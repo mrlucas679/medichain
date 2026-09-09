@@ -625,3 +625,64 @@ export function getDefaultExpandedSections(role: Role): Set<string> {
     .map(section => section.id);
   return new Set(expanded);
 }
+
+// =============================================================================
+// Route ownership
+// =============================================================================
+
+/** The five staff navigations, paired with the role each belongs to. */
+const NAV_BY_ROLE: ReadonlyArray<readonly [Role, NavSection[]]> = [
+  ['Admin', ADMIN_NAV],
+  ['Doctor', DOCTOR_NAV],
+  ['Nurse', NURSE_NAV],
+  ['LabTechnician', LAB_TECH_NAV],
+  ['Pharmacist', PHARMACIST_NAV],
+];
+
+const pathsOf = (sections: NavSection[]): string[] =>
+  sections.flatMap(section => section.items.map(item => item.to));
+
+/** Every route that appears in at least one role's navigation. */
+const ASSIGNED_ROUTES: ReadonlySet<string> = new Set(
+  NAV_BY_ROLE.flatMap(([, sections]) => pathsOf(sections))
+);
+
+/**
+ * Which roles, if any, this route belongs to instead of `role`.
+ *
+ * Returns an empty array when the route is `role`'s own, and also when it
+ * belongs to nobody — deep routes (`/patients/:id`), the per-role dashboard
+ * aliases, and a handful of screens reachable only by link. Those are
+ * deliberately not judged here: the question this answers is narrow, and it is
+ * "has the product assigned this screen to somebody else?", not "should anyone
+ * be able to open it?".
+ *
+ * # Why this exists
+ *
+ * The navigation and the authorization disagreed. `ADMIN_NAV` is a curated
+ * fourteen routes — user management, access logs, analytics, and the
+ * medico-legal ones (emergency, MCI, death certificate, autopsy) — and pointedly
+ * not the bedside clinical screens. But nothing stopped an administrator typing
+ * `/mar` and getting a working medication administration record, because the
+ * router had no notion of who a route was for.
+ *
+ * That was found by `e2e/roles.spec.ts` signing in as each account. The first
+ * reading of it was that the screen would be harmless because the server would
+ * refuse the writes. It would not: `Role::can_edit_medical_records` is
+ * `Admin | Doctor | Nurse`, so an administrator's clinical writes succeed. The
+ * two halves of the product had different ideas about what an administrator
+ * does, and the permissive half was winning silently.
+ *
+ * This makes the navigation the answer, because it is the half somebody
+ * deliberately authored. Whether `can_edit_medical_records` should include
+ * `Admin` at all is a separate and larger question — see
+ * docs/TECHNICAL_DEBT_REGISTER.md — and this does not prejudge it: the API is
+ * unchanged, so anything that legitimately depends on that authority still
+ * works.
+ */
+export function rolesOwningRoute(role: Role, path: string): Role[] {
+  if (!ASSIGNED_ROUTES.has(path)) return [];
+  const own = new Set(pathsOf(getNavForRole(role)));
+  if (own.has(path)) return [];
+  return NAV_BY_ROLE.filter(([, sections]) => pathsOf(sections).includes(path)).map(([r]) => r);
+}

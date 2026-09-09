@@ -1,7 +1,13 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store';
-import { useSidebarData, useSSE, useApiStatus } from '@medichain/shared';
+import {
+  useSidebarData,
+  useSSE,
+  useApiStatus,
+  useTranslation,
+  RestrictedSection,
+} from '@medichain/shared';
 import {
   LogOut,
   Shield,
@@ -22,10 +28,32 @@ import {
   getThemeForRole,
   getDefaultExpandedSections,
   getQuickActionsForRole,
+  rolesOwningRoute,
   type NavSection,
   type NavItem,
   type Role,
 } from '../config/navigation';
+
+/**
+ * The plural, lower-case form of each role, for use mid-sentence.
+ *
+ * `docRoles.*` holds the singular badge label — "Nurse", "Lab Technician" — which
+ * is right on a chip and wrong in "This screen is restricted to Nurse".
+ */
+const ROLE_PLURAL: Record<Role, string> = {
+  Admin: 'administrators',
+  Doctor: 'doctors',
+  Nurse: 'nurses',
+  LabTechnician: 'laboratory technicians',
+  Pharmacist: 'pharmacists',
+  Patient: 'patients',
+};
+
+/** "nurses", or "doctors and nurses" — never "doctors, nurses". */
+function formatRoleList(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? 'another role';
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
 
 // =============================================================================
 // Types
@@ -272,6 +300,7 @@ function NavSectionComponent({
 function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   
   // Sidebar state
@@ -340,6 +369,23 @@ function Layout() {
   // Get role-specific configuration
   const theme = useMemo(() => getThemeForRole(userRole), [userRole]);
   const navigation = useMemo(() => getNavForRole(userRole), [userRole]);
+
+  /**
+   * Does the route on screen belong to a different role?
+   *
+   * The navigation and the router disagreed: `ADMIN_NAV` deliberately omits the
+   * bedside clinical screens, and an administrator could still type `/mar` and
+   * get a working medication administration record. Nothing refused it — not the
+   * router, and not the API, whose `can_edit_medical_records` includes `Admin`.
+   *
+   * The shell stays rendered, so a reader can see where they are and navigate
+   * away, rather than being bounced somewhere they did not ask for. A redirect
+   * would also hide the fact that the link they followed was for somebody else.
+   */
+  const routeOwners = useMemo(
+    () => rolesOwningRoute(userRole, location.pathname),
+    [userRole, location.pathname]
+  );
   const defaultExpanded = useMemo(() => getDefaultExpandedSections(userRole), [userRole]);
   
   const [expandedSections, setExpandedSections] = useState<Set<string>>(defaultExpanded);
@@ -673,7 +719,20 @@ function Layout() {
             </button>
           </div>
         )}
-        <Outlet />
+        {routeOwners.length > 0 ? (
+          <RestrictedSection
+            title="This screen"
+            audience={formatRoleList(routeOwners.map((r) => ROLE_PLURAL[r]))}
+            currentRole={t(`docRoles.${userRole}`)}
+            guidance={
+              userRole === 'Admin'
+                ? 'It is not part of the administrator workspace.'
+                : 'Ask an administrator if you need access.'
+            }
+          />
+        ) : (
+          <Outlet />
+        )}
       </main>
       <CommandPalette open={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />
     </div>
