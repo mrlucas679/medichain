@@ -8,6 +8,15 @@ policy enforcement or negative-path behavior. The current feature verdict and
 remaining release blockers are in
 [`FEATURE_END_TO_END_AUDIT.md`](FEATURE_END_TO_END_AUDIT.md).
 
+> **What that caveat costs, measured.** On 2026-09-09 seven clinical pages with
+> matching paths were probed with the payload they actually send. Three returned
+> 400 or 500 — they had never filed a record at all — and four returned **201
+> while discarding every clinical field**, because the handler read names the
+> page did not send. Nineteen GET handlers returned a literal `null` with a 200.
+> See "Six clinical scales lived in the browser" in
+> [`TECHNICAL_DEBT_REGISTER.md`](TECHNICAL_DEBT_REGISTER.md). A path that
+> resolves is the start of the question, not the answer.
+
 ## How the connection works
 
 The apps never hardcode the API host. In development they call **relative

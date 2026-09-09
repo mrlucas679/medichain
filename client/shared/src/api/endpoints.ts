@@ -139,6 +139,16 @@ import type {
   MedicalIdCard,
   EmergencyMedicalId,
   VerifyInsuranceResponse,
+  CreateCardiacRequest,
+  CardiacCreateResult,
+  CreateFallRiskRequest,
+  FallRiskCreateResult,
+  CreateBurnRequest,
+  BurnCreateResult,
+  CreateMciRequest,
+  MciCreateResult,
+  IvSiteCreateResult,
+  PreOpCreateResult,
 } from '../types';
 
 // ============================================================================
@@ -1237,7 +1247,9 @@ export async function getStroke(assessmentId: string): Promise<StrokeAssessment>
   return getApiClient().get(`/api/emergency/stroke/${assessmentId}`);
 }
 
-export async function createCardiac(data: unknown): Promise<ClinicalCreateResult> {
+export async function createCardiac(
+  data: CreateCardiacRequest,
+): Promise<CardiacCreateResult> {
   return getApiClient().post('/api/emergency/cardiac', data);
 }
 
@@ -1343,7 +1355,7 @@ export async function getWound(assessmentId: string): Promise<WoundAssessment> {
   return getApiClient().get(`/api/emergency/wound/${assessmentId}`);
 }
 
-export async function createIvSite(data: unknown): Promise<ClinicalCreateResult> {
+export async function createIvSite(data: unknown): Promise<IvSiteCreateResult> {
   return getApiClient().post('/api/emergency/iv-site', data);
 }
 
@@ -1367,7 +1379,9 @@ export async function getIncident(reportId: string): Promise<IncidentReport> {
   return getApiClient().get(`/api/emergency/incident/${reportId}`);
 }
 
-export async function createFallRisk(data: unknown): Promise<ClinicalCreateResult> {
+export async function createFallRisk(
+  data: CreateFallRiskRequest,
+): Promise<FallRiskCreateResult> {
   return getApiClient().post('/api/emergency/fall-risk', data);
 }
 
@@ -1383,7 +1397,7 @@ export async function getNurseTasks(): Promise<NurseTasksResponse> {
 // Specialized Assessments (Phase 4)
 // ============================================================================
 
-export async function createBurn(data: unknown): Promise<AssessmentCreateResult> {
+export async function createBurn(data: CreateBurnRequest): Promise<BurnCreateResult> {
   return getApiClient().post('/api/clinical/burn', data);
 }
 
@@ -1411,7 +1425,7 @@ export async function getTox(assessmentId: string): Promise<ToxicologyAssessment
   return getApiClient().get(`/api/clinical/tox/${assessmentId}`);
 }
 
-export async function createMci(data: unknown): Promise<IncidentCreateResult> {
+export async function createMci(data: CreateMciRequest): Promise<MciCreateResult> {
   return getApiClient().post('/api/clinical/mci', data);
 }
 
@@ -1625,7 +1639,7 @@ export async function getProgressNote(noteId: string): Promise<ProgressNote> {
 // Surgical Documentation (Phase 9)
 // ============================================================================
 
-export async function createPreOp(data: unknown): Promise<ClinicalCreateResult> {
+export async function createPreOp(data: unknown): Promise<PreOpCreateResult> {
   return getApiClient().post('/api/surgical/pre-op', data);
 }
 

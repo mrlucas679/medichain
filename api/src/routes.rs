@@ -191,6 +191,10 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
         .service(get_card_info)
         .service(suspend_card)
         .service(list_nfc_cards)
+        // Clinical scoring catalog: the thresholds and formula constants that
+        // used to be duplicated inside the forms. Registered before the
+        // `/api/clinical/...` records so `scoring` is never matched as an id.
+        .service(get_scoring_catalog)
         // Clinical documentation endpoints (Phase 1)
         // IMPORTANT: get_triage_queue must be registered BEFORE get_triage_assessment
         // otherwise /api/clinical/triage/queue matches {assessment_id} as "queue"

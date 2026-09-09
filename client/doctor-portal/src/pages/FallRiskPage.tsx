@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
-import { createFallRisk, getPatients, useTranslation } from '@medichain/shared';
+import {
+  createFallRisk,
+  getPatients,
+  useTranslation,
+  useScoringCatalog,
+  morseTotal,
+  bandFor,
+} from '@medichain/shared';
 import type { PatientProfile } from '@medichain/shared';
 import {
   AlertTriangle,
@@ -72,7 +78,9 @@ export default function FallRiskPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuthStore();
+  // `user` is no longer read here: the server attributes each record to
+  // whoever authenticated the request, rather than to whatever `assessed_by`
+  // the body claimed.
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<PatientProfile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -81,6 +89,13 @@ export default function FallRiskPage() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'assessment' | 'history'>('assessment');
   const [_assessmentHistory, _setAssessmentHistory] = useState<FallRiskAssessment[]>([]);
+  const { catalog } = useScoringCatalog();
+  // What the server actually scored and stored. Until a save happens the page
+  // shows a preview; after it, it shows the record.
+  const [savedResult, setSavedResult] = useState<{
+    total_score: number;
+    risk_level: RiskLevel;
+  } | null>(null);
 
   const [morseScale, setMorseScale] = useState<MorseScale>({
     fallHistory: 0,
@@ -200,24 +215,22 @@ export default function FallRiskPage() {
     p.patient_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const calculateTotalScore = (): number => {
-    return (
-      morseScale.fallHistory +
-      morseScale.secondaryDiagnosis +
-      morseScale.ambulatoryAid +
-      morseScale.ivTherapy +
-      morseScale.gait +
-      morseScale.mentalStatus
-    );
-  };
+  // Live preview only. The stored score and band are computed by the server
+  // from the same six items and returned by `createFallRisk` — see
+  // `savedResult` below, which is what the page shows once it is saved.
+  //
+  // The cut-points come from `GET /api/clinical/scoring/catalog`, not from
+  // literals here: this page used to carry its own `>= 45` / `>= 25`, which
+  // was the third copy of them in the codebase after the Rust handler and the
+  // generated `risk_level` column.
+  const totalScore = morseTotal(morseScale as unknown as Record<string, number>);
+  const previewRisk = bandFor(totalScore, catalog?.morse_fall_scale?.bands) as RiskLevel | null;
+  // Until the catalog loads there is no band, and a guessed band on a falls
+  // assessment is the difference between a bed alarm and no bed alarm.
+  const riskLevel: RiskLevel | null = savedResult?.risk_level ?? previewRisk;
+  const displayScore = savedResult?.total_score ?? totalScore;
 
-  const getRiskLevel = (score: number): RiskLevel => {
-    if (score >= 45) return 'high';
-    if (score >= 25) return 'moderate';
-    return 'low';
-  };
-
-  const getRiskColor = (level: RiskLevel) => {
+  const getRiskColor = (level: RiskLevel | null) => {
     switch (level) {
       case 'high': return 'text-critical-subtle-fg bg-critical-subtle border-red-500';
       case 'moderate': return 'text-caution-subtle-fg bg-caution-subtle border-yellow-500';
@@ -225,16 +238,13 @@ export default function FallRiskPage() {
     }
   };
 
-  const getRiskBadge = (level: RiskLevel) => {
+  const getRiskBadge = (level: RiskLevel | null) => {
     switch (level) {
       case 'high': return 'bg-red-500 text-white';
       case 'moderate': return 'bg-caution text-white';
       default: return 'bg-green-500 text-white';
     }
   };
-
-  const totalScore = calculateTotalScore();
-  const riskLevel = getRiskLevel(totalScore);
 
   const toggleIntervention = (intervention: string) => {
     setInterventions(prev =>
@@ -270,26 +280,43 @@ export default function FallRiskPage() {
     setError('');
 
     try {
+      // The six Morse items go flat, under the names the API and the database
+      // column set use. They used to be nested under `morse_scale` with
+      // camelCase keys, which the handler did not read — so it scored every
+      // assessment 0, and 0 bands as low risk. A patient the nurse scored 70
+      // was filed as low risk, and low risk is the band that gets no bed
+      // alarm, no hourly rounding and no signage.
+      //
+      // `total_score` and `risk_level` are deliberately not sent. The server
+      // derives both, and in PostgreSQL they are generated columns besides.
       const assessmentData = {
-        assessment_id: `FALL-${Date.now()}`,
         patient_id: selectedPatient.patient_id,
-        assessment_date: new Date().toISOString().split('T')[0],
-        assessment_time: new Date().toTimeString().slice(0, 5),
-        assessed_by: user?.userId || 'unknown',
-        morse_scale: morseScale,
-        total_score: totalScore,
-        risk_level: riskLevel,
+        assessment_tool: 'morse',
+        history_of_falling: morseScale.fallHistory,
+        secondary_diagnosis: morseScale.secondaryDiagnosis,
+        ambulatory_aid: morseScale.ambulatoryAid,
+        iv_therapy: morseScale.ivTherapy,
+        gait_status: morseScale.gait,
+        mental_status: morseScale.mentalStatus,
         interventions,
         additional_factors: additionalFactors,
         environmental_hazards: environmentalHazards,
-        medications,
-        recent_fall: recentFall,
-        mobility,
+        medications: Object.entries(medications)
+          .filter(([, taking]) => taking)
+          .map(([name]) => name),
+        recent_fall: recentFall.occurred,
+        mobility: Object.entries(mobility).find(([, active]) => active)?.[0],
         notes,
-        created_at: Math.floor(Date.now() / 1000)
+        assessed_at: new Date().toISOString()
       };
 
-      await createFallRisk(assessmentData);
+      const saved = await createFallRisk(assessmentData);
+      // Show what was stored, not what the form calculated. If the two ever
+      // disagree the record is the one that matters.
+      setSavedResult({
+        total_score: saved.total_score ?? totalScore,
+        risk_level: (saved.risk_level as RiskLevel) ?? previewRisk ?? 'low'
+      });
       setSuccess(t('docFallRisk.successSaved'));
       setTimeout(() => navigate('/dashboard'), 2000);
     } catch (err) {
@@ -349,17 +376,25 @@ export default function FallRiskPage() {
                   {riskLevel === 'low' && <Shield className="h-8 w-8 text-green-500" />}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">{t('docFallRisk.morseScoreTitle', { score: totalScore })}</h2>
-                  <p className="text-lg font-medium capitalize">{t('docFallRisk.riskSuffix', { level: t(`docFallRisk.risk_${riskLevel}`) })}</p>
+                  <h2 className="text-2xl font-bold">{t('docFallRisk.morseScoreTitle', { score: displayScore })}</h2>
+                  {/* No band until the server's cut-points are known. A dash
+                      says "not yet"; a guessed band would say "low risk". */}
+                  <p className="text-lg font-medium capitalize">
+                    {riskLevel
+                      ? t('docFallRisk.riskSuffix', { level: t(`docFallRisk.risk_${riskLevel}`) })
+                      : '—'}
+                  </p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-sm">
                   {t('docFallRisk.scoreRangeNote')}
                 </p>
-                <span className={`mt-2 inline-block px-4 py-2 rounded-full text-lg font-bold ${getRiskBadge(riskLevel)}`}>
-                  {t('docFallRisk.riskBadge', { level: t(`docFallRisk.risk_${riskLevel}`).toUpperCase() })}
-                </span>
+                {riskLevel && (
+                  <span className={`mt-2 inline-block px-4 py-2 rounded-full text-lg font-bold ${getRiskBadge(riskLevel)}`}>
+                    {t('docFallRisk.riskBadge', { level: t(`docFallRisk.risk_${riskLevel}`).toUpperCase() })}
+                  </span>
+                )}
               </div>
             </div>
           </div>

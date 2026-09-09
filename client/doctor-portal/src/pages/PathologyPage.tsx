@@ -146,7 +146,7 @@ function toSpecimen(raw: unknown): PathologySpecimen {
 const PathologyPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [specimens, setSpecimens] = useState<PathologySpecimen[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -216,7 +216,7 @@ const PathologyPage: React.FC = () => {
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPatientId || !collectionDate || !site || !clinician) {
-      showWarning(t('docPathology.warningRequiredFields'));
+      showError(t('docPathology.errorRequiredFields'));
       return;
     }
 
@@ -361,11 +361,11 @@ const PathologyPage: React.FC = () => {
 
     if (finalizeReport) {
       if (!diagnosis || !microscopicDescription) {
-        showWarning(t('docPathology.warningFinalizeFields'));
+        showError(t('docPathology.errorFinalizeFields'));
         return;
       }
       if (isCritical && !communicatedTo) {
-        showWarning(t('docPathology.warningCriticalCommunication'));
+        showError(t('docPathology.errorCriticalCommunication'));
         return;
       }
     }

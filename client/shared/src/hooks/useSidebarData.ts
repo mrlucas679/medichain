@@ -234,11 +234,12 @@ export function useSidebarData(
             updatedBadges.vitalsDue = data.tasks.vitals_due;
             updatedBadges.ivsToCheck = data.tasks.ivs_to_check;
             // `tasks.meds_due` and `tasks.wounds_to_assess` were read here and
-            // are not in the payload — the badges showed `undefined`. Meds due
-            // is derivable from the list the same response carries; wound
-            // assessments are not returned at all, so the badge stays at its
-            // initial 0 rather than displaying a number nobody computed.
+            // were not in the payload — the badges showed `undefined`. Meds due
+            // is derivable from the list the same response carries, and the
+            // wound count is now computed by the dashboard from the wound
+            // assessments rather than left at a zero nobody calculated.
             updatedBadges.medsDue = (data.medication_records || []).length;
+            updatedBadges.woundsToAssess = data.tasks.wounds_to_assess ?? 0;
 
             // Extract recent patients
             recentPatients = (data.patients.list || []).slice(0, 5).map((p) => ({

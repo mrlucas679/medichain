@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { getPatients, listMar, administerMedication, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
+import {
+  getPatients,
+  listMar,
+  administerMedication,
+  useTranslation,
+  Alert,
+  LoadingSpinner,
+  useScoringCatalog,
+  isDoseOverdue,
+} from '@medichain/shared';
 import type { PatientProfile } from '@medichain/shared';
 import { Pill, Clock, User, CheckCircle, XCircle, AlertTriangle, Calendar, Search, FileText, Activity, RefreshCw } from 'lucide-react';
 import { useToastActions } from '../components/Toast';
@@ -76,8 +85,9 @@ interface RawMarRow {
 
 const MedicationAdminPage: React.FC = () => {
   const { t } = useTranslation();
+  const { catalog } = useScoringCatalog();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [medications, setMedications] = useState<ScheduledMedication[]>([]);
   const [administrations, setAdministrations] = useState<MedicationAdmin[]>([]);
@@ -163,17 +173,17 @@ const MedicationAdminPage: React.FC = () => {
     e.preventDefault();
     
     if (!selectedMed || !actualTime) {
-      showWarning(t('docMedicationAdmin.warningRequiredFields'));
+      showError(t('docMedicationAdmin.errorRequiredFields'));
       return;
     }
 
     if (status === 'given' && !fiveRightsVerified) {
-      showWarning(t('docMedicationAdmin.warningFiveRights'));
+      showError(t('docMedicationAdmin.errorFiveRights'));
       return;
     }
 
     if ((status === 'not-given' || status === 'held' || status === 'refused') && !reasonNotGiven) {
-      showWarning(t('docMedicationAdmin.warningReasonNotGiven'));
+      showError(t('docMedicationAdmin.errorReasonNotGiven'));
       return;
     }
 
@@ -240,12 +250,15 @@ const MedicationAdminPage: React.FC = () => {
       if (admin.status === 'refused') return 'refused';
     }
 
-    const now = new Date();
+    // The overdue window comes from `GET /api/clinical/scoring/catalog`, not
+    // from `30 * 60000` here. It is a medication-safety policy: it decides when
+    // a dose turns red on the MAR and gets put in front of the nurse. Until the
+    // catalog loads, `isDoseOverdue` returns null and the dose stays pending —
+    // a dose shown as pending that is actually late is recoverable; one shown
+    // as overdue because the page guessed teaches the nurse to ignore the
+    // colour.
     const scheduled = new Date(`${selectedDate}T${time}`);
-    const thirtyMinutesLater = new Date(scheduled.getTime() + 30 * 60000);
-
-    if (now > thirtyMinutesLater) return 'overdue';
-    return 'pending';
+    return isDoseOverdue(scheduled, catalog) ? 'overdue' : 'pending';
   };
 
   const getStatusIcon = (status: string) => {

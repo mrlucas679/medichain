@@ -14,7 +14,16 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { apiUrl, createIntakeOutput, getApiClient, listIntakeOutput, useTranslation, clickable } from '@medichain/shared';
+import {
+  apiUrl,
+  createIntakeOutput,
+  getApiClient,
+  listIntakeOutput,
+  useTranslation,
+  clickable,
+  useScoringCatalog,
+  fluidBalanceBand,
+} from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
 import { useToastActions } from '../components/Toast';
 
@@ -116,6 +125,7 @@ function toPatientIO(
 
 const IntakeOutputPage: React.FC = () => {
   const { t } = useTranslation();
+  const { catalog } = useScoringCatalog();
   const [activeTab, setActiveTab] = useState<'patients' | 'entry' | 'trends'>('patients');
   const [patients, setPatients] = useState<PatientIO[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<PatientIO | null>(null);
@@ -127,7 +137,7 @@ const IntakeOutputPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
 
   const [newEntry, setNewEntry] = useState({
     type: 'intake' as 'intake' | 'output',
@@ -246,11 +256,24 @@ const IntakeOutputPage: React.FC = () => {
     return colors[cat] || 'bg-surface-sunken text-content-secondary';
   };
 
+  // The band comes from `GET /api/clinical/scoring/catalog`, not from literals
+  // here. `> 1000`, `> 500` and `< -500` are ward policy — a patient running a
+  // litre positive is a patient being fluid-overloaded — and policy in a
+  // component cannot be changed without a front-end deploy.
   const getBalanceStatus = (balance: number): { color: string; icon: React.ReactNode; label: string } => {
-    if (balance > 1000) return { color: 'text-critical-subtle-fg', icon: <TrendingUp className="w-4 h-4" />, label: t('docIntakeOutput.balancePositiveHigh') };
-    if (balance > 500) return { color: 'text-caution-subtle-fg', icon: <TrendingUp className="w-4 h-4" />, label: t('docIntakeOutput.balancePositive') };
-    if (balance < -500) return { color: 'text-notice-subtle-fg', icon: <TrendingDown className="w-4 h-4" />, label: t('docIntakeOutput.balanceNegative') };
-    return { color: 'text-ok-subtle-fg', icon: <CheckCircle className="w-4 h-4" />, label: t('docIntakeOutput.balanceBalanced') };
+    switch (fluidBalanceBand(balance, catalog)) {
+      case 'positive_high':
+        return { color: 'text-critical-subtle-fg', icon: <TrendingUp className="w-4 h-4" />, label: t('docIntakeOutput.balancePositiveHigh') };
+      case 'positive':
+        return { color: 'text-caution-subtle-fg', icon: <TrendingUp className="w-4 h-4" />, label: t('docIntakeOutput.balancePositive') };
+      case 'negative':
+        return { color: 'text-notice-subtle-fg', icon: <TrendingDown className="w-4 h-4" />, label: t('docIntakeOutput.balanceNegative') };
+      case 'balanced':
+        return { color: 'text-ok-subtle-fg', icon: <CheckCircle className="w-4 h-4" />, label: t('docIntakeOutput.balanceBalanced') };
+      default:
+        // Catalog not loaded: no band, so no colour and no claim about it.
+        return { color: 'text-content-muted', icon: <CheckCircle className="w-4 h-4" />, label: '—' };
+    }
   };
 
   // `patientName`, `mrn` and `room` are all optional in practice — a patient
@@ -266,7 +289,7 @@ const IntakeOutputPage: React.FC = () => {
 
   const handleAddEntry = async () => {
     if (!selectedPatient || newEntry.amount <= 0) {
-      showWarning(t('docIntakeOutput.warningValidAmount'));
+      showError(t('docIntakeOutput.errorValidAmount'));
       return;
     }
 

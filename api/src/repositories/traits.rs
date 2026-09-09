@@ -940,10 +940,31 @@ pub struct FallRiskAssessmentEntity {
     pub iv_therapy: Option<i32>,
     pub gait_status: Option<i32>,
     pub mental_status: Option<i32>,
-    pub total_score: i32,   // Generated column
-    pub risk_level: String, // Generated column
+    /// Morse total. `GENERATED ALWAYS ... STORED` from the six item columns,
+    /// and `Option` because those columns are nullable: a row written before
+    /// the items were populated has a NULL total, and PostgreSQL will not
+    /// decode that into an `i32`.
+    ///
+    /// It was `i32`, which meant one legacy row with a null score made
+    /// `get_high_risk_patients` fail to decode — and that read is on the nurse
+    /// dashboard's critical path, so the entire screen returned 503.
+    ///
+    /// `None` means "never scored", which is deliberately not the same as 0.
+    /// Zero bands as low risk; unscored is a patient nobody has assessed.
+    pub total_score: Option<i32>,
+    /// Risk band, generated from `total_score`. `None` for the same reason.
+    pub risk_level: Option<String>,
     pub additional_factors: Option<serde_json::Value>,
     pub interventions: Option<serde_json::Value>,
+    /// Hazards identified at the bedside. Collected by the form since it was
+    /// written; had no column until 20260909000001, so it was dropped on save.
+    pub environmental_hazards: Option<serde_json::Value>,
+    /// Fall-risk-increasing drugs the patient is on. Same history.
+    pub medications: Option<serde_json::Value>,
+    /// A fall already occurred during this admission.
+    pub recent_fall: bool,
+    /// Mobility status the prevention plan is built around.
+    pub mobility: Option<String>,
     pub notes: Option<String>,
     pub assessed_by: String,
     pub assessed_at: DateTime<Utc>,
@@ -2923,6 +2944,20 @@ pub struct BurnAssessmentEntity {
     pub burn_center_notified: bool,
     pub photos_taken: bool,
     pub notes: Option<String>,
+    /// Parkland input. A stored fluid volume with no weight beside it cannot be
+    /// rechecked against the formula. Added 20260909000002.
+    pub weight_kg: Option<rust_decimal::Decimal>,
+    /// `minor` / `moderate` / `major`, from `clinical_scoring::burn_severity`.
+    pub severity: Option<String>,
+    /// The Parkland split. `parkland_formula_volume` is the 24h total; these are
+    /// the two blocks it is actually delivered in.
+    pub parkland_first_8h_ml: Option<i32>,
+    pub parkland_next_16h_ml: Option<i32>,
+    pub associated_injuries: serde_json::Value,
+    pub interventions: serde_json::Value,
+    pub fluid_start_time: Option<DateTime<Utc>>,
+    /// Measured output, titrated against `urine_output_goal`.
+    pub urine_output_ml_hr: Option<i32>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     #[sqlx(skip)]

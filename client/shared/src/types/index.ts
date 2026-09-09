@@ -747,13 +747,29 @@ export interface NurseDashboardPatient {
   /** False when the row exists but its PHI could not be decrypted. */
   content_available: boolean;
 
-  // --- Not returned by the API. ---
-  /** Ward/bed. */
+  // --- The ward-orientation half of the list. ---
+  //
+  // These are returned now. They were declared optional and marked "not
+  // returned by the API" because `/api/dashboard/nurse` served a bare
+  // `DashboardPatient`, which carries none of them — so the columns the page
+  // renders were permanently blank, and `room` was worse, falling back to
+  // "Pending" for every bed on the ward.
+  //
+  // They stay optional because each still depends on a record existing: a
+  // patient with no triage assessment has no bed and no acuity, and a patient
+  // who has never been assessed for falls has no band. Absent means "not
+  // recorded", which is a different thing from low risk, and the page has to be
+  // able to say so.
+
+  /** Assigned bed, from the patient's most recent triage assessment. */
   room?: string;
-  /** Emergency Severity Index, 1–5. */
+  /** Emergency Severity Index, 1–5, from the same assessment. */
   esi_level?: number;
-  fall_risk?: boolean;
-  iv_site?: boolean;
+  /** `low` | `moderate` | `high`, from the most recent Morse Fall Scale assessment. */
+  fall_risk?: string;
+  /** Where the patient's live cannula is, if one is documented. */
+  iv_site?: string;
+  /** A wound has not been reassessed within the review interval. */
   wound_care_due?: boolean;
 }
 
@@ -764,18 +780,31 @@ export interface NurseDashboardPatient {
  * page used to default `route` to `'PO'`, which told a nurse that every drug on
  * the ward list was oral — including the ones that are not.
  */
+/**
+ * One row of the ward drug round.
+ *
+ * Sourced from the medication administration record, not from
+ * `medication_reminders`. The reminders feed is patient adherence — a drug
+ * name, a dose and a list of times — and it has no route, no scheduled time
+ * and no patient name, which is why this interface used to carry three fields
+ * marked "not returned by the API" and the page defaulted `route` to `'PO'`.
+ * That told a nurse every drug on the ward was oral, including the ones given
+ * IV or IM.
+ *
+ * `route` and `scheduled_time` are still optional, because a MAR entry can be
+ * written without them. Absent is shown as unknown — a question rather than a
+ * wrong answer.
+ */
 export interface NurseDashboardMedication {
-  reminder_id: string;
+  record_id: string;
   patient_id: string;
-  medication_name: string;
-  dosage: string;
-  reminder_times?: string[];
-  instructions?: string | null;
-
-  // --- Not returned by the API. ---
+  /** Resolved server-side; the name is encrypted at rest. */
   patient_name?: string;
-  route?: string;
-  scheduled_time?: string;
+  medication_name?: string | null;
+  dosage?: string | null;
+  route?: string | null;
+  scheduled_time?: string | null;
+  status?: string | null;
 }
 
 /** One flagged vital-signs reading. */
@@ -817,7 +846,10 @@ export interface NurseDashboardResponse {
   critical_alerts: unknown[];
   tasks: {
     vitals_due: number;
+    /** Live cannulae on the ward. Was hardcoded `0` server-side. */
     ivs_to_check: number;
+    /** Wounds not reassessed within the review interval. */
+    wounds_to_assess: number;
   };
 }
 
@@ -1044,6 +1076,10 @@ export interface PharmacistDashboardResponse {
 export type ApiResponse<T> = T | ApiError;
 
 export * from './clinical';
+// Typed request/response shapes for the endpoints that score clinically. These
+// replace `data: unknown` on the create functions, which is how four pages came
+// to post payloads no handler read.
+export * from './clinicalScoring';
 
 export function isApiError(response: ApiResponse<unknown>): response is ApiError {
   return typeof response === 'object' && response !== null && (response as ApiError).success === false && 'error' in (response as object);

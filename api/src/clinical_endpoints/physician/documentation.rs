@@ -424,7 +424,13 @@ pub async fn get_hp(
     }
 
     match data.repositories.history_physicals.get_by_id(&hp_id).await {
-        Ok(entity) => HttpResponse::Ok().json(entity.data),
+        Ok(entity) => {
+            // The stored record, not `entity.data`. `data` is `#[sqlx(skip)]`
+            // on every one of these entities, so on PostgreSQL it is always
+            // `Value::Null` — this endpoint returned a literal `null` with a
+            // 200 for every record ever saved. The typed columns are the record.
+            HttpResponse::Ok().json(entity)
+        }
         Err(RepositoryError::NotFound(_)) => HttpResponse::NotFound().json(ErrorResponse {
             success: false,
             error: "H&P not found".to_string(),
@@ -788,7 +794,13 @@ pub async fn get_consult(
         .get_by_id(&consult_id)
         .await
     {
-        Ok(entity) => HttpResponse::Ok().json(entity.data),
+        Ok(entity) => {
+            // The stored record, not `entity.data`. `data` is `#[sqlx(skip)]`
+            // on every one of these entities, so on PostgreSQL it is always
+            // `Value::Null` — this endpoint returned a literal `null` with a
+            // 200 for every record ever saved. The typed columns are the record.
+            HttpResponse::Ok().json(entity)
+        }
         Err(RepositoryError::NotFound(_)) => HttpResponse::NotFound().json(ErrorResponse {
             success: false,
             error: "Consultation note not found".to_string(),
@@ -906,7 +918,13 @@ pub async fn get_progress_note(
     }
 
     match data.repositories.progress_notes.get_by_id(&note_id).await {
-        Ok(entity) => HttpResponse::Ok().json(entity.data),
+        Ok(entity) => {
+            // The stored record, not `entity.data`. `data` is `#[sqlx(skip)]`
+            // on every one of these entities, so on PostgreSQL it is always
+            // `Value::Null` — this endpoint returned a literal `null` with a
+            // 200 for every record ever saved. The typed columns are the record.
+            HttpResponse::Ok().json(entity)
+        }
         Err(RepositoryError::NotFound(_)) => HttpResponse::NotFound().json(ErrorResponse {
             success: false,
             error: "Progress note not found".to_string(),

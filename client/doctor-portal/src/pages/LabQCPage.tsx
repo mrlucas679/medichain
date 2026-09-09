@@ -60,7 +60,7 @@ interface Calibration {
 const LabQCPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showWarning } = useToastActions();
+  const { showSuccess, showWarning, showError } = useToastActions();
   const [qcTests, setQcTests] = useState<QCTest[]>([]);
   const [calibrations, setCalibrations] = useState<Calibration[]>([]);
   const [activeTab, setActiveTab] = useState<'qcTests' | 'newQC' | 'calibrations' | 'newCalibration'>('qcTests');
@@ -154,7 +154,7 @@ const LabQCPage: React.FC = () => {
   const handleSubmitQC = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!instrument || !analyte || !observedValue || !expectedMean || !expectedSD) {
-      showWarning(t('docLabQC.warningRequiredFields'));
+      showError(t('docLabQC.errorRequiredFields'));
       return;
     }
 
@@ -222,7 +222,7 @@ const LabQCPage: React.FC = () => {
   const handleSubmitCalibration = (e: React.FormEvent) => {
     e.preventDefault();
     if (!calInstrument || !calibratorLot || !calExpiryDate) {
-      showWarning(t('docLabQC.warningRequiredFields'));
+      showError(t('docLabQC.errorRequiredFields'));
       return;
     }
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToastActions } from '../components/Toast';
 import {
   Baby,
   Search,
@@ -59,6 +60,11 @@ const latestGrowthOf = (patient: PediatricPatient): GrowthData | undefined =>
   patient.growthData.length > 0 ? patient.growthData[patient.growthData.length - 1] : undefined;
 
 const PediatricsPage: React.FC = () => {
+  // Toasts, not `alert()`. A native alert is a blocking modal: it freezes the
+  // tab until dismissed, ignores the app's styling and focus handling, and
+  // interrupts a clinician mid-form. `Toast.tsx` says in its own header that it
+  // exists "to replace browser alert() calls"; these three pages were missed.
+  const { showSuccess, showError } = useToastActions();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'patients' | 'assessment' | 'growth'>('patients');
   const [patients, setPatients] = useState<PediatricPatient[]>([]);
@@ -228,63 +234,68 @@ const PediatricsPage: React.FC = () => {
 
   const handleSubmitAssessment = async () => {
     if (!assessmentForm.patientId || !assessmentForm.weightKg || !assessmentForm.heartRate) {
-      alert(t('docPediatrics.warningRequiredFields'));
+      showError(t('docPediatrics.errorRequiredFields'));
       return;
     }
 
     try {
-      // Mapping to the backend PediatricAssessment structure
+      // Only what the form collects, under the names the handler reads.
+      //
+      // Two things were wrong here. The field names did not match — the page
+      // sent `age: {years, months}`, `weight_method` and `immunizations`
+      // against a handler reading `age_months`, `weight_estimated` and
+      // `immunizations_up_to_date` — so a paediatric assessment stored age
+      // 0 months and no immunisation status while returning success.
+      //
+      // And six clinical findings were asserted that nobody entered:
+      //
+      //   hr_interpretation / rr_interpretation / temp_interpretation: 'Normal'
+      //     — every paediatric vital sign filed as normal, including a
+      //       tachycardic infant's.
+      //   pain: { score: 0 }              — no pain, on a child nobody asked.
+      //   immunizations: 'Up to date'     — a complete schedule for every child.
+      //   abuse_screening: { concerns: false }
+      //     — the worst of them: a record stating a child-protection screen
+      //       found no concerns, when no screen was performed.
+      //   guardian_present: true          — a guardian who may not have been there.
+      //   weight_method: 'Measured'       — measured, not estimated.
+      //
+      // A temperature nobody entered also became 37.0 and a weight nobody
+      // entered became 0. Absent is what these are, and absent is what they
+      // send now.
       const assessmentData = {
-        assessment_id: `PEDS-${Date.now()}`,
         patient_id: selectedPatient?.id || assessmentForm.patientId,
-        age: {
-          years: Math.floor((selectedPatient?.ageMonths || 0) / 12),
-          months: (selectedPatient?.ageMonths || 0) % 12,
-          category: (selectedPatient?.ageGroup || 'infant').charAt(0).toUpperCase() + (selectedPatient?.ageGroup || 'infant').slice(1)
+        age_months: selectedPatient?.ageMonths,
+        weight_kg: assessmentForm.weightKg ? parseFloat(assessmentForm.weightKg) : null,
+        length_cm: assessmentForm.heightCm ? parseFloat(assessmentForm.heightCm) : null,
+        // The Paediatric Assessment Triangle, which the form does collect.
+        appearance_score: assessmentForm.patAppearance === 'normal' ? 'Normal' : 'Abnormal',
+        work_of_breathing: assessmentForm.patWorkOfBreathing === 'normal' ? 'Normal' : 'Abnormal',
+        circulation_to_skin: assessmentForm.patCirculation === 'normal' ? 'Normal' : 'Abnormal',
+        developmental_concerns:
+          assessmentForm.developmentalStatus === 'on-track'
+            ? null
+            : assessmentForm.developmentalStatus,
+        // Vital signs as recorded. No interpretation: the form has no control
+        // for one, and a vital sign labelled "Normal" by the page rather than
+        // by a clinician is a finding nobody made.
+        pediatric_triangle: {
+          heart_rate: assessmentForm.heartRate ? parseInt(assessmentForm.heartRate) : null,
+          respiratory_rate: assessmentForm.respiratoryRate
+            ? parseInt(assessmentForm.respiratoryRate)
+            : null,
+          temperature_celsius: assessmentForm.temperature
+            ? parseFloat(assessmentForm.temperature)
+            : null,
+          appearance: assessmentForm.patAppearance,
+          work_of_breathing: assessmentForm.patWorkOfBreathing,
+          circulation: assessmentForm.patCirculation,
         },
-        weight_kg: parseFloat(assessmentForm.weightKg) || 0,
-        // Collected by the form but previously never sent, so a child's
-        // height and the clinician's notes were discarded on save.
-        length_cm: parseFloat(assessmentForm.heightCm) || null,
         notes: assessmentForm.notes,
-        weight_method: 'Measured',
-        vital_signs: {
-          heart_rate: parseInt(assessmentForm.heartRate) || 0,
-          hr_interpretation: 'Normal',
-          respiratory_rate: parseInt(assessmentForm.respiratoryRate) || 0,
-          rr_interpretation: 'Normal',
-          temperature_celsius: parseFloat(assessmentForm.temperature) || 37.0,
-          temp_interpretation: 'Normal'
-        },
-        pat: {
-          appearance: assessmentForm.patAppearance === 'normal' ? 'Normal' : 'Abnormal',
-          work_of_breathing: assessmentForm.patWorkOfBreathing === 'normal' ? 'Normal' : 'Abnormal',
-          circulation: assessmentForm.patCirculation === 'normal' ? 'Normal' : 'Abnormal'
-        },
-        pain: {
-          score: 0,
-          scale_used: 'FLACC'
-        },
-        development: assessmentForm.developmentalStatus,
-        history: {
-          symptoms: '',
-          allergies: '',
-          medications: '',
-          past_history: '',
-          last_meal: '',
-          events: ''
-        },
-        immunizations: 'Up to date',
-        abuse_screening: {
-          concerns: false,
-          notes: ''
-        },
-        guardian_present: true,
-        assessed_at: Date.now()
       };
 
       await createPeds(assessmentData);
-      alert(t('docPediatrics.submittedSuccess'));
+      showSuccess(t('docPediatrics.submittedSuccess'));
       setActiveTab('patients');
       // Reset form
       setAssessmentForm({
@@ -294,7 +305,7 @@ const PediatricsPage: React.FC = () => {
       });
     } catch (error) {
       console.error('Failed to submit pediatric assessment:', error);
-      alert(t('docPediatrics.submitError'));
+      showError(t('docPediatrics.submitError'));
     }
   };
 

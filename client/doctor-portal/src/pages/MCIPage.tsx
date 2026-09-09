@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
-import { createMci, useTranslation } from '@medichain/shared';
+import { createMci, useTranslation, useScoringCatalog } from '@medichain/shared';
 import {
   AlertTriangle,
   Users,
@@ -32,7 +31,10 @@ interface MCIPatient {
   chiefComplaint: string;
   injuries: string[];
   vitals: {
+    /** START's first question: did they walk to the collection point unaided? */
+    ambulatory: boolean;
     respiratoryRate: number;
+    /** Radial pulse rate. 0 means no palpable radial pulse. */
     pulse: number;
     capRefill: number;
     mentalStatus: string;
@@ -103,7 +105,9 @@ const INJURY_KEYS: Record<string, string> = {
 export default function MCIPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  // `user` is no longer read here: the server attributes each record to
+  // whoever authenticated the request, rather than to whatever `assessed_by`
+  // the body claimed.
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -127,6 +131,8 @@ export default function MCIPage() {
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [_editingPatient, _setEditingPatient] = useState<MCIPatient | null>(null);
   const [tagCounter, setTagCounter] = useState(1);
+  // START's thresholds come from the API, not from this file.
+  const { catalog } = useScoringCatalog();
 
   // New Patient Form
   const [newPatient, setNewPatient] = useState<Partial<MCIPatient>>({
@@ -136,6 +142,7 @@ export default function MCIPage() {
     chiefComplaint: '',
     injuries: [],
     vitals: {
+      ambulatory: false,
       respiratoryRate: 16,
       pulse: 80,
       capRefill: 2,
@@ -206,44 +213,41 @@ export default function MCIPage() {
     'Smoke Inhalation', 'Chemical Exposure', 'Internal Bleeding'
   ];
 
-  // START Triage Algorithm
-  const calculateSTARTCategory = (vitals: MCIPatient['vitals']): TriageCategory => {
-    // Can they walk? → Minor (Green)
-    // (We assume non-ambulatory if triaging)
-    
-    // Are they breathing?
-    if (vitals.respiratoryRate === 0) {
-      // Position airway - still not breathing → Deceased (Black)
-      return 'deceased';
-    }
-    
-    // RR > 30 → Immediate (Red)
-    if (vitals.respiratoryRate > 30) {
-      return 'immediate';
-    }
-    
-    // Cap refill > 2 seconds → Immediate (Red)
-    if (vitals.capRefill > 2) {
-      return 'immediate';
-    }
-    
-    // No radial pulse → Immediate (Red)
-    if (vitals.pulse === 0 || vitals.pulse > 120) {
-      return 'immediate';
-    }
-    
-    // Mental status - not following commands → Immediate (Red)
-    if (vitals.mentalStatus === 'unresponsive' || vitals.mentalStatus === 'confused') {
-      return 'immediate';
-    }
-    
-    // All criteria met → Delayed (Yellow)
+  /**
+   * START triage preview for the tag the responder is filling in.
+   *
+   * The stored category is the server's — `createMci` returns one per casualty
+   * and this page adopts them on save. This exists only so the tag colour
+   * appears as the observations are entered, and it uses the thresholds from
+   * `GET /api/clinical/scoring/catalog` rather than its own literals.
+   *
+   * What it replaces got START's shape wrong in two ways. It never asked
+   * whether the casualty could walk, which is the algorithm's first and most
+   * decisive question, and it treated a pulse over 120 as Immediate, which is
+   * not a START criterion at all — the perfusion check is capillary refill over
+   * two seconds *or* an absent radial pulse.
+   */
+  const previewSTARTCategory = (vitals: MCIPatient['vitals']): TriageCategory | null => {
+    const start = catalog?.start_triage;
+    if (!start) return null;
+    const { respiratory_rate_immediate_above, capillary_refill_immediate_above_secs } = start;
+
+    if (vitals.ambulatory) return 'minor';
+    if (vitals.respiratoryRate === 0) return 'deceased';
+    if (vitals.respiratoryRate > respiratory_rate_immediate_above) return 'immediate';
+    if (vitals.capRefill > capillary_refill_immediate_above_secs) return 'immediate';
+    if (vitals.pulse === 0) return 'immediate';
+    if (vitals.mentalStatus !== 'alert') return 'immediate';
     return 'delayed';
   };
 
   const addPatient = () => {
     const tagNum = `MCI-${tagCounter.toString().padStart(4, '0')}`;
-    const category = calculateSTARTCategory(newPatient.vitals!);
+    // The board shows this until the incident is filed; the server's category
+    // replaces it on save. `immediate` is the fallback when the catalog has not
+    // loaded, because over-triage costs a transport slot and under-triage costs
+    // the casualty.
+    const category = previewSTARTCategory(newPatient.vitals!) ?? 'immediate';
     
     const patient: MCIPatient = {
       id: `P-${Date.now()}`,
@@ -269,7 +273,7 @@ export default function MCIPage() {
       gender: 'unknown',
       chiefComplaint: '',
       injuries: [],
-      vitals: { respiratoryRate: 16, pulse: 80, capRefill: 2, mentalStatus: 'alert' },
+      vitals: { ambulatory: false, respiratoryRate: 16, pulse: 80, capRefill: 2, mentalStatus: 'alert' },
       location: '',
       destination: '',
       notes: ''
@@ -312,22 +316,45 @@ export default function MCIPage() {
     setError('');
 
     try {
+      // The incident and its casualty board, as the API reads them. The old
+      // payload wrapped everything in `mci_id` / `documented_by` / a
+      // `category_counts` the server recomputes, and the handler — which read
+      // flat top-level keys — matched none of it. What got written was one row
+      // for a nameless incident of type `natural_disaster` with a single `red`
+      // casualty who did not exist, and the whole board was dropped.
+      //
+      // `category` is still sent per casualty, but as an *override*: the server
+      // scores START itself and stores both, so the record shows the decision
+      // that was made and the algorithm it departed from.
       const mciData = {
-        mci_id: `MCI-${Date.now()}`,
-        incident: {
-          ...incident,
-          total_patients: patients.length,
-          category_counts: counts
-        },
-        patients: patients.map(p => ({
-          ...p,
-          documented_by: user?.userId
+        incident,
+        patients: patients.map((p) => ({
+          tagNumber: p.tagNumber,
+          age: p.age,
+          gender: p.gender,
+          chiefComplaint: p.chiefComplaint,
+          injuries: p.injuries,
+          vitals: p.vitals,
+          location: p.location,
+          destination: p.destination,
+          triageTime: p.triageTime,
+          notes: p.notes,
+          category: p.category,
         })),
-        documented_by: user?.userId || 'unknown',
-        documented_at: Math.floor(Date.now() / 1000)
       };
 
-      await createMci(mciData);
+      const saved = await createMci(mciData);
+      // Adopt the server's triage. If it disagrees with the board, the record
+      // is the one that matters and the responder should see it before the
+      // patients move.
+      setPatients((prev) =>
+        prev.map((patient) => {
+          const scored = saved.triage.find((row) => row.tag_number === patient.tagNumber);
+          return scored
+            ? { ...patient, category: scored.triage_category as TriageCategory }
+            : patient;
+        }),
+      );
       setSuccess(true);
       setTimeout(() => navigate('/dashboard'), 2000);
     } catch (err) {
@@ -436,6 +463,28 @@ export default function MCIPage() {
                       {/* Quick Vitals for START */}
                       <div className="md:col-span-3 bg-caution-subtle p-4 rounded-lg">
                         <p className="font-medium text-caution-subtle-fg mb-3">{t('docMCI.startTriageVitalsLabel')}</p>
+                        {/* START asks this first, and the answer ends the
+                            algorithm: anyone who can walk is Minor, whatever
+                            their vitals say. The page used to skip the question
+                            entirely — a comment in the old in-browser START
+                            implementation read "we assume non-ambulatory if
+                            triaging" — so every walking-wounded casualty was
+                            triaged as if they could not walk, which in a real
+                            incident spends a transport slot on someone who does
+                            not need one. */}
+                        <label className="flex items-center gap-2 mb-3 text-sm font-medium text-caution-subtle-fg cursor-pointer">
+                          <input
+                            id="mci-ambulatory"
+                            type="checkbox"
+                            checked={newPatient.vitals?.ambulatory ?? false}
+                            onChange={(e) => setNewPatient({
+                              ...newPatient,
+                              vitals: { ...newPatient.vitals!, ambulatory: e.target.checked }
+                            })}
+                            className="h-4 w-4 rounded border-border-interactive"
+                          />
+                          {t('docMCI.ambulatoryLabel')}
+                        </label>
                         <div className="grid grid-cols-4 gap-4">
                           <div>
                             <label htmlFor="mci-respiratory-rate" className="block text-sm font-medium text-content-secondary mb-1">{t('docMCI.respiratoryRateLabel')}</label>

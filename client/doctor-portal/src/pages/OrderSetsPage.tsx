@@ -58,7 +58,7 @@ interface OrderSet {
 const OrderSetsPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [orderSets, setOrderSets] = useState<OrderSet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,7 +111,7 @@ const OrderSetsPage: React.FC = () => {
 
   const handleCreateOrderSet = () => {
     if (!newOrderSet.name || !newOrderSet.specialty || !newOrderSet.description || !newOrderSet.orders?.length) {
-      showWarning(t('docOrderSets.warningCreateFields'));
+      showError(t('docOrderSets.errorCreateFields'));
       return;
     }
 
@@ -148,7 +148,7 @@ const OrderSetsPage: React.FC = () => {
 
   const handleAddOrderToNewSet = () => {
     if (!newOrder.description) {
-      showWarning(t('docOrderSets.warningOrderDescription'));
+      showError(t('docOrderSets.errorOrderDescription'));
       return;
     }
 

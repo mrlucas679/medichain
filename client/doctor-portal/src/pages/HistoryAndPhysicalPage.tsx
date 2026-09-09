@@ -255,7 +255,7 @@ const HistoryAndPhysicalPage: React.FC = () => {
 
   const handleSaveHp = async (status: 'in-progress' | 'signed') => {
     if (!formData.patientId || !formData.chiefComplaint) {
-      showError(t('docHistoryPhysical.warningRequiredFields'));
+      showError(t('docHistoryPhysical.errorRequiredFields'));
       return;
     }
     

@@ -83,7 +83,7 @@ const CRITICAL_THRESHOLDS: CriticalValueThreshold[] = [
 const CriticalValuePage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [notifications, setNotifications] = useState<CriticalValueNotification[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'report-new' | 'history' | 'thresholds'>('pending');
@@ -192,7 +192,7 @@ const CriticalValuePage: React.FC = () => {
 
   const handleReportCriticalValue = async () => {
     if (!newCritical.patientId || !newCritical.analyte || !newCritical.value || !newCritical.orderingProvider) {
-      showWarning(t('docCriticalValue.errorRequiredFields'));
+      showError(t('docCriticalValue.errorRequiredFields'));
       return;
     }
 
@@ -203,7 +203,7 @@ const CriticalValuePage: React.FC = () => {
     const criticalInfo = determineCriticalLevel(newCritical.analyte, value);
 
     if (!criticalInfo) {
-      showWarning(t('docCriticalValue.warningNotCritical'));
+      showError(t('docCriticalValue.errorNotCritical'));
       return;
     }
 
@@ -261,7 +261,7 @@ const CriticalValuePage: React.FC = () => {
     if (!selectedNotification) return;
 
     if (!acknowledgment.notifiedProvider || !acknowledgment.readBackValue) {
-      showWarning(t('docCriticalValue.errorProviderReadBackRequired'));
+      showError(t('docCriticalValue.errorProviderReadBackRequired'));
       return;
     }
 
@@ -924,7 +924,7 @@ const CriticalValuePage: React.FC = () => {
                     return (
                       <p className="text-sm text-content-secondary">
                         <AlertTriangle className="w-4 h-4 inline mr-1" />
-                        {t('docCriticalValue.warningNotCritical')}
+                        {t('docCriticalValue.errorNotCritical')}
                       </p>
                     );
                   }

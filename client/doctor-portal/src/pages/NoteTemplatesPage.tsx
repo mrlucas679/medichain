@@ -39,7 +39,7 @@ interface NoteTemplate {
 const NoteTemplatesPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [templates, setTemplates] = useState<NoteTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,7 +93,7 @@ const NoteTemplatesPage: React.FC = () => {
 
   const handleCreateTemplate = () => {
     if (!newTemplate.name || !newTemplate.description || !newTemplate.sections?.length) {
-      showWarning(t('docNoteTemplates.warningCreateFields'));
+      showError(t('docNoteTemplates.errorCreateFields'));
       return;
     }
 
@@ -130,7 +130,7 @@ const NoteTemplatesPage: React.FC = () => {
 
   const handleAddSectionToTemplate = () => {
     if (!newSection.title || !newSection.content) {
-      showWarning(t('docNoteTemplates.warningSectionFields'));
+      showError(t('docNoteTemplates.errorSectionFields'));
       return;
     }
 

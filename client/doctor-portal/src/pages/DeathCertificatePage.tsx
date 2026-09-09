@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToastActions } from '../components/Toast';
 import {
   User,
   Calendar,
@@ -50,6 +51,11 @@ interface CauseOfDeathEntry {
 }
 
 const DeathCertificatePage: React.FC = () => {
+  // Toasts, not `alert()`. A native alert is a blocking modal: it freezes the
+  // tab until dismissed, ignores the app's styling and focus handling, and
+  // interrupts a clinician mid-form. `Toast.tsx` says in its own header that it
+  // exists "to replace browser alert() calls"; these three pages were missed.
+  const { showSuccess, showError } = useToastActions();
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'certificates' | 'new'>('certificates');
   const [certificates, setCertificates] = useState<DeathCertificate[]>([]);
@@ -206,7 +212,7 @@ const DeathCertificatePage: React.FC = () => {
   const handleSignAndSubmit = async () => {
     // Basic validation
     if (!deceasedInfo.lastName || !deathInfo.dateOfDeath || !causeInfo.immediateCause || !certifierInfo.certifierName || !certifierInfo.licenseNumber) {
-      alert(t('docDeathCertificate.errorRequiredFields'));
+      showError(t('docDeathCertificate.errorRequiredFields'));
       return;
     }
 
@@ -231,7 +237,7 @@ const DeathCertificatePage: React.FC = () => {
 
       await createDeathCertificate(payload);
 
-      alert(t('docDeathCertificate.successSubmitted'));
+      showSuccess(t('docDeathCertificate.successSubmitted'));
       setActiveTab('certificates');
       setCurrentStep(1);
       
@@ -259,7 +265,7 @@ const DeathCertificatePage: React.FC = () => {
 
     } catch (error) {
       console.error('Failed to submit death certificate:', error);
-      alert(t('docDeathCertificate.errorSubmitFailed'));
+      showError(t('docDeathCertificate.errorSubmitFailed'));
     }
   };
 

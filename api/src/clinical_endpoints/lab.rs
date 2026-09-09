@@ -211,7 +211,13 @@ pub async fn get_specimen(
         .get_by_id(&collection_id)
         .await
     {
-        Ok(entity) => HttpResponse::Ok().json(entity.data),
+        Ok(entity) => {
+            // The stored record, not `entity.data`. `data` is `#[sqlx(skip)]`
+            // on every one of these entities, so on PostgreSQL it is always
+            // `Value::Null` — this endpoint returned a literal `null` with a
+            // 200 for every record ever saved. The typed columns are the record.
+            HttpResponse::Ok().json(entity)
+        }
         Err(RepositoryError::NotFound(_)) => HttpResponse::NotFound().json(ErrorResponse {
             success: false,
             error: "Specimen collection not found".to_string(),
@@ -487,7 +493,13 @@ pub async fn get_chain_of_custody(
     }
 
     match data.repositories.chain_of_custody.get_by_id(&form_id).await {
-        Ok(entity) => HttpResponse::Ok().json(entity.data),
+        Ok(entity) => {
+            // The stored record, not `entity.data`. `data` is `#[sqlx(skip)]`
+            // on every one of these entities, so on PostgreSQL it is always
+            // `Value::Null` — this endpoint returned a literal `null` with a
+            // 200 for every record ever saved. The typed columns are the record.
+            HttpResponse::Ok().json(entity)
+        }
         Err(RepositoryError::NotFound(_)) => HttpResponse::NotFound().json(ErrorResponse {
             success: false,
             error: "Chain of custody not found".to_string(),
@@ -674,7 +686,13 @@ pub async fn get_lab_qc(
     }
 
     match data.repositories.lab_qc_records.get_by_id(&qc_id).await {
-        Ok(entity) => HttpResponse::Ok().json(entity.data),
+        Ok(entity) => {
+            // The stored record, not `entity.data`. `data` is `#[sqlx(skip)]`
+            // on every one of these entities, so on PostgreSQL it is always
+            // `Value::Null` — this endpoint returned a literal `null` with a
+            // 200 for every record ever saved. The typed columns are the record.
+            HttpResponse::Ok().json(entity)
+        }
         Err(RepositoryError::NotFound(_)) => HttpResponse::NotFound().json(ErrorResponse {
             success: false,
             error: "Lab QC record not found".to_string(),
@@ -892,7 +910,13 @@ pub async fn get_critical_value(
         .get_by_id(&notification_id)
         .await
     {
-        Ok(entity) => HttpResponse::Ok().json(entity.data),
+        Ok(entity) => {
+            // The stored record, not `entity.data`. `data` is `#[sqlx(skip)]`
+            // on every one of these entities, so on PostgreSQL it is always
+            // `Value::Null` — this endpoint returned a literal `null` with a
+            // 200 for every record ever saved. The typed columns are the record.
+            HttpResponse::Ok().json(entity)
+        }
         Err(RepositoryError::NotFound(_)) => HttpResponse::NotFound().json(ErrorResponse {
             success: false,
             error: "Critical value notification not found".to_string(),

@@ -9,6 +9,7 @@
  * © 2025 Lukau Invasion (Pty) Ltd. All rights reserved.
  */
 
+import { IS_DEMO } from '../config';
 import type { Role } from '../types';
 import type {
   SubstrateAddress,
@@ -382,9 +383,18 @@ export async function signMessage(address: SubstrateAddress, message: string): P
  * Connect wallet (simulates wallet extension connection if IS_DEMO=true)
  */
 export async function connectWallet(address?: SubstrateAddress): Promise<WalletAccount | null> {
-  // Check if we are in demo mode
-  const IS_DEMO = true; // Should come from config
-
+  // `IS_DEMO` comes from `../config`, which reads `VITE_DEMO_MODE` and defaults
+  // to false. It used to be a local `const IS_DEMO = true; // Should come from
+  // config`, which made the real-extension branch below unreachable: the
+  // function always fell through to the simulator lookup, storing an account as
+  // the current wallet with no extension involvement and no signature.
+  //
+  // That was never a live authentication bypass — this function has no callers,
+  // and sign-in goes through `signMessage()` below, which does the correct
+  // `web3Enable` / `web3Accounts` / `web3FromSource` / `signRaw` ordering
+  // against a server that issues no JWT without a verified sr25519 challenge.
+  // But a hardcoded `true` sitting in the same module as the real signing path
+  // is exactly the shape that gets copied into something live.
   if (!IS_DEMO) {
     const accounts = await connectRealWallet();
     if (address) {

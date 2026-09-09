@@ -91,13 +91,17 @@ export default function TraumaPage() {
         mechanism_of_injury: mechanism,
         injuries: [], // Injuries added via injury documentation form
         interventions: [],
-        vital_signs: {
-          // Default vitals - updated from patient monitoring
-          bp: "120/80",
-          hr: 80,
-          rr: 16,
-          spo2: 98
-        },
+        // No `vital_signs`. This sent `{bp: "120/80", hr: 80, rr: 16, spo2: 98}`
+        // under a comment reading "Default vitals - updated from patient
+        // monitoring" — an update that does not happen. Every trauma assessment
+        // on file therefore records textbook-normal observations for a trauma
+        // patient, on someone who may be shocked.
+        //
+        // This page has no vital-signs inputs; observations are recorded on the
+        // Vitals page against the same patient. Sending none is the truthful
+        // answer, and an absent set reads as "not recorded here" rather than as
+        // a stable patient.
+
         notes: `Primary Survey:\nA: ${airway}\nB: ${breathing}\nC: ${circulation}\nD: ${disability}\nE: ${exposure}\n\nNotes: ${notes}`,
         assessed_by: user?.userId || 'unknown',
         assessed_at: Math.floor(Date.now() / 1000)

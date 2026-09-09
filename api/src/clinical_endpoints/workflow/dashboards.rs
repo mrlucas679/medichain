@@ -303,6 +303,153 @@ pub async fn doctor_dashboard(data: web::Data<AppState>, http_req: HttpRequest) 
 /// `tasks.*`, `vitals_needing_attention`, `io_records` and `fall_risk_patients`
 /// while the API returned `active_patients` / `pending_medications`, so every
 /// card on a nurse's landing page showed zero.
+/// How many medication rows the ward list shows at once.
+const WARD_MEDICATION_ROWS: usize = 10;
+
+/// Today's scheduled medications across the ward, newest patient first.
+///
+/// Each row carries the patient's name, the drug, the dose, the route and the
+/// scheduled time — the five things a nurse needs to give a drug safely, and
+/// the last three of which the previous source could not supply at all.
+async fn ward_medications_due(
+    data: &web::Data<AppState>,
+    patients: &[DashboardPatient],
+) -> Vec<serde_json::Value> {
+    let today = Utc::now().date_naive();
+    let mut rows: Vec<serde_json::Value> = Vec::with_capacity(WARD_MEDICATION_ROWS);
+
+    for patient in patients {
+        if rows.len() >= WARD_MEDICATION_ROWS {
+            break;
+        }
+        let Ok(Some(record)) = data
+            .repositories
+            .medication_records
+            .get_by_patient_and_date(&patient.patient_id, today)
+            .await
+        else {
+            continue;
+        };
+        let Some(scheduled) = record.scheduled_medications.as_array() else {
+            continue;
+        };
+        for medication in scheduled.iter().take(WARD_MEDICATION_ROWS) {
+            if rows.len() >= WARD_MEDICATION_ROWS {
+                break;
+            }
+            let field = |key: &str| {
+                medication
+                    .get(key)
+                    .and_then(|v| v.as_str())
+                    .map(str::to_string)
+            };
+            rows.push(serde_json::json!({
+                "record_id": record.id,
+                "patient_id": patient.patient_id,
+                // Resolved here because the name is encrypted at rest.
+                "patient_name": patient.full_name,
+                "medication_name": field("medication_name").or_else(|| field("name")),
+                "dosage": field("dosage").or_else(|| field("dose")),
+                // Absent rather than assumed. A wrong route is a wrong drug.
+                "route": field("route"),
+                "scheduled_time": field("scheduled_time").or_else(|| field("time")),
+                "status": field("status"),
+            }));
+        }
+    }
+    rows
+}
+
+/// The ward-orientation half of a nurse's patient list.
+///
+/// `NurseDashboardPage` renders bed, triage acuity and three standing tasks
+/// beside every patient. `/api/dashboard/nurse` returned `DashboardPatient`,
+/// which carries none of the five, so the columns were permanently blank — and
+/// before that they were worse than blank: `room` had a `|| t('pending')`
+/// fallback, so every bed on the ward read "Pending".
+///
+/// Each field has a real source. Nothing here is defaulted: a field the
+/// repositories cannot answer stays `None`, and the page shows it as absent
+/// rather than as a plausible value nobody recorded.
+#[derive(Debug, Default, serde::Serialize)]
+pub struct WardContext {
+    /// Assigned bed, from the patient's most recent triage assessment.
+    pub room: Option<String>,
+    /// Emergency Severity Index 1-5, from the same assessment.
+    pub esi_level: Option<i32>,
+    /// `low` / `moderate` / `high`, from the most recent Morse Fall Scale
+    /// assessment. Blank until one has been done — which is itself worth
+    /// seeing, because an unassessed patient is not a low-risk one.
+    pub fall_risk: Option<String>,
+    /// Where the patient's live cannula is, if one is documented.
+    pub iv_site: Option<String>,
+    /// A wound has not been assessed within the review interval.
+    pub wound_care_due: bool,
+}
+
+/// Wounds are reassessed at least daily; past this, the dressing is due.
+const WOUND_REASSESSMENT_INTERVAL_HOURS: i64 = 24;
+
+/// Gather one patient's ward context.
+///
+/// Four reads per patient, against a list the caller caps at fifteen. That is
+/// deliberate rather than incidental: none of these repositories has a
+/// ward-wide listing, and the alternative — leaving the columns empty — is what
+/// this replaces. If the ward list grows, these want a batched read before the
+/// page does.
+async fn ward_context(data: &web::Data<AppState>, patient_id: &str) -> WardContext {
+    let mut context = WardContext::default();
+
+    if let Ok(Some(triage)) = data
+        .repositories
+        .triage_assessments
+        .get_latest_by_patient(patient_id)
+        .await
+    {
+        context.room = triage.assigned_bed.clone();
+        context.esi_level = Some(triage.esi_level);
+    }
+
+    if let Ok(Some(fall_risk)) = data
+        .repositories
+        .fall_risk_assessments
+        .get_latest_by_patient(patient_id)
+        .await
+    {
+        // `None` when the row predates the scoring fix: unscored, not low risk.
+        context.fall_risk = fall_risk.risk_level.clone();
+    }
+
+    // The most recently documented site that has not been discontinued. A
+    // removed cannula is not an IV site, and showing one would send a nurse
+    // looking for a line that is not there.
+    if let Ok(sites) = data
+        .repositories
+        .iv_assessments
+        .get_by_patient(patient_id, Pagination::new(0, 10))
+        .await
+    {
+        context.iv_site = sites
+            .items
+            .iter()
+            .filter(|s| s.site_discontinued != Some(true))
+            .max_by_key(|s| s.assessed_at)
+            .map(|s| s.site_location.clone());
+    }
+
+    if let Ok(wounds) = data
+        .repositories
+        .wound_assessments
+        .get_by_patient(patient_id, Pagination::new(0, 10))
+        .await
+    {
+        let cutoff = Utc::now() - chrono::Duration::hours(WOUND_REASSESSMENT_INTERVAL_HOURS);
+        context.wound_care_due = wounds.items.iter().any(|w| w.assessed_at < cutoff);
+    }
+
+    context
+}
+
 #[get("/api/dashboard/nurse")]
 pub async fn nurse_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -> impl Responder {
     let current_user_id = match crate::support::require_clinical_staff(&data, &http_req) {
@@ -322,17 +469,38 @@ pub async fn nurse_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -
     .map(|e| dashboard_patient(e, &data.encryption_keyring))
     .collect();
 
-    let medication_records: Vec<_> = required_dashboard_read!(
-        data.repositories
-            .medication_reminders
-            .list_all_active()
-            .await,
-        "nurse dashboard medication reminders"
-    )
-    .into_iter()
-    .filter(|m| m.is_active)
-    .take(10)
-    .collect();
+    // Bed, acuity and the three standing tasks, per patient. The page has
+    // always rendered these columns; the endpoint has never filled them.
+    let mut ward: Vec<serde_json::Value> = Vec::with_capacity(patients.len());
+    let mut ivs_to_check = 0_usize;
+    let mut wounds_to_assess = 0_usize;
+    for patient in &patients {
+        let context = ward_context(&data, &patient.patient_id).await;
+        if context.iv_site.is_some() {
+            ivs_to_check += 1;
+        }
+        if context.wound_care_due {
+            wounds_to_assess += 1;
+        }
+        let mut value = serde_json::to_value(patient).unwrap_or(serde_json::Value::Null);
+        if let (Some(obj), Ok(serde_json::Value::Object(extra))) =
+            (value.as_object_mut(), serde_json::to_value(&context))
+        {
+            obj.extend(extra);
+        }
+        ward.push(value);
+    }
+
+    // Today's medication administration records for the ward, flattened into
+    // the rows the round is actually worked from.
+    //
+    // This used to read `medication_reminders`, which is the patient-adherence
+    // feature: a `MedicationReminder` has a name, a dose and a list of reminder
+    // times, and no route, no scheduled time and no patient. The page rendered
+    // `route: med.route || 'PO'`, so the ward medication list stated that every
+    // drug was oral — including the ones given IV or IM. The MAR carries all
+    // three, and it is what a drug round is.
+    let medication_records = ward_medications_due(&data, &patients).await;
 
     let critical_alerts: Vec<_> = required_dashboard_read!(
         data.repositories
@@ -379,10 +547,14 @@ pub async fn nurse_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -
 
     HttpResponse::Ok().json(serde_json::json!({
         "nurse_id": current_user_id,
-        "patients": { "total": patients.len(), "list": patients },
+        "patients": { "total": ward.len(), "list": ward },
         "tasks": {
             "vitals_due": vitals_needing_attention.len(),
-            "ivs_to_check": 0,
+            // Counted from the same ward reads rather than hardcoded. This was
+            // `0`, which is a number, and a nurse reading a task badge cannot
+            // tell a real zero from a placeholder one.
+            "ivs_to_check": ivs_to_check,
+            "wounds_to_assess": wounds_to_assess,
         },
         "vitals_needing_attention": vitals_needing_attention,
         "fall_risk_patients": fall_risk_patients,
@@ -475,20 +647,11 @@ pub async fn lab_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -> 
         "lab dashboard specimen rejections"
     );
 
-    let mut rejection_names: std::collections::HashMap<String, String> =
-        std::collections::HashMap::new();
-    for r in &rejection_records {
-        if r.patient_id.is_empty() || rejection_names.contains_key(&r.patient_id) {
-            continue;
-        }
-        if let Ok(entity) = data.repositories.patients.get_by_id(&r.patient_id).await {
-            if let Some(profile) =
-                crate::patient_entity_to_profile(&entity, &data.encryption_keyring)
-            {
-                rejection_names.insert(r.patient_id.clone(), profile.full_name);
-            }
-        }
-    }
+    let rejection_ids: Vec<String> = rejection_records
+        .iter()
+        .map(|r| r.patient_id.clone())
+        .collect();
+    let rejection_names = resolve_patient_names(&data, &rejection_ids).await;
 
     // Enrich the SERIALISED ENTITY, not `entity.data`.
     //
@@ -521,10 +684,42 @@ pub async fn lab_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -> 
 
     // A critical result nobody has acknowledged is the one thing on this screen
     // that must never be silently empty.
-    let critical_notifications = required_dashboard_read!(
+    let critical_records = required_dashboard_read!(
         data.repositories.critical_values.get_unacknowledged().await,
         "lab dashboard critical notifications"
     );
+
+    // The same enrichment the rejections get, for the same reason and with more
+    // at stake. `CriticalValueEntity` carries `patient_id` and no name — the
+    // name is encrypted at rest and only the API holds the keyring — while the
+    // dashboard's critical-alert banner reads `patient_name`. Every
+    // unacknowledged critical result was therefore announced without saying
+    // whose it was: a potassium of 7.2 on the screen, and a lab tech with no
+    // way to tell who to call.
+    let critical_ids: Vec<String> = critical_records
+        .iter()
+        .map(|c| c.patient_id.clone())
+        .collect();
+    let critical_names = resolve_patient_names(&data, &critical_ids).await;
+    let critical_notifications: Vec<serde_json::Value> = critical_records
+        .iter()
+        .map(|record| {
+            // The serialised entity, not `record.data` — that field is
+            // `#[sqlx(skip)]` and is always null for a row read from
+            // PostgreSQL, which would put a `null` in the array the banner
+            // maps over and take the dashboard down.
+            let mut value = serde_json::to_value(record).unwrap_or(serde_json::Value::Null);
+            if let Some(obj) = value.as_object_mut() {
+                if let Some(name) = critical_names.get(&record.patient_id) {
+                    obj.insert(
+                        "patient_name".to_string(),
+                        serde_json::Value::String(name.clone()),
+                    );
+                }
+            }
+            value
+        })
+        .collect();
     let open_recollections = match data.repositories.specimen_recollections.list_open().await {
         Ok(values) => values,
         Err(error) => {
@@ -549,6 +744,37 @@ pub async fn lab_dashboard(data: web::Data<AppState>, http_req: HttpRequest) -> 
         "open_recollections": open_recollections,
         "critical_notifications": critical_notifications,
     }))
+}
+
+/// Resolve patient ids to display names, decrypting through the keyring.
+///
+/// Dashboards do this rather than the client for one reason: the name is
+/// encrypted at rest and only the API holds the keyring, so a panel that reads
+/// `patient_name` off a raw entity gets `undefined` and announces a result
+/// without saying whose it is.
+///
+/// Ids are de-duplicated, so a patient with six unacknowledged criticals costs
+/// one read rather than six. Ids that cannot be resolved are simply absent from
+/// the map, and the caller leaves the field off — an unnamed alert is better
+/// than one attributed to the wrong person.
+async fn resolve_patient_names(
+    data: &web::Data<AppState>,
+    patient_ids: &[String],
+) -> std::collections::HashMap<String, String> {
+    let mut names: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    for patient_id in patient_ids {
+        if patient_id.is_empty() || names.contains_key(patient_id) {
+            continue;
+        }
+        if let Ok(entity) = data.repositories.patients.get_by_id(patient_id).await {
+            if let Some(profile) =
+                crate::patient_entity_to_profile(&entity, &data.encryption_keyring)
+            {
+                names.insert(patient_id.clone(), profile.full_name);
+            }
+        }
+    }
+    names
 }
 
 /// Administrator Dashboard

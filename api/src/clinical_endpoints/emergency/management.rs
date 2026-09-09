@@ -858,9 +858,46 @@ pub struct IvSiteInput {
     #[serde(rename = "isActive", default)]
     pub is_active: bool,
     #[serde(default)]
-    pub assessments: Vec<serde_json::Value>,
+    pub assessments: Vec<IvAssessmentInput>,
     #[serde(rename = "discontinuedReason", default)]
     pub discontinued_reason: Option<String>,
+}
+
+/// One bedside look at a cannula site.
+///
+/// `phlebitisScore` is accepted but ignored — the page computed it in the
+/// browser and posted it, and it is recomputed here from `conditions` by
+/// `clinical_scoring::vip_score`. A site score decides whether the cannula
+/// stays in, so it is not a number a client gets to assert.
+#[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize)]
+pub struct IvAssessmentInput {
+    #[serde(default)]
+    pub id: String,
+    #[serde(rename = "assessedAt", default)]
+    pub assessed_at: Option<String>,
+    /// Site findings, from the form's fixed vocabulary
+    /// (`clean-dry-intact`, `tenderness`, `redness`, `swelling`, `warmth`,
+    /// `induration`, `drainage`).
+    #[serde(default)]
+    pub conditions: Vec<String>,
+    #[serde(rename = "dressingType", default)]
+    pub dressing_type: Option<String>,
+    #[serde(rename = "dressingIntact", default)]
+    pub dressing_intact: Option<bool>,
+    #[serde(rename = "flushPatent", default)]
+    pub flush_patent: Option<bool>,
+    #[serde(rename = "bloodReturn", default)]
+    pub blood_return: Option<bool>,
+    #[serde(default)]
+    pub infusing: Option<String>,
+    #[serde(rename = "infusionRate", default)]
+    pub infusion_rate: Option<f64>,
+    #[serde(default)]
+    pub notes: Option<String>,
+    #[serde(rename = "infiltrationGrade", default)]
+    pub infiltration_grade: Option<i32>,
+    #[serde(rename = "painLevel", default)]
+    pub pain_level: Option<i32>,
 }
 
 /// What the IV site form submits: a patient and every site currently documented.
@@ -917,7 +954,7 @@ pub async fn create_iv_site(
     }
 
     let now = Utc::now();
-    let mut saved = Vec::new();
+    let mut saved: Vec<serde_json::Value> = Vec::with_capacity(record.sites.len());
     for site in &record.sites {
         // The site keeps its client id so re-saving the same list updates rather
         // than duplicating rows for a cannula that is already documented.
@@ -931,6 +968,23 @@ pub async fn create_iv_site(
             format!("{} ({})", site.location, site.location_detail.trim())
         };
 
+        // The most recent look at the site is the one that describes it now.
+        // Every field below was hardcoded `None`: the appearance, the phlebitis
+        // grade, the infiltration grade, the pain score, the dressing status
+        // and the notes were all collected by the form, posted, and dropped —
+        // so a cannula with a stage-4 site read back as never assessed.
+        let latest = site.assessments.last();
+        let conditions: Vec<String> = latest.map(|a| a.conditions.clone()).unwrap_or_default();
+        let phlebitis = latest.map(|_| crate::clinical_scoring::vip_score(&conditions));
+        // The finding that set the score, for the queryable column.
+        let worst_condition = phlebitis.and_then(|score| {
+            conditions
+                .iter()
+                .find(|c| crate::clinical_scoring::vip_score(std::slice::from_ref(c)) == score)
+                .map(String::as_str)
+        });
+        let dwell_hours = crate::clinical_scoring::catheter_dwell_limit_hours(&site.catheter_type);
+
         let entity = crate::repositories::traits::IVAssessmentEntity {
             id: id.clone(),
             patient_id: record.patient_id.clone(),
@@ -939,16 +993,31 @@ pub async fn create_iv_site(
             catheter_type: Some(site.catheter_type.clone()).filter(|c| !c.is_empty()),
             catheter_gauge: Some(site.gauge.clone()).filter(|g| !g.is_empty()),
             insertion_date: Some(inserted),
-            patency: None,
-            site_appearance: None,
-            infiltration_grade: None,
-            phlebitis_grade: None,
-            current_infusions: None,
-            dressing_intact: None,
+            // `patent` / `sluggish` / `occluded` is the column's own CHECK-ed
+            // vocabulary. A cannula that will not flush is occluded; "sluggish"
+            // is a third observation this form does not collect.
+            patency: latest
+                .and_then(|a| a.flush_patent)
+                .map(|p| if p { "patent" } else { "occluded" }.to_string()),
+            // The single worst finding, not the joined list. The column is
+            // VARCHAR(32) and a full list of findings overflows it; the
+            // complete set is in `data`, and what belongs in a queryable column
+            // is the one that decides what happens to the cannula.
+            site_appearance: worst_condition.map(str::to_string),
+            infiltration_grade: latest.and_then(|a| a.infiltration_grade),
+            phlebitis_grade: phlebitis.map(i32::from),
+            current_infusions: latest
+                .and_then(|a| a.infusing.clone())
+                .filter(|s| !s.trim().is_empty())
+                .map(|s| serde_json::json!([s])),
+            dressing_intact: latest.and_then(|a| a.dressing_intact),
             dressing_change_due: None,
-            pain_level: None,
-            notes: None,
-            actions_taken: None,
+            pain_level: latest.and_then(|a| a.pain_level),
+            notes: latest
+                .and_then(|a| a.notes.clone())
+                .filter(|s| !s.trim().is_empty()),
+            actions_taken: phlebitis
+                .map(|score| crate::clinical_scoring::vip_action(score).to_string()),
             site_discontinued: Some(!site.is_active),
             discontinuation_reason: site.discontinued_reason.clone(),
             assessed_by: caller.wallet_address.clone(),
@@ -986,7 +1055,16 @@ pub async fn create_iv_site(
                 code: "REPO_ERROR".to_string(),
             });
         }
-        saved.push(id);
+        saved.push(serde_json::json!({
+            "id": id,
+            "site_id": site.id,
+            // What the server scored, and what that score requires. The page
+            // showed its own arithmetic and never learned whether the server
+            // agreed - and the server was storing nothing at all.
+            "phlebitis_score": phlebitis,
+            "action": phlebitis.map(crate::clinical_scoring::vip_action),
+            "dwell_limit_hours": dwell_hours,
+        }));
     }
 
     HttpResponse::Created().json(serde_json::json!({ "success": true, "sites": saved }))
@@ -1450,116 +1528,180 @@ pub async fn get_incident(
     }
 }
 
+/// What `FallRiskPage` submits.
+///
+/// The page used to send the six Morse Fall Scale items nested under
+/// `morse_scale` with camelCase keys, plus its own `total_score` and
+/// `risk_level`. The handler read six *top-level* snake_case keys, found none
+/// of them, and scored every assessment 0 — which bands as "low". A patient
+/// scored 70 by the nurse at the bedside was filed as low risk, and low risk is
+/// the band that gets no bed alarm, no hourly rounding and no signage.
+///
+/// The six items are the contract now, at the top level under the names the
+/// database column set uses. `morse_scale` is accepted as an alias so a client
+/// that has not been redeployed is scored correctly rather than silently at 0.
+#[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
+pub struct MorseFallScaleItems {
+    /// 0 or 25
+    #[serde(default, alias = "fallHistory")]
+    pub history_of_falling: i32,
+    /// 0 or 15
+    #[serde(default, alias = "secondaryDiagnosis")]
+    pub secondary_diagnosis: i32,
+    /// 0, 15 or 30
+    #[serde(default, alias = "ambulatoryAid")]
+    pub ambulatory_aid: i32,
+    /// 0 or 20
+    #[serde(default, alias = "ivTherapy")]
+    pub iv_therapy: i32,
+    /// 0, 10 or 20
+    #[serde(default, alias = "gait")]
+    pub gait_status: i32,
+    /// 0 or 15
+    #[serde(default, alias = "mentalStatus")]
+    pub mental_status: i32,
+}
+
+impl MorseFallScaleItems {
+    /// The Morse total *is* the sum of its six items. Nothing else is the total.
+    fn total(&self) -> i32 {
+        self.history_of_falling
+            + self.secondary_diagnosis
+            + self.ambulatory_aid
+            + self.iv_therapy
+            + self.gait_status
+            + self.mental_status
+    }
+}
+
+/// Create-fall-risk request body.
+///
+/// Deliberately does **not** carry `total_score` or `risk_level`. Both are
+/// derived here from the six items, and in PostgreSQL they are
+/// `GENERATED ALWAYS ... STORED` columns besides — a client cannot set them,
+/// so accepting them would only let a caller believe it had.
+#[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
+pub struct CreateFallRiskRequest {
+    pub patient_id: String,
+    /// The six scale items, flat. `morse_scale` is the legacy nesting.
+    #[serde(default, flatten)]
+    pub items: MorseFallScaleItems,
+    #[serde(default)]
+    pub morse_scale: Option<MorseFallScaleItems>,
+    #[serde(default)]
+    pub assessment_tool: Option<String>,
+    #[serde(default)]
+    pub additional_factors: Option<serde_json::Value>,
+    #[serde(default)]
+    pub interventions: Option<serde_json::Value>,
+    #[serde(default)]
+    pub environmental_hazards: Option<serde_json::Value>,
+    #[serde(default)]
+    pub medications: Option<serde_json::Value>,
+    #[serde(default)]
+    pub recent_fall: bool,
+    #[serde(default)]
+    pub mobility: Option<String>,
+    #[serde(default)]
+    pub notes: Option<String>,
+    #[serde(default)]
+    pub assessed_at: Option<String>,
+    #[serde(default)]
+    pub next_assessment_due: Option<String>,
+    #[serde(default)]
+    pub facility_id: Option<String>,
+}
+
 /// Create fall risk assessment
 #[post("/api/emergency/fall-risk")]
 pub async fn create_fall_risk(
     data: web::Data<AppState>,
-    req: web::Json<serde_json::Value>,
+    req: web::Json<CreateFallRiskRequest>,
     http_req: HttpRequest,
 ) -> impl Responder {
-    if let Err(resp) = crate::support::require_clinical_staff(&data, &http_req) {
-        return resp;
-    }
+    let current_user = match crate::support::require_clinical_staff(&data, &http_req) {
+        Ok(u) => u,
+        Err(resp) => return resp,
+    };
 
     let body = req.into_inner();
     let now = chrono::Utc::now();
     // Server-generated: a client-supplied id lets one submission overwrite another.
     let id = format!("FRA-{}", uuid::Uuid::new_v4().simple());
 
-    // Sum of the six Morse Fall Scale items. Absent items score 0, which is the
-    // scale's own "not present" value, so a partial submission is scored as
-    // filled in rather than rejected — but the total always reflects what was
-    // actually recorded rather than what the client asserted.
-    let morse_item = |key: &str| body.get(key).and_then(|v| v.as_i64()).unwrap_or(0);
-    let morse_total = (morse_item("history_of_falling")
-        + morse_item("secondary_diagnosis")
-        + morse_item("ambulatory_aid")
-        + morse_item("iv_therapy")
-        + morse_item("gait_status")
-        + morse_item("mental_status")) as i32;
+    // Flat items win; the nested legacy shape is the fallback. A caller sending
+    // both that disagree is a caller with a bug, and taking the flat one keeps
+    // "what the current contract says" as the answer.
+    let items = if body.items.total() > 0 {
+        body.items
+    } else {
+        body.morse_scale.unwrap_or(body.items)
+    };
+    let morse_total = items.total();
+
+    let parse_ts = |v: &Option<String>| {
+        v.as_deref()
+            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+            .map(|d| d.with_timezone(&chrono::Utc))
+    };
 
     let entity = FallRiskAssessmentEntity {
         id: id.clone(),
-        patient_id: body
-            .get("patient_id")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string(),
-        assessment_tool: body
-            .get("assessment_tool")
-            .and_then(|v| v.as_str())
-            .map(str::to_string),
-        history_of_falling: body
-            .get("history_of_falling")
-            .and_then(|v| v.as_i64())
-            .map(|v| v as i32),
-        secondary_diagnosis: body
-            .get("secondary_diagnosis")
-            .and_then(|v| v.as_i64())
-            .map(|v| v as i32),
-        ambulatory_aid: body
-            .get("ambulatory_aid")
-            .and_then(|v| v.as_i64())
-            .map(|v| v as i32),
-        iv_therapy: body
-            .get("iv_therapy")
-            .and_then(|v| v.as_i64())
-            .map(|v| v as i32),
-        gait_status: body
-            .get("gait_status")
-            .and_then(|v| v.as_i64())
-            .map(|v| v as i32),
-        mental_status: body
-            .get("mental_status")
-            .and_then(|v| v.as_i64())
-            .map(|v| v as i32),
-        additional_factors: body.get("additional_factors").cloned(),
-        interventions: body.get("interventions").cloned(),
-        notes: body
-            .get("notes")
-            .and_then(|v| v.as_str())
-            .map(str::to_string),
-        assessed_by: body
-            .get("assessed_by")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string(),
-        assessed_at: body
-            .get("assessed_at")
-            .and_then(|v| v.as_str())
-            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-            .map(|d| d.with_timezone(&chrono::Utc))
-            .unwrap_or(now),
-        next_assessment_due: body
-            .get("next_assessment_due")
-            .and_then(|v| v.as_str())
-            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-            .map(|d| d.with_timezone(&chrono::Utc)),
+        patient_id: body.patient_id,
+        assessment_tool: body.assessment_tool.or_else(|| Some("morse".to_string())),
+        history_of_falling: Some(items.history_of_falling),
+        secondary_diagnosis: Some(items.secondary_diagnosis),
+        ambulatory_aid: Some(items.ambulatory_aid),
+        iv_therapy: Some(items.iv_therapy),
+        gait_status: Some(items.gait_status),
+        mental_status: Some(items.mental_status),
+        additional_factors: body.additional_factors,
+        interventions: body.interventions,
+        environmental_hazards: body.environmental_hazards,
+        medications: body.medications,
+        recent_fall: body.recent_fall,
+        mobility: body.mobility,
+        notes: body.notes,
+        // The assessing clinician is whoever authenticated, not whoever the body
+        // names. A body-supplied `assessed_by` lets one clinician file an
+        // assessment under another's name.
+        assessed_by: current_user.wallet_address,
+        assessed_at: parse_ts(&body.assessed_at).unwrap_or(now),
+        next_assessment_due: parse_ts(&body.next_assessment_due),
         created_at: now,
         updated_at: now,
-        facility_id: body
-            .get("facility_id")
-            .and_then(|v| v.as_str())
-            .map(str::to_string),
-        data: body.clone(),
+        facility_id: body.facility_id,
         // The Morse Fall Scale total drives the risk band, so derive the band
         // from the score rather than trusting a separate field that can
-        // disagree with it.
-        //
-        // The score itself is derived too. It was read straight off the body
-        // with `unwrap_or(0)`, so a submission carrying the six item scores but
-        // no `total_score` — or a client that computed it wrongly — filed a
-        // patient at 0, which bands as "low". A high-risk patient recorded as
-        // low risk does not get the bed alarm, the hourly rounding or the
-        // signage, and the assessment exists precisely to trigger those. The
-        // Morse total *is* the sum of its six items, so any supplied total that
-        // disagrees with them is wrong by definition.
-        total_score: morse_total,
-        risk_level: morse_risk_band(morse_total).to_string(),
+        // disagree with it. On PostgreSQL both are generated columns and these
+        // values are overwritten by the database with the same arithmetic; on
+        // the in-memory backend they are what the record carries.
+        total_score: Some(morse_total),
+        risk_level: Some(morse_risk_band(morse_total).to_string()),
+        data: serde_json::Value::Null,
     };
     match data.repositories.fall_risk_assessments.create(entity).await {
-        Ok(_) => HttpResponse::Created().json(serde_json::json!({ "id": id, "success": true })),
-        Err(_) => HttpResponse::InternalServerError().finish(),
+        Ok(saved) => HttpResponse::Created().json(serde_json::json!({
+            "id": id,
+            "success": true,
+            // Return what was actually scored and stored. The page used to show
+            // its own arithmetic and never learn whether the server agreed.
+            // The stored values. `unwrap_or` is safe here and only here: this
+            // row was just written with both set, so a None would mean the
+            // database disagreed with the INSERT.
+            "total_score": saved.total_score.unwrap_or(morse_total),
+            "risk_level": saved
+                .risk_level
+                .unwrap_or_else(|| morse_risk_band(morse_total).to_string()),
+        })),
+        Err(e) => {
+            log::error!("fall risk assessment persistence failed: {e}");
+            HttpResponse::InternalServerError().json(ErrorResponse {
+                success: false,
+                error: "Failed to save the fall risk assessment".to_string(),
+                code: "REPO_ERROR".to_string(),
+            })
+        }
     }
 }
 

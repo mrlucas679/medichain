@@ -202,7 +202,7 @@ const psychiatricDiagnoses = [
 const PsychPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [assessments, setAssessments] = useState<PsychAssessment[]>([]);
   const [activeTab, setActiveTab] = useState<'assessment' | 'history'>('assessment');
@@ -289,11 +289,11 @@ const PsychPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedPatient) {
-      showWarning(t('docPsych.warnSelectPatient'));
+      showError(t('docPsych.errorSelectPatient'));
       return;
     }
     if (!disposition) {
-      showWarning('Select a disposition before saving the assessment.');
+      showError('Select a disposition before saving the assessment.');
       return;
     }
     const apiDisposition: Record<string, string> = {

@@ -91,7 +91,7 @@ const decontaminationMethods = [
 const ToxicologyPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [cases, setCases] = useState<ToxCase[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
@@ -136,7 +136,7 @@ const ToxicologyPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedPatient || !substance) {
-      showWarning(t('docToxicology.warnSelect'));
+      showError(t('docToxicology.errorSelect'));
       return;
     }
     const patient = patients.find(p => p.patient_id === selectedPatient);

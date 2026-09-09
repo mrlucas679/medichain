@@ -53,7 +53,7 @@ const returnPrecautionsList = [
 const SplintPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const typeLabel = (v: string): string => ({
     splint: t('docSplint.typeSplint'), cast: t('docSplint.typeCast'), sling: t('docSplint.typeSling'),
     brace: t('docSplint.typeBrace'), boot: t('docSplint.typeBoot'),
@@ -101,7 +101,7 @@ const SplintPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedPatient || !bodyPart) {
-      showWarning(t('docSplint.warnSelect'));
+      showError(t('docSplint.errorSelect'));
       return;
     }
     const patient = patients.find(p => p.patient_id === selectedPatient);

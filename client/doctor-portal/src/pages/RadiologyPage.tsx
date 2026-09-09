@@ -53,7 +53,7 @@ interface RadiologyReportRow {
 const RadiologyPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [_patients, setPatients] = useState<PatientProfile[]>([]);
   const [studies, setStudies] = useState<RadiologyStudy[]>([]);
   const [reports, setReports] = useState<RadiologyReportRow[]>([]);
@@ -183,7 +183,7 @@ const RadiologyPage: React.FC = () => {
   const saveReport = async (asFinal: boolean) => {
     if (!selectedStudy) return;
     if (criticalFindings && !communicatedTo) {
-      showWarning(t('docRadiology.criticalCommunicate'));
+      showError(t('docRadiology.criticalCommunicate'));
       return;
     }
 

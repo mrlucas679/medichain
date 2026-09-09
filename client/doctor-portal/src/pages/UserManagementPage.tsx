@@ -59,7 +59,7 @@ const UserManagementPage: React.FC = () => {
   const { user } = useAuthStore();
   const isAdministrator = user?.role === 'Admin';
   const { t } = useTranslation();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [users, setUsers] = useState<SystemUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -149,7 +149,7 @@ const UserManagementPage: React.FC = () => {
 
   const handleCreateUser = async () => {
     if (!newUser.walletAddress || !newUser.name || !newUser.email || !newUser.phone) {
-      showWarning(t('docUserManagement.warnRequiredFields'));
+      showError(t('docUserManagement.errorRequiredFields'));
       return;
     }
 

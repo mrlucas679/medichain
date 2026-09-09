@@ -11,6 +11,7 @@ import {
   Activity,
   AlertTriangle,
   Droplets,
+  HeartPulse,
   Pill,
   ClipboardList,
   FileText,
@@ -50,19 +51,23 @@ export default function NurseDashboardPage() {
     }
   };
 
-  // `record_id`, `medication`, `dose`, `route` and `scheduled_time` were all
-  // read here and none of them exist on the record `/api/dashboard/nurse`
-  // returns. The `||` fallbacks hid it, and one of them was actively dangerous:
-  // `route: med.route || 'PO'` told a nurse that every drug on the ward list was
-  // oral, including the ones that are given IV or IM. An unknown route now shows
-  // as unknown, which is a question rather than a wrong answer.
+  // The ward drug round, from the medication administration record.
+  //
+  // `/api/dashboard/nurse` used to serve `medication_reminders` here — the
+  // patient-adherence feed, which has no route, no scheduled time and no
+  // patient name. The `||` fallbacks hid that, and one was actively dangerous:
+  // `route: med.route || 'PO'` told a nurse every drug on the ward was oral,
+  // including the ones given IV or IM.
+  //
+  // The MAR carries all three. Where a MAR entry genuinely omits one, it still
+  // shows as unknown — a question rather than a wrong answer.
   const medicationsDue = data?.medication_records?.slice(0, 5).map((med) => ({
-    id: med.reminder_id,
+    id: med.record_id,
     patient_name: med.patient_name || t('docNurseDashboard.unknown'),
-    medication: med.medication_name,
-    time_due: med.scheduled_time || med.reminder_times?.[0] || t('docNurseDashboard.unknown'),
+    medication: med.medication_name || t('docNurseDashboard.unknown'),
+    time_due: med.scheduled_time || t('docNurseDashboard.unknown'),
     route: med.route || t('docNurseDashboard.unknown'),
-    dose: med.dosage,
+    dose: med.dosage || '',
   })) || [];
 
   const quickActions: QuickAction[] = [
@@ -72,11 +77,16 @@ export default function NurseDashboardPage() {
     { id: 'care-plan', label: t('docNurseDashboard.qaUpdateCarePlan'), icon: ClipboardList, href: '/care-plan', color: 'purple' },
   ];
 
-  // room / esi_level / fall_risk / iv_site / wound_care_due are not returned by
-  // `/api/dashboard/nurse` either — see docs/TECHNICAL_DEBT_REGISTER.md, "Nurse
-  // dashboard ward fields". They are passed through as undefined so the list
-  // renders them as absent rather than as a fabricated default; `room` used to
-  // read "Pending" for every bed on the ward.
+  // `/api/dashboard/nurse` returns these now: the bed and acuity from the
+  // patient's latest triage assessment, the fall-risk band from their latest
+  // Morse assessment, the live cannula from the IV records, and whether a wound
+  // is overdue for reassessment.
+  //
+  // They are still optional, and still passed through undefined rather than
+  // defaulted. A patient with no triage assessment has no bed; one never
+  // assessed for falls has no band. Absent means "not recorded", which is not
+  // low risk — `room` used to fall back to "Pending" for every bed on the ward,
+  // which is the failure this shape exists to prevent.
   const patients: PatientListItem[] = data?.patients?.list?.map((p) => ({
     patient_id: p.patient_id,
     full_name: p.full_name,
@@ -208,6 +218,17 @@ export default function NurseDashboardPage() {
           value={data?.tasks?.ivs_to_check || 0}
           icon={<Droplets className="text-notice-subtle-fg" size={24} />}
           color="bg-notice-subtle"
+          onClick={() => navigate('/iv-sites')}
+          loading={loading}
+        />
+        {/* Wounds overdue for reassessment. The API counts this now; the badge
+            was left off the panel entirely while nobody computed it. */}
+        <StatCard
+          label={t('docNurseDashboard.statWoundsToAssess')}
+          value={data?.tasks?.wounds_to_assess || 0}
+          icon={<HeartPulse className="text-caution-subtle-fg" size={24} />}
+          color="bg-caution-subtle"
+          onClick={() => navigate('/wound-care')}
           loading={loading}
         />
       </div>

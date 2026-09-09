@@ -150,7 +150,7 @@ interface VaccineScheduleItem {
 const ImmunizationPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [administrations, setAdministrations] = useState<VaccineAdministration[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -276,7 +276,7 @@ const ImmunizationPage: React.FC = () => {
 
   const handleAdminister = async () => {
     if (!newVaccine.patientId || !newVaccine.vaccineName || !newVaccine.lotNumber) {
-      showWarning(t('docImmunization.warningRequiredFields'));
+      showError(t('docImmunization.errorRequiredFields'));
       return;
     }
 

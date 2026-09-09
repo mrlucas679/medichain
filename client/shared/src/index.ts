@@ -42,6 +42,11 @@ export * from './types';
 export * from './api/client';
 export * from './api/endpoints';
 
+// Clinical scoring previews. The stored score is always the server's; these
+// only let a form show a total moving as it is filled in, using thresholds
+// fetched from the API rather than a second copy of the policy.
+export * from './clinical/scoring';
+
 // Push notifications (Phase 5.2)
 export { initPushNotifications } from './push';
 

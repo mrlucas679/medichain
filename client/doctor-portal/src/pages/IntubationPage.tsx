@@ -96,7 +96,7 @@ const COMPLICATION_KEYS: Record<string, string> = {
 const IntubationPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [records, setRecords] = useState<IntubationRecord[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
@@ -168,7 +168,7 @@ const IntubationPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedPatient || !formData.indication) {
-      showWarning(t('docIntubation.warningSelectPatientIndication'));
+      showError(t('docIntubation.errorSelectPatientIndication'));
       return;
     }
     const patient = patients.find(p => p.patient_id === selectedPatient);

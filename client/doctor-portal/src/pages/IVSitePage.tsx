@@ -1,7 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { apiUrl, createIvSite, getApiClient, getPatients, useTranslation } from '@medichain/shared';
+import {
+  apiUrl,
+  createIvSite,
+  getApiClient,
+  getPatients,
+  useTranslation,
+  useScoringCatalog,
+  vipScorePreview,
+  dwellDueAt,
+} from '@medichain/shared';
 import type { PatientProfile } from '@medichain/shared';
 import {
   Syringe,
@@ -226,6 +235,8 @@ export default function IVSitePage() {
     fetchIVSites();
   }, [selectedPatient, user]);
 
+  const { catalog } = useScoringCatalog();
+
   const filteredPatients = patients.filter(p => 
     p.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.patient_id?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -238,7 +249,10 @@ export default function IVSitePage() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
+  // An unknown review date is not an expiring one. Both guards return false
+  // for an empty string so the counters say "none known" rather than "all due".
   const isExpiringSoon = (expiresAt: string) => {
+    if (!expiresAt) return false;
     const expires = new Date(expiresAt);
     const now = new Date();
     const diffTime = expires.getTime() - now.getTime();
@@ -247,17 +261,25 @@ export default function IVSitePage() {
   };
 
   const isExpired = (expiresAt: string) => {
+    if (!expiresAt) return false;
     return new Date(expiresAt) < new Date();
   };
 
-  const calculateExpiration = (catheterType: CatheterType) => {
-    const now = new Date();
-    switch (catheterType) {
-      case 'peripheral': return new Date(now.setDate(now.getDate() + 4)).toISOString().split('T')[0];
-      case 'midline': return new Date(now.setDate(now.getDate() + 28)).toISOString().split('T')[0];
-      case 'picc': return new Date(now.setDate(now.getDate() + 90)).toISOString().split('T')[0];
-      case 'central': return new Date(now.setDate(now.getDate() + 7)).toISOString().split('T')[0];
-    }
+  /**
+   * When a newly inserted device is due for review.
+   *
+   * The dwell limits used to be a `switch` here — 4 days peripheral, 28
+   * midline, 90 PICC, 7 central. Those are ward policy, and ward policy in a
+   * component cannot be changed without a front-end deploy. They come from
+   * `GET /api/clinical/scoring/catalog` now, and the same numbers are returned
+   * by `createIvSite` for each site it stores.
+   */
+  const calculateExpiration = (catheterType: CatheterType): string => {
+    const due = dwellDueAt(new Date().toISOString(), catheterType, catalog);
+    // Empty until the catalog loads. `expiresAt` feeds the "expiring" and
+    // "expired" counters, and a made-up date there would tell a nurse a line
+    // is due out when nobody said so.
+    return due ? due.toISOString().split('T')[0] : '';
   };
 
   const addNewSite = () => {
@@ -323,17 +345,20 @@ export default function IVSitePage() {
     setTimeout(() => setSuccess(''), 3000);
   };
 
-  const calculatePhlebitisScore = (conditions: SiteCondition[]) => {
-    if (conditions.includes('clean-dry-intact') && conditions.length === 1) return 0;
-    let score = 0;
-    if (conditions.includes('tenderness')) score = Math.max(score, 1);
-    if (conditions.includes('redness')) score = Math.max(score, 1);
-    if (conditions.includes('swelling')) score = Math.max(score, 2);
-    if (conditions.includes('warmth')) score = Math.max(score, 2);
-    if (conditions.includes('induration')) score = Math.max(score, 3);
-    if (conditions.includes('drainage')) score = Math.max(score, 4);
-    return score;
-  };
+  /**
+   * VIP phlebitis stage for a set of site findings.
+   *
+   * A preview. The stored grade is the server's — `createIvSite` scores the
+   * latest assessment for each site and returns it, along with what that stage
+   * requires. The stage-to-sign mapping now comes from the scoring catalog
+   * rather than a ladder of `Math.max` calls here.
+   *
+   * Returns 0 rather than `null` when the catalog has not loaded: this feeds a
+   * colour and a number beside an assessment the nurse is entering, and 0 is
+   * also what "clean, dry and intact" scores.
+   */
+  const calculatePhlebitisScore = (conditions: SiteCondition[]): number =>
+    vipScorePreview(conditions, catalog) ?? 0;
 
   const discontinueSite = (siteId: string, reason: string) => {
     setIvSites(prev => prev.map(site => 
@@ -616,7 +641,9 @@ export default function IVSitePage() {
                                     <div>
                                       <span className="text-content-muted">{t('docIVSite.expiresLabel')}</span>
                                       <span className={`ml-2 ${expired ? 'text-critical-subtle-fg font-bold' : expiringSoon ? 'text-caution-subtle-fg font-bold' : ''}`}>
-                                        {new Date(site.expiresAt).toLocaleDateString()}
+                                        {site.expiresAt
+                                          ? new Date(site.expiresAt).toLocaleDateString()
+                                          : '—'}
                                       </span>
                                     </div>
                                     <div>

@@ -63,7 +63,7 @@ const obInterventions = [
 const ObstetricsPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const fhrDesc = (cat: FetalHeartCategory): string => ({
     I: t('docObstetrics.fhrDescI'), II: t('docObstetrics.fhrDescII'), III: t('docObstetrics.fhrDescIII'),
   }[cat]);
@@ -129,7 +129,7 @@ const ObstetricsPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedPatient) {
-      showWarning(t('docObstetrics.warnSelectPatient'));
+      showError(t('docObstetrics.errorSelectPatient'));
       return;
     }
     const patient = patients.find(p => p.patient_id === selectedPatient);

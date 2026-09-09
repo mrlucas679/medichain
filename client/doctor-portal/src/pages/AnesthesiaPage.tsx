@@ -65,7 +65,7 @@ const complicationsList = [
 const AnesthesiaPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [records, setRecords] = useState<AnesthesiaRecord[]>([]);
   const [activeTab, setActiveTab] = useState<'record' | 'history'>('record');
@@ -111,7 +111,7 @@ const AnesthesiaPage: React.FC = () => {
 
   const addVital = () => {
     if (!newVital.time) {
-      showWarning(t('docAnesthesia.warnEnterTime'));
+      showError(t('docAnesthesia.errorEnterTime'));
       return;
     }
     setVitals([...vitals, { ...newVital }]);
@@ -120,7 +120,7 @@ const AnesthesiaPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedPatient) {
-      showError(t('docAnesthesia.warnSelectPatient'));
+      showError(t('docAnesthesia.errorSelectPatient'));
       return;
     }
     const patient = patients.find(p => p.patient_id === selectedPatient);

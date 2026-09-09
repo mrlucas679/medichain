@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useToastActions } from '../components/Toast';
 import { getPatients, listAutopsy, createAutopsyReport, useTranslation, Alert, LoadingSpinner } from '@medichain/shared';
 import type { PatientProfile } from '@medichain/shared';
 import { useAuthStore } from '../store/authStore';
@@ -87,6 +88,11 @@ interface AutopsyReport {
 }
 
 const AutopsyPage: React.FC = () => {
+  // Toasts, not `alert()`. A native alert is a blocking modal: it freezes the
+  // tab until dismissed, ignores the app's styling and focus handling, and
+  // interrupts a clinician mid-form. `Toast.tsx` says in its own header that it
+  // exists "to replace browser alert() calls"; these three pages were missed.
+  const { showSuccess, showError } = useToastActions();
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
@@ -165,7 +171,7 @@ const AutopsyPage: React.FC = () => {
 
   const handleCreateAutopsy = async () => {
     if (!newAutopsy.patientId || !newAutopsy.dateOfDeath || !newAutopsy.causeOfDeath) {
-      alert(t('docAutopsy.errorRequiredFields'));
+      showError(t('docAutopsy.errorRequiredFields'));
       return;
     }
 
@@ -262,7 +268,7 @@ const AutopsyPage: React.FC = () => {
           notes: '',
         });
         setActiveTab('reports');
-        alert(t('docAutopsy.successCreated'));
+        showSuccess(t('docAutopsy.successCreated'));
       } else {
         setError(response.error || t('docAutopsy.errorCreateFailed'));
       }

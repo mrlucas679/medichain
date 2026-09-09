@@ -82,7 +82,7 @@ interface Consult {
 const ConsultPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [consults, setConsults] = useState<Consult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -144,7 +144,7 @@ const ConsultPage: React.FC = () => {
 
   const handleRequestConsult = async () => {
     if (!newConsult.patientId || !newConsult.reason || !newConsult.clinicalQuestion) {
-      showWarning(t('docConsult.errorRequiredFields'));
+      showError(t('docConsult.errorRequiredFields'));
       return;
     }
 
@@ -207,7 +207,7 @@ const ConsultPage: React.FC = () => {
 
   const handleRespondToConsult = async () => {
     if (!selectedConsult || !consultResponse.assessment || !consultResponse.recommendations) {
-      showWarning(t('docConsult.errorRequiredResponseFields'));
+      showError(t('docConsult.errorRequiredResponseFields'));
       return;
     }
 

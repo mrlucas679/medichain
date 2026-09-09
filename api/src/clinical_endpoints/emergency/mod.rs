@@ -16,18 +16,19 @@ fn json_value<T: serde::Serialize>(value: &T) -> Value {
 
 /// Morse Fall Scale risk band for a total score.
 ///
-/// The published cut-points are 0–24 low, 25–44 moderate, 45+ high. Kept in one
-/// place because the band is what actually drives the interventions — bed
-/// alarm, hourly rounding, signage — and two copies of a threshold eventually
-/// disagree about a patient sitting on the boundary.
+/// The published cut-points are 0-24 low, 25-44 moderate, 45+ high. This used
+/// to hold its own copy of them, under a doc comment observing that "two copies
+/// of a threshold eventually disagree about a patient sitting on the boundary"
+/// — which was true, and by then there were three: this one, the generated
+/// `risk_level` column in `fall_risk_assessments`, and `getRiskLevel` in
+/// `FallRiskPage.tsx`.
+///
+/// The authority is now [`crate::clinical_scoring::morse_band`], which also
+/// publishes the cut-points through `GET /api/clinical/scoring/catalog` so the
+/// page can show a live band without a fourth copy. Kept as a name because it
+/// reads better at the call site than the fully qualified path.
 pub(crate) fn morse_risk_band(total_score: i32) -> &'static str {
-    if total_score >= 45 {
-        "high"
-    } else if total_score >= 25 {
-        "moderate"
-    } else {
-        "low"
-    }
+    crate::clinical_scoring::morse_band(total_score)
 }
 
 /// Append a dose administration to the patient's MAR for today, creating the
@@ -377,6 +378,14 @@ fn stroke_entity(assessment: &StrokeAssessment, data: Value) -> StrokeAssessment
     }
 }
 
+/// Superseded by `crisis::create_cardiac`, which builds the entity from
+/// `CreateCardiacRequest` — the shape the form actually submits — and derives
+/// the TIMI score rather than storing the client's.
+///
+/// Kept rather than deleted per the project rule on removing code, and because
+/// the structured `clinical::CardiacEvent` it maps from is still the read-side
+/// type. Remove once someone confirms nothing intends to use that shape.
+#[allow(dead_code)]
 fn cardiac_entity(event: &CardiacEvent, data: Value) -> CardiacEventEntity {
     let now = Utc::now();
     CardiacEventEntity {

@@ -43,6 +43,7 @@ mod auth_sessions;
 mod blockchain;
 mod clinical;
 mod clinical_endpoints;
+mod clinical_scoring;
 mod deferred_emergency_audit;
 mod device_lifecycle;
 mod dispensing_policy;

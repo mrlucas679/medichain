@@ -39,7 +39,9 @@ impl BurnAssessmentRepository for PgBurnAssessmentRepository {
                 circumferential_locations, escharotomy_needed, escharotomy_performed,
                 fluid_resuscitation_started, parkland_formula_volume, urine_output_goal,
                 pain_score, tetanus_status, transfer_to_burn_center, burn_center_notified,
-                photos_taken, notes
+                photos_taken, notes,
+                weight_kg, severity, parkland_first_8h_ml, parkland_next_16h_ml,
+                associated_injuries, interventions, fluid_start_time, urine_output_ml_hr
             ) ",
         );
 
@@ -69,7 +71,15 @@ impl BurnAssessmentRepository for PgBurnAssessmentRepository {
                 .push_bind(a.transfer_to_burn_center)
                 .push_bind(a.burn_center_notified)
                 .push_bind(a.photos_taken)
-                .push_bind(&a.notes);
+                .push_bind(&a.notes)
+                .push_bind(a.weight_kg)
+                .push_bind(&a.severity)
+                .push_bind(a.parkland_first_8h_ml)
+                .push_bind(a.parkland_next_16h_ml)
+                .push_bind(&a.associated_injuries)
+                .push_bind(&a.interventions)
+                .push_bind(a.fluid_start_time)
+                .push_bind(a.urine_output_ml_hr);
         });
 
         qb.push(" RETURNING *");

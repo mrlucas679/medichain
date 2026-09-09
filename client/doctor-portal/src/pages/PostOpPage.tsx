@@ -61,7 +61,7 @@ const dischargeCriteriaList = [
 const PostOpPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [notes, setNotes] = useState<PostOpNote[]>([]);
   const [activeTab, setActiveTab] = useState<'assessment' | 'history'>('assessment');
@@ -132,7 +132,7 @@ const PostOpPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedPatient) {
-      showWarning(t('docPostOp.warnSelectPatient'));
+      showError(t('docPostOp.errorSelectPatient'));
       return;
     }
     const patient = patients.find(p => p.patient_id === selectedPatient);

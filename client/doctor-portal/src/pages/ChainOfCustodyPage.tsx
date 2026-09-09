@@ -65,7 +65,7 @@ interface ChainOfCustody {
 const ChainOfCustodyPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [records, setRecords] = useState<ChainOfCustody[]>([]);
   const [activeTab, setActiveTab] = useState<'active' | 'new-collection' | 'transfer' | 'history'>('active');
@@ -163,7 +163,7 @@ const ChainOfCustodyPage: React.FC = () => {
   // tab is worse than no record, because the collector believes it was kept.
   const handleCreateCustody = async () => {
     if (!newCollection.patientId || !newCollection.specimenDescription || !newCollection.sealNumber) {
-      showWarning(t('docChainOfCustody.errorRequiredFields'));
+      showError(t('docChainOfCustody.errorRequiredFields'));
       return;
     }
 
@@ -234,7 +234,7 @@ const ChainOfCustodyPage: React.FC = () => {
 
   const handleTransfer = () => {
     if (!selectedRecord || !transfer.transferredTo || !transfer.location) {
-      showWarning(t('docChainOfCustody.errorRequiredTransferFields'));
+      showError(t('docChainOfCustody.errorRequiredTransferFields'));
       return;
     }
 

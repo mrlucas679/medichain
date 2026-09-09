@@ -56,7 +56,7 @@ const woundClasses: WoundClass[] = ['clean', 'clean-contaminated', 'contaminated
 const OperativeNotePage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showError, showWarning } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
   const [patients, setPatients] = useState<PatientProfile[]>([]);
   const [notes, setNotes] = useState<OperativeNote[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
@@ -168,7 +168,7 @@ const OperativeNotePage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedPatient || !procedureName) {
-      showWarning(t('docOperativeNote.warningSelectPatientProcedure'));
+      showError(t('docOperativeNote.errorSelectPatientProcedure'));
       return;
     }
     const patient = patients.find(p => p.patient_id === selectedPatient);

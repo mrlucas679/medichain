@@ -44,6 +44,13 @@ export default function CodeBluePage() {
   const [teamMembers, setTeamMembers] = useState<string>('');
   const [narrative, setNarrative] = useState('');
   const [outcome, setOutcome] = useState('ongoing');
+  // Where the code was called and what arrested the patient. Both used to be
+  // literals in the submit payload — `'Emergency Department'` and
+  // `'Cardiac Arrest'` — with no control anywhere. A code blue on a ward, in
+  // theatre or in radiology was filed as having happened in the ED, and
+  // response-time review is done by location.
+  const [location, setLocation] = useState('');
+  const [primaryCause, setPrimaryCause] = useState('');
 
   useEffect(() => {
     loadPatients();
@@ -118,8 +125,8 @@ export default function CodeBluePage() {
         patient_id: selectedPatient,
         code_called_at: Math.floor(startTime / 1000),
         code_called_by: user?.userId || 'unknown',
-        location: 'Emergency Department',
-        primary_cause: 'Cardiac Arrest',
+        location: location.trim() || null,
+        primary_cause: primaryCause.trim() || null,
         outcome,
         narrative: narrative + '\n\nLog:\n' + events.join('\n'),
         team_members: teamMembers.split(',').map(s => s.trim()),
@@ -323,6 +330,28 @@ export default function CodeBluePage() {
           <div className="bg-surface shadow rounded-lg p-6">
             <h3 className="text-lg font-medium text-content mb-4">{t('docCodeBlue.documentation')}</h3>
             <div className="space-y-4">
+              <div>
+                <label htmlFor="code-blue-location" className="block text-sm font-medium text-content-secondary">{t('docCodeBlue.locationLabel')}</label>
+                <input
+                  id="code-blue-location"
+                  type="text"
+                  className="mt-1 block w-full border border-border-interactive rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder={t('docCodeBlue.locationPlaceholder')}
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="code-blue-cause" className="block text-sm font-medium text-content-secondary">{t('docCodeBlue.primaryCauseLabel')}</label>
+                <input
+                  id="code-blue-cause"
+                  type="text"
+                  className="mt-1 block w-full border border-border-interactive rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder={t('docCodeBlue.primaryCausePlaceholder')}
+                  value={primaryCause}
+                  onChange={(e) => setPrimaryCause(e.target.value)}
+                />
+              </div>
               <div>
                 <label htmlFor="code-blue-team" className="block text-sm font-medium text-content-secondary">{t('docCodeBlue.teamMembers')}</label>
                 <input

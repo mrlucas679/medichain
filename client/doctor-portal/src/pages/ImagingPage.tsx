@@ -81,7 +81,7 @@ interface RawImagingOrder {
 const ImagingPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { showSuccess, showWarning, showError } = useToastActions();
+  const { showSuccess, showError } = useToastActions();
 
   const modalityLabel = (m: ImagingModality): string => {
     switch (m) {
@@ -195,7 +195,7 @@ const ImagingPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedPatient || !indication) {
-      showWarning(t('docImaging.fillRequired'));
+      showError(t('docImaging.fillRequired'));
       return;
     }
     const patient = patients.find(p => p.patient_id === selectedPatient);

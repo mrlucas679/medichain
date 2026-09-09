@@ -1461,7 +1461,7 @@ The options, when someone picks it up: make `Default` return a usable first page
 (`per_page: 50`), or drop the derive so callers must state a page size. Dropping
 it is the stricter choice and, with one call site, the cheaper one.
 
-## `connectWallet()` hardcodes demo mode and has no callers (2026-08-26)
+## `connectWallet()` hardcodes demo mode and has no callers (2026-08-26, half closed 2026-09-09)
 
 `client/shared/src/wallet/service.ts` contains:
 
@@ -1488,7 +1488,7 @@ extension check, `web3Accounts()`, `web3FromSource(account.meta.source)`,
 
 It is recorded rather than deleted because this register is where removals wait
 until the app is finished, and because deleting code needs the owner's
-confirmation. Two things make it worth doing early when someone picks it up:
+confirmation. Two things made it worth doing early:
 
 * a hardcoded `IS_DEMO = true` sitting in the same module as the real signing
   path is exactly the shape that gets copied into something live;
@@ -1496,66 +1496,423 @@ confirmation. Two things make it worth doing early when someone picks it up:
   gate that exists for this defect class has a blind spot worth closing at the
   same time.
 
+**The first is fixed (2026-09-09).** `config.ts` already exported a real
+`IS_DEMO`, reading `VITE_DEMO_MODE` and defaulting to **false**; the local
+constant was shadowing it for no reason. `service.ts` imports the real one now,
+so the extension branch is reachable and a production build takes it. The
+function still has no callers and is still not deleted — that needs the owner's
+confirmation, and it is now inert rather than quietly wrong.
+
+**The second is still open.** `check-uncontrolled-defaults.py` scans
+`useState({...})` initialisers and cannot see a bare `const X = true` inside a
+function body, so this defect class has a blind spot the size of every module-
+level and function-level constant in the codebase.
+
 ---
 
-## Dashboard payload gaps (recorded 2026-09-09)
+## Six clinical scales lived in the browser, and four save paths were broken (2026-09-09)
+
+The working rule from here on: **a page never decides a clinical value.** It
+collects observations; the server scores them; the page displays what came back.
+
+### How this was found
+
+Not by reading. By posting each page's exact payload at the running API and
+looking at what came back, and then at what the database held afterwards.
+
+| Endpoint | Before | What was actually happening |
+|---|---|---|
+| `POST /api/emergency/fall-risk` | **500** | The repository INSERTed into `total_score` and `risk_level`, which are `GENERATED ALWAYS ... STORED` columns. PostgreSQL refuses any INSERT naming a generated column, so **no falls assessment had ever been saved**. The nurse saw "save failed" and nothing was stored. |
+| `POST /api/emergency/cardiac` | **400** | `Json deserialize error: unknown variant "stemi"`. The form's `<select>` emits lowercase; the typed `CardiacEvent` spells them `STEMI`. It also required `door_time`, `ecg_findings`, `biomarkers`, `cath_lab_activated` and `pci_performed` — five fields the form has no control for. **The cardiac screen had never filed a record.** |
+| `POST /api/surgical/pre-op` | **400** | `unknown variant "II"`. The form emits Roman numerals; the enum spells them `ASA1`..`ASA6`. The database column has accepted exactly `I`..`VI` and `I-E`..`V-E` all along, so the schema and the form agreed and only the enum did not. |
+| `POST /api/clinical/burn` | **201**, and worse | The handler read `tbsa_percentage` and `parkland_formula_volume`; the page sent `total_bsa` and `parkland_fluid`. Neither matched, so **every burn assessment on file records a 0% burn with no fluid order** — and returned 201. |
+| `POST /api/clinical/mci` | **201**, and worse | The handler read flat top-level keys off a body shaped `{mci_id, incident: {...}, patients: [...]}`. What got written was one row for a nameless incident of type `natural_disaster` with a single `red` casualty who did not exist. The casualty board — the entire point of an MCI record — was dropped. |
+| `POST /api/emergency/iv-site` | **201**, and worse | `phlebitis_grade`, `site_appearance`, `infiltration_grade`, `pain_level`, `patency`, `dressing_intact` and `notes` were all hardcoded `None`. A cannula with a stage-4 site read back as never assessed. |
+
+Two of those failed loudly and four succeeded while discarding the clinical
+content. The four quiet ones are the dangerous shape, and they are the reason
+this was found by probing rather than by reading: every one of them returns 201.
+
+**Nineteen read endpoints returned a literal `null` with a 200.** `get_burn`,
+`get_psych`, `get_tox` and sixteen others served `entity.data`, and `data` is
+`#[sqlx(skip)]` on all 28 of those entities — always `Value::Null` for a row read
+from PostgreSQL. They return the stored entity now. No frontend page called any
+of them, which is its own finding: these clinical documentation screens were
+write-only, and a form you cannot read back is not documentation.
+
+### The single authority
+
+`api/src/clinical_scoring.rs` holds the Morse Fall Scale, TBSA and the Parkland
+formula, burn severity, TIMI, START triage, the VIP phlebitis score and catheter
+dwell limits. Pure functions, 11 unit tests pinning the published reference
+values, called from the create handlers so the stored score is always the
+server's.
+
+`GET /api/clinical/scoring/catalog` publishes the thresholds and constants so a
+form can show a total moving as it is filled in without carrying a second copy
+of the policy. `client/shared/src/clinical/scoring.ts` consumes it and returns
+`null` for every helper when the catalog has not loaded — the page shows a dash,
+which is honest, rather than a score computed from numbers it made up.
+
+The unit suite caught a real defect in that module: the accessors read
+`catalog.timi.threshold` rather than `catalog.timi?.threshold`, so a partial
+catalog response threw inside render. On the burn page that is a blank screen
+instead of a fluid order. Every accessor now treats a missing section the same
+way it treats a missing catalog.
+
+### Three of the six browser copies had drifted
+
+Moving the arithmetic was not a refactor. Three were wrong:
+
+* **TIMI.** `CardiacPage` scored "3 or more CAD risk factors" from a symptom
+  list containing diabetes *or* hypertension — one factor, not three — and read
+  "2 or more anginal episodes in 24 hours" off a chest-pain **character**
+  dropdown, which describes quality, not frequency. Both errors score a
+  criterion that is not met. TIMI decides who goes for early invasive
+  management. The five criteria that are clinical judgements are checkboxes now;
+  the server derives age from the patient's date of birth and the cardiac marker
+  from the troponin against the published assay threshold.
+* **START triage.** `MCIPage` skipped the algorithm's first and most decisive
+  question — "can they walk" — behind a comment reading "we assume
+  non-ambulatory if triaging". Every walking-wounded casualty was triaged as if
+  they could not walk. It also treated a pulse over 120 as Immediate, which is
+  not a START criterion; the perfusion check is capillary refill over two
+  seconds **or** an absent radial pulse. Verified after the fix: an ambulatory
+  casualty comes back `minor`/green where the old code would have said
+  `delayed`.
+* **Morse.** `FallRiskPage` posted its six items nested under `morse_scale` in
+  camelCase while the handler read six flat snake_case keys, so it scored every
+  assessment 0 — and 0 bands as low risk. A patient the nurse scored 70 was
+  filed as low risk, and low risk is the band that gets no bed alarm, no hourly
+  rounding and no signage.
+
+Age was also computed as `thisYear - birthYear`, which is a year out for anyone
+who has not had their birthday yet — and 64-turning-65 is exactly the boundary
+the TIMI criterion is about.
+
+### One default worth naming
+
+`BurnPage` initialised `weight` to `70`. Parkland is 4 mL x kg x %TBSA, so a
+burned child left at the default gets a fluid order roughly three times too
+large. The field starts empty now, and `parkland_fluid()` returns `None` rather
+than a number for a missing or impossible weight: no weight, no fluid order, on
+the page and on the server.
+
+### What the empirical pass caught in my own work
+
+Three defects in the fixes themselves, all found by posting to the running API
+rather than by re-reading the code:
+
+* ASA was normalised to `ASA<n>`, which the column's CHECK constraint rejects.
+  The schema's vocabulary is Roman numerals with `-E` — the same one the form
+  already used. (There is no `VI-E`: ASA VI is a declared brain-dead organ
+  donor, for whom "emergency" means nothing.)
+* MCI wrote the START category name into `triage_category`, which is
+  CHECK-constrained to a tag **colour**. The colour goes there and the category
+  name beside it in `start_triage_category`, so the record holds both the tag
+  that was hung on the casualty and the algorithm result behind it. The form's
+  twelve human-readable incident types also needed mapping onto the column's
+  eight.
+* `patency` was written as `"not patent"` against a CHECK of
+  `patent | sluggish | occluded`, and `site_appearance` was a joined list of
+  findings against a `VARCHAR(32)`.
+
+The VIP scale runs 0–5 and `iv_assessments.phlebitis_grade` was constrained to
+0–4, excluding the one stage where the answer is not "resite the cannula" but
+"resite it and treat the patient". Nothing had hit the constraint because the
+column had never been written at all. Widened by migration
+`20260909000003`.
+
+### Schema changes
+
+Three additive migrations, all `ADD COLUMN IF NOT EXISTS` or a widened CHECK:
+
+* `20260909000001` — `fall_risk_assessments` gains `environmental_hazards`,
+  `medications`, `recent_fall`, `mobility`. The form has always collected them;
+  there was nowhere to put them. A Morse total answers "how likely is this
+  patient to fall"; these answer "why, and what has to change".
+* `20260909000002` — `burn_assessments` gains `weight_kg`, `severity`, the
+  Parkland split, `associated_injuries`, `interventions`, `fluid_start_time` and
+  `urine_output_ml_hr`. A stored fluid volume with no weight beside it cannot be
+  rechecked against the formula.
+* `20260909000003` — the VIP widening above.
+
+### Typed request payloads
+
+The endpoint functions took `data: unknown`. That is *how* four pages came to
+post payloads no handler read, and why TypeScript saw none of it.
+`client/shared/src/types/clinicalScoring.ts` types the six requests and their
+responses, and it earned its keep immediately: adding it turned the Cardiac and
+MCI mismatches into compile errors rather than runtime 400s.
+
+Each request type deliberately **omits** the derived values — no `total_score`,
+no `risk_level`, no `total_bsa`, no `parkland_fluid`, no `timi_score`. A field a
+client cannot set should not be in the shape it fills in.
+
+### A seventh page, and six findings nobody made
+
+`PediatricsPage` was the same contract mismatch as the other four — it sent
+`age: {years, months}`, `weight_method` and `immunizations` against a handler
+reading `age_months`, `weight_estimated` and `immunizations_up_to_date`, so
+every paediatric assessment stored age 0 months and no immunisation status,
+returning 201.
+
+What made it worse than the others is what the submit literal asserted. None of
+these had a control on the form:
+
+```
+hr_interpretation: 'Normal', rr_interpretation: 'Normal', temp_interpretation: 'Normal'
+pain: { score: 0, scale_used: 'FLACC' }
+immunizations: 'Up to date'
+abuse_screening: { concerns: false }
+guardian_present: true
+weight_method: 'Measured'
+```
+
+Every paediatric vital sign filed as normal, including a tachycardic infant's.
+No pain, on a child nobody asked. A complete immunisation schedule for every
+child. And a record stating a **child-protection screen found no concerns**,
+when no screen was performed — which is not a data-quality problem, it is a
+safeguarding record asserting something false.
+
+A temperature nobody entered also became `37.0` and a weight nobody entered
+became `0`.
+
+The page now sends only what it collects, under the names the handler reads.
+This is the same shape as the `AMAPage` `patientSigned: true` and
+`LacerationRepairPage` `sutureType: '4-0 Nylon'` defects already recorded above,
+and `scripts/check-uncontrolled-defaults.py` misses all of them for the same
+reason: it scans `useState({...})` initialisers, and these live in the object
+literal built inside the submit handler. **Extending it to submit literals is
+the highest-value change available to that gate** — three real defects of this
+class have now been found by hand in code it scans past.
+
+### Two more, found by sweeping for the same shape
+
+Having named the pattern, a scan for assertive literals in submit payloads with
+no control behind them turned up two more:
+
+* **`TraumaPage`** sent
+  `vital_signs: { bp: "120/80", hr: 80, rr: 16, spo2: 98 }` under a comment
+  reading *"Default vitals - updated from patient monitoring"* — an update that
+  does not happen. **Every trauma assessment on file records textbook-normal
+  observations for a trauma patient.** The page has no vital-signs inputs;
+  observations are recorded on the Vitals page against the same patient, so it
+  sends none now. An absent set reads as "not recorded here"; `120/80, SpO2 98`
+  reads as a stable patient.
+* **`CodeBluePage`** sent `location: 'Emergency Department'` and
+  `primary_cause: 'Cardiac Arrest'` with no control for either. A code called on
+  a ward, in theatre or in radiology was filed as having happened in the ED —
+  and code-blue response times are reviewed by location. Both are inputs now.
+
+That sweep is worth keeping as a habit: the pattern is a plausible constant in
+the object a page posts, and it is invisible to every gate the project has.
+
+### Two more ward thresholds moved with them
+
+`MedicationAdminPage` decided a dose was overdue with `30 * 60000` inline, and
+`IntakeOutputPage` banded fluid balance with `> 1000`, `> 500`, `< -500`. Both
+are policy, not display preference: the first is what turns a dose red on the
+MAR and puts it in front of the nurse, and the second is what calls out a
+patient running a litre positive. Both are in the catalog now
+(`medication.overdue_after_minutes`, `fluid_balance`), and both pages fall back
+to the safe answer when it has not loaded — the dose stays *pending* rather
+than being guessed overdue, and the balance shows a dash rather than a colour.
+
+A dose shown as pending that is actually late is recoverable. One shown as
+overdue because the page guessed teaches the nurse to ignore the colour, which
+is not.
+
+### Still open: handler length
+
+`create_burn` (144 lines), `create_pre_op` (132), `create_cardiac` (125) and
+`create_mci` (126) all exceed the 60-line limit in CLAUDE.md rule 3, and so do
+the handlers around them that this pass did not touch — `create_psych` (203),
+`create_tox` (186), `create_mar` (108), every dashboard (96–176).
+
+The bulk of each is a single struct literal mapping thirty-odd request fields
+onto entity fields. Splitting that into helpers moves the lines without reducing
+the complexity, so it is recorded rather than done badly. `create_mci` came down
+from 206 to 126 by extracting `MciIncidentHeader`, which was real duplication —
+two near-identical thirty-field entity literals — rather than length for its own
+sake. That is the shape of fix worth making here; the rest wants a considered
+pass over the whole file, not a drive-by.
+
+### Verified
+
+571 API tests pass on PostgreSQL, 373 doctor-portal and 83 patient-app unit
+tests pass, all 15 CI static gates pass, all three workspaces typecheck and lint
+at zero warnings, and every one of the six endpoints was exercised end to end
+against a live server with the payload the updated page sends — including
+reading each record back.
+
+`check-endpoint-auth.py` caught the scoring catalog at tier 0, "no auth decision
+at all". The endpoint *was* authenticated; the decision sat one function call
+away in a helper, and the gate reads the handler body. The gate was right —
+an auth decision a reader cannot see at the endpoint is one nobody can audit —
+so the helper was inlined.
+
+---
+
+## Family history banded hereditary risk on a raw count (2026-09-09)
+
+`FamilyHistoryPage.calculateRiskAssessment` counted affected relatives per
+condition category and banded the count: 3 or more "HIGH", 2 "MODERATE". The
+"HIGH" badge then rendered an automatic recommendation reading *"Consider
+genetic counseling and enhanced screening protocols."*
+
+Hereditary risk does not work that way. It turns on the **degree** of
+relationship and the **age of onset**, and the count model gets the important
+case backwards:
+
+* a mother and a sister with breast cancer at 40 counts **2** — "MODERATE", the
+  milder recommendation;
+* three second cousins with type 2 diabetes counts **3** — "HIGH", and an
+  automatic referral for genetic counselling.
+
+**Half fixed.** The page no longer calls a count a risk level. It shows the
+count and the conditions — genuinely useful family history — under one prompt to
+assess against degree and onset, instead of a graded recommendation it has no
+basis for. `noRiskIdentified` read *"No significant familial risk identified
+based on available history"* off an empty list; nothing recorded is not the same
+as nothing there, and it now says so.
+
+**Still open: the real model.** Choosing one is a clinical decision, not an
+engineering one, which is why nothing was substituted. Two things make it more
+tractable than it looks when someone picks it up:
+
+* the data model already carries age of onset — `onsetYearsSuffix` renders it —
+  and the relationship, so both inputs a real model needs are on file;
+* `_getRiskColor` is kept (underscored) for the band's return, and the scoring
+  belongs in `api/src/clinical_scoring.rs` with the rest, not back in the page.
+
+## Dashboard payload gaps (recorded 2026-09-09, CLOSED 2026-09-09)
 
 Three dashboard response types in `client/shared/src/types/index.ts` had drifted
 from what the handlers in
-`api/src/clinical_endpoints/workflow/dashboards.rs` actually return. They have
-been corrected against the handlers, and the four items below are what the
-correction exposed but does not itself resolve.
+`api/src/clinical_endpoints/workflow/dashboards.rs` actually return. They were
+corrected against the handlers, and the four items below are what the
+correction exposed. **All four are now closed**, and one of them was recorded
+on a mistaken reading.
 
-### Nurse dashboard ward fields
+### Nurse dashboard ward fields — CLOSED
 
-`NurseDashboardPatient` declares `room`, `esi_level`, `fall_risk`, `iv_site` and
-`wound_care_due` as optional because `/api/dashboard/nurse` does not return
-them — the handler serialises `DashboardPatient`, which carries none of the
-five. `NurseDashboardPage` renders all of them.
+`NurseDashboardPatient` declared `room`, `esi_level`, `fall_risk`, `iv_site` and
+`wound_care_due` as optional because `/api/dashboard/nurse` did not return
+them — the handler serialised `DashboardPatient`, which carries none of the
+five, while `NurseDashboardPage` renders all of them. `room` had previously
+shown "Pending" for every bed via a `|| t('pending')` fallback.
 
-They are the ward-orientation half of a nurse's patient list: bed, triage
-acuity, and the three standing tasks. Supplying them means either extending
-`DashboardPatient` or joining the relevant repositories in the handler.
+Every one of them had a real source; nothing needed inventing:
 
-Until then the list shows them as absent. It previously showed `room` as
-"Pending" for every bed, via a `|| t('pending')` fallback.
+| Field | Source |
+|---|---|
+| `room` | `assigned_bed` on the patient's latest triage assessment |
+| `esi_level` | `esi_level` on the same assessment |
+| `fall_risk` | `risk_level` on the latest Morse Fall Scale assessment |
+| `iv_site` | the most recent non-discontinued `iv_assessments` row |
+| `wound_care_due` | a `wound_assessments` row older than the 24-hour review interval |
 
-### Nurse dashboard medication route and time
+`ward_context()` gathers them, four reads per patient against a list capped at
+fifteen. That is deliberate rather than incidental: none of these repositories
+has a ward-wide listing, and the alternative was the empty columns this entry
+describes. If the ward list grows past fifteen, they want a batched read first.
 
-Same shape: `medication_records` are `MedicationReminder` rows, which have
+`fall_risk` is a **band**, not a boolean — `PatientListPanel` typed it
+`fall_risk?: boolean`, and "at risk of falling" is not a yes/no question:
+moderate adds a bed alarm and hourly rounding, high adds signage and supervised
+toileting. `undefined` is a third state again and means no assessment has been
+done, which is not the same as low risk.
+
+`tasks.ivs_to_check` was hardcoded `0` and `tasks.wounds_to_assess` did not
+exist. Both are counted from the same reads now, and the wounds badge was added
+to the page — it had been read by `useSidebarData` and by nothing else.
+
+**A latent bug surfaced while verifying this, and it was taking a whole screen
+down.** `fall_risk_assessments.total_score` and `risk_level` are
+`GENERATED ALWAYS ... STORED` from six nullable item columns, so a row written
+before those items were populated has a NULL total. `FallRiskAssessmentEntity`
+typed both non-optional, so `get_high_risk_patients` failed to decode — and that
+read is on the nurse dashboard's critical path, so **the entire nurse dashboard
+returned 503** as soon as any such row existed. Both fields are `Option` now,
+and `None` means "never scored", which is deliberately not the same as `0`: zero
+bands as low risk, unscored is a patient nobody has assessed.
+
+Verified against PostgreSQL: `tasks` reads
+`{"ivs_to_check": 1, "vitals_due": 0, "wounds_to_assess": 0}` and a patient row
+reads `"fall_risk": "high", "iv_site": "right-hand (dorsum)"`. `room` and
+`esi_level` come back null for synthetic patients who have no triage
+assessment — which is the point: absent means not recorded.
+
+### Nurse dashboard medication route and time — CLOSED
+
+`medication_records` were `MedicationReminder` rows, which have
 `medication_name`, `dosage` and `reminder_times` but no `route`, no
-`scheduled_time` and no `patient_name`.
+`scheduled_time` and no `patient_name`. `route` had a `|| 'PO'` fallback, so the
+ward medication list stated that every drug was oral — including any given IV or
+IM.
 
-`route` had a `|| 'PO'` fallback, so the ward medication list stated that every
-drug was oral — including any given IV or IM. It now shows "unknown", which is a
-question rather than a wrong answer, but the field still needs to come from
-somewhere: the MAR record carries a route, the reminder does not.
+The fix was not to find the fields on the reminder. It was to notice that the
+source was wrong: `medication_reminders` is the patient-adherence feature, and a
+ward drug round is the **medication administration record**, which carries the
+route, the scheduled time and the patient. `ward_medications_due()` reads today's
+MAR for each patient on the ward list and flattens `scheduled_medications` into
+the rows the round is worked from.
 
-`tasks.wounds_to_assess` is in the same position — the sidebar badge for it is
-left at 0 rather than displaying a number nobody computes.
+Where a MAR entry genuinely omits a route it still shows as unknown — a question
+rather than a wrong answer — but it is now absent because nobody recorded it,
+not because the endpoint could not carry it.
 
-### Critical value alerts do not name the patient
+### Critical value alerts do not name the patient — CLOSED
 
 `CriticalValueEntity` carries `patient_id` and no name; the name is encrypted at
 rest and only the API holds the keyring. `LabTechDashboardPage`'s critical-alert
-banner reads `patient_name`, so every unacknowledged critical result is
-announced without saying whose it is.
+banner reads `patient_name`, so every unacknowledged critical result was
+announced without saying whose it was — a potassium of 6.9 on the screen and no
+way to tell who to call.
 
-`lab_dashboard` already performs precisely this enrichment for the `rejections`
-array — resolve the ids, decrypt, insert `patient_name` on the serialised value.
-The same block over `critical_notifications` closes it. This is the smallest and
-most clinically valuable of the four.
+`lab_dashboard` already performed exactly this enrichment for `rejections`. The
+duplicated loop became `resolve_patient_names()`, which de-duplicates ids so a
+patient with six unacknowledged criticals costs one read rather than six, and it
+now runs over `critical_notifications` too. Ids that cannot be resolved are
+absent from the map and the field is left off: an unnamed alert is better than
+one attributed to the wrong person.
 
-### Sidebar recent-patients list
+The enrichment maps over the **serialised entity**, not `entity.data` — that
+field is `#[sqlx(skip)]` and is always null for a PostgreSQL row, and putting a
+null in the array the banner maps over takes the dashboard down. The same
+mistake had already been made once here, on the rejections array.
 
-`useSidebarData` returns `recentPatients` and `isLoading`, which are the exact
-two props of `RecentPatientsList` — a finished component with loading and empty
-states and **no call site anywhere**. `Layout` used to destructure both and
-render neither, so the roster was polled every 30 seconds for nothing.
+Verified: the banner reads `"patient_name": "Thandiwe Ncube"`.
 
-Wiring it up is a product decision about sidebar real estate: the sidebar
-already carries collapsible nav sections, quick actions and the user block, and
-has to survive the 320px reflow case. Either render it or stop fetching it.
+### Sidebar recent-patients list — CLOSED, and the premise was wrong
+
+**What was written here first:**
+
+> `useSidebarData` returns `recentPatients` and `isLoading`, which are the exact
+> two props of `RecentPatientsList` — a finished component with loading and empty
+> states and **no call site anywhere**. `Layout` used to destructure both and
+> render neither, so the roster was polled every 30 seconds for nothing.
+
+Three of those claims are false.
+
+* **They are not the same two props.** `RecentPatientsList` takes
+  `{patientId, fullName, healthId, lastAccessed}`; the hook returns
+  `{id, name, healthId, lastSeen}`. Wiring it up as described would have
+  rendered a column of blanks.
+* **Nothing is polled for it.** `recentPatients` is derived from the dashboard
+  response the badges already need. Removing it would save no request.
+* **The list is not missing from the product.** `DashboardPage` renders a
+  "Recent Patients" panel inline from the same response. The component is a
+  superseded duplicate of a panel that already ships.
+
+It is also not sidebar furniture: `p-8` padding and 48px icons are a dashboard
+panel. The "product decision about sidebar real estate" this entry asked for was
+an artefact of the misreading.
+
+Left in place rather than deleted, per the project rule on removing code. The
+comment in `Layout.tsx` that repeated the wrong claim now says what is actually
+true.
 
 ## Underscore-marked dead bindings (recorded 2026-09-09)
 
@@ -1581,13 +1938,40 @@ this is an unfinished feature rather than an abandoned one.
 
 Per the project rule, nothing here is deleted without the owner's confirmation.
 
-## Validation message register: warning vs error (recorded 2026-09-09)
+## Validation message register: warning vs error (recorded 2026-09-09, CLOSED 2026-09-09)
 
-Required-field validation surfaces as `showWarning` on some pages and
-`showError` on others, and `HistoryAndPhysicalPage` calls
+Required-field validation surfaced as `showWarning` on some pages and
+`showError` on others, and `HistoryAndPhysicalPage` called
 `showError(t('docHistoryPhysical.warningRequiredFields'))` — an error toast
-carrying a string named "warning". Nothing is broken; the register is
-inconsistent. Worth one pass to settle which a blocked submit is.
+carrying a string named "warning".
+
+**The rule the code now follows**, documented on `useToastActions` in
+`client/shared/src/components/Toast.tsx`:
+
+> Did the thing the user asked for happen? No — `showError`. Yes, with a
+> caveat — `showWarning`.
+
+That is not a style preference, and the codebase turned out to answer it
+already. Of the 36 `showWarning` call sites, **35 were immediately followed by
+`return`** — they had blocked the save, nothing was recorded, and the toast was
+the only thing telling the clinician so. Exactly one had not: `LabQCPage`'s
+"QC recorded locally", where the action did go through with a caveat. The
+distribution was the rule; it just had not been written down.
+
+So: 35 blocked guards became `showError`, one advisory stayed `showWarning`,
+and 26 i18n keys were renamed from `warning*` / `warn*` to `error*` so a string
+cannot claim a severity its call site contradicts. Six pages needed `showError`
+added to their `useToastActions()` destructuring and sixteen had a now-unused
+`showWarning` removed from theirs.
+
+Only `en-US` defined any of the renamed keys — the other five locales are
+partial overlays and carried none of them — so nothing fell back to English
+that was not already falling back.
+
+Why it mattered more than tidiness: a clinician who reads "warning" on a form
+that silently discarded their entry has been told the wrong thing about their
+own record. The severity is the only signal distinguishing "saved, with a note"
+from "not saved at all".
 
 ---
 

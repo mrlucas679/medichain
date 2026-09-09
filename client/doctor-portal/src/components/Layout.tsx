@@ -317,11 +317,24 @@ function Layout() {
 
   const userRole = (user?.role as Role) || 'Doctor';
 
-  // Fetch real-time sidebar data from API
-  // NOTE: this hook also returns `recentPatients` and `isLoading`, which are the
-  // exact two props of <RecentPatientsList/> -- a finished component with no
-  // call site anywhere. Not destructured here because nothing renders them; see
-  // docs/TECHNICAL_DEBT_REGISTER.md "Sidebar recent-patients list".
+  // Fetch real-time sidebar data from API.
+  //
+  // This hook also returns `recentPatients` and `isLoading`. They are not
+  // destructured because nothing here renders them, and the register's note
+  // that they are "the exact two props of <RecentPatientsList/>" was wrong on
+  // both counts: that component takes `{patientId, fullName, healthId,
+  // lastAccessed}` against this hook's `{id, name, healthId, lastSeen}`, so
+  // wiring it up as described would have rendered a column of blanks — and the
+  // panel it draws (p-8, 48px icons) is dashboard furniture, not a sidebar
+  // strip.
+  //
+  // `DashboardPage` already renders a "Recent Patients" panel inline from the
+  // same dashboard response, so the list is not missing from the product; the
+  // component is a superseded duplicate of it. Left in place rather than
+  // removed, per the project rule on deleting code.
+  //
+  // `recentPatients` costs no extra request either way: it is derived from the
+  // dashboard payload the badges already need.
   const { badges, refetch: refetchBadges } = useSidebarData(
     userRole,
     30000 // Refresh every 30 seconds
