@@ -1289,8 +1289,8 @@ Three real defects had this exact shape:
   selector, so every appointment booked was filed as a consultation. **Fixed
   2026-08-11** by adding the type selector.
 
-**The check is a review aid, not a gate**, for two reasons. It cannot see
-computed-key updates (`setMse({ ...mse, [field.key]: v })`), which is how
+**The form-state half is a review aid, not a gate**, for two reasons. It cannot
+see computed-key updates (`setMse({ ...mse, [field.key]: v })`), which is how
 `PsychPage` writes its nine mental-status fields — nine false alarms until the
 script learned to skip files that write state through a computed key. And
 deciding whether a default is a lie needs judgement about the field:
@@ -1298,10 +1298,75 @@ deciding whether a default is a lie needs judgement about the field:
 deliberate, because over-triage is the safe error in a mass-casualty incident
 and `updatePatientCategory` lets responders correct it.
 
-Still open, judged low-risk: `CDSAlertsPage.evidenceLevel: 'B'` asserts a
-literature-evidence grade for every authored rule. It is rule-authoring
-metadata rather than patient data, but a rule claiming evidence level B it does
-not have is still a claim.
+`CDSAlertsPage.evidenceLevel: 'B'` was recorded here as still open. **It has a
+control now** — a bound field at `CDSAlertsPage.tsx:898` — so the value is
+visible and editable, and the script correctly stopped reporting it. The
+initial value is still `'B'`, which is a pre-filled evidence grade rather than
+an asserted one; that is rule-authoring metadata and a materially lower-stakes
+call than the clinical defaults above.
+
+---
+
+### The blind spot, and the gate that closes it (2026-09-09)
+
+`useState` was the wrong place to look, or rather it was only half of it. **The
+worse instances are literals in the object a page POSTs**, which are not state
+at all, and this script scanned past all sixteen of them:
+
+| Page | Asserted, with no control | What that means |
+|---|---|---|
+| `PediatricsPage` | `hr`/`rr`/`temp_interpretation: 'Normal'` | every child's vitals, including a tachycardic infant's |
+| | `pain: { score: 0 }` | no pain, on a child nobody asked |
+| | `immunizations: 'Up to date'` | a complete schedule for every child |
+| | `abuse_screening: { concerns: false }` | **a child-protection screen recorded as finding no concerns, when none was performed** |
+| | `guardian_present: true`, `weight_method: 'Measured'` | |
+| `TraumaPage` | `vital_signs: {bp:"120/80", hr:80, rr:16, spo2:98}` | textbook-normal observations on a patient who may be shocked |
+| `CodeBluePage` | `location: 'Emergency Department'` | every code, wherever it was actually called |
+| `BloodBankPage` | `bloodType: 'Unknown'` | while the patient record held the type |
+
+All sixteen were found by hand, page by page. That is not a repeatable method.
+
+**The payload scan is now a gate** — exit 1 on anything new, against a baseline
+of thirteen triaged entries, each carrying the reason it is true of every record
+the page files. Most are lifecycle states (`status: 'requested'` on a new
+consult), which is the one shape that is legitimately constant.
+
+Three things made it work where a naive version would not:
+
+* **It recurses.** Seven of the sixteen were nested one level down —
+  `vital_signs.bp`, `abuse_screening.concerns`, `pain.score` — and the
+  form-state scan only ever walked depth 0.
+* **It scans payloads, not every object literal.** It follows the local that is
+  actually passed to a `create*`/`update*` call, so an unrelated literal is not
+  reported.
+* **`false` and `0` count here.** In form state they are a blank to be filled
+  in; in a payload they are a negative assertion, which is exactly what
+  `abuse_screening: { concerns: false }` was. The whole tree yields three, all
+  of them the AMA signature flags, all correct.
+
+**Replayed against the pre-fix tree it reports all sixteen.** That replay is the
+only reason to trust it — a detector for a class you have already cleaned up
+reports nothing either way, and proves nothing. It was also self-falsified
+forward: reintroducing `immunizations: 'Up to date'` failed the gate on that
+exact line, and removing it passed again.
+
+The gate found one defect on its first real run that the by-hand pass had
+missed: `BloodBankPage` filed every blood-product order with
+`bloodType: 'Unknown'` while `patient` sat in scope holding the real value.
+Blood type is what the crossmatch is against. It reads
+`patient.emergency_info.blood_type` now, falling back to `'Unknown'` only when
+the profile genuinely has none — which is a real state, and the reason the order
+needs a type-and-screen first.
+
+One baseline entry is marked **worth a second look** rather than settled:
+`ChainOfCustodyPage.integrityVerified: true` at collection. It is defensible —
+the collector applies the seal on that same form — but a chain-of-custody record
+is a legal document and the form never asks. The transfer path does it properly,
+from `transfer.sealIntact`.
+
+**Still not seen:** a payload assembled by spread or by a helper rather than
+written as one literal, and a value read from state that is itself wrong. The
+literal is the signal.
 
 ---
 
@@ -1702,11 +1767,12 @@ became `0`.
 The page now sends only what it collects, under the names the handler reads.
 This is the same shape as the `AMAPage` `patientSigned: true` and
 `LacerationRepairPage` `sutureType: '4-0 Nylon'` defects already recorded above,
-and `scripts/check-uncontrolled-defaults.py` misses all of them for the same
-reason: it scans `useState({...})` initialisers, and these live in the object
-literal built inside the submit handler. **Extending it to submit literals is
-the highest-value change available to that gate** — three real defects of this
-class have now been found by hand in code it scans past.
+and `scripts/check-uncontrolled-defaults.py` missed all of them for the same
+reason: it scanned `useState({...})` initialisers, and these live in the object
+literal built inside the submit handler. **That is fixed** — see "The blind
+spot, and the gate that closes it" under *Form fields with a default and no
+control* above. The payload scan is a gate, it replays all sixteen historical
+defects, and it found a seventeenth on its first run.
 
 ### Two more, found by sweeping for the same shape
 

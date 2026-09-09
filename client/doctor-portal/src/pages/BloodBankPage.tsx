@@ -158,7 +158,14 @@ const BloodBankPage: React.FC = () => {
       orderId: `BB-${String(orders.length + 1).padStart(3, '0')}`,
       patientId: selectedPatientId,
       patientName: patient.full_name,
-      bloodType: 'Unknown',
+      // The patient's blood type, which is already on file — this was
+      // hardcoded 'Unknown' while `patient` sat right here holding it. Every
+      // blood-product order was filed as an unknown type by a system that knew
+      // it, and blood type is what the crossmatch is against.
+      //
+      // Still 'Unknown' when the profile genuinely has none, which is a real
+      // state and the reason the order needs a type-and-screen first.
+      bloodType: patient.emergency_info?.blood_type || 'Unknown',
       orderDate: new Date().toISOString().split('T')[0],
       orderTime: new Date().toTimeString().slice(0, 5),
       orderedBy: user?.userId || 'Unknown',

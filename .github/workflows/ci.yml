@@ -147,8 +147,15 @@ jobs:
             - name: Frontend calls resolve to registered endpoints
               run: python scripts/check-endpoint-drift.py
 
-            # A security control whose default is permissive is not a control.
-            - name: Security-relevant defaults fail closed
+            # A page must not assert a clinical value nobody entered. Until
+            # 2026-09-09 this only read `useState` initialisers and always
+            # exited 0, so it was advisory and it missed the whole worse half:
+            # literals in the object a page POSTs. Those included every child's
+            # vitals filed as 'Normal', textbook-normal observations on every
+            # trauma patient, and a child-protection screen recorded as finding
+            # no concerns when none was performed. The payload half is a gate
+            # now, against a triaged baseline in the script.
+            - name: No page asserts a clinical value nobody entered
               run: python scripts/check-uncontrolled-defaults.py
 
             # WCAG AA contrast, checked at the design tokens rather than at a
