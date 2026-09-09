@@ -404,7 +404,7 @@ function RegisterPatientPage() {
             </div>
 
             <div className="flex gap-6 pt-2">
-              <label htmlFor="register-organ-donor" className="flex items-center gap-2 cursor-pointer">
+              <label htmlFor="register-organ-donor" className="flex items-center gap-2 min-h-[24px] py-1 cursor-pointer">
                 <input
                   type="checkbox"
                   id="register-organ-donor"
@@ -416,7 +416,7 @@ function RegisterPatientPage() {
                 <span className="text-sm text-content-secondary">{t('docRegisterPatient.organDonor')}</span>
               </label>
               
-              <label htmlFor="register-dnr-status" className="flex items-center gap-2 cursor-pointer">
+              <label htmlFor="register-dnr-status" className="flex items-center gap-2 min-h-[24px] py-1 cursor-pointer">
                 <input
                   type="checkbox"
                   id="register-dnr-status"

@@ -86,6 +86,27 @@ interface HistoryAndPhysical {
   signedAt?: Date;
 }
 
+/**
+ * Rendered when a record carries no vitals, so the summary strip stays intact.
+ *
+ * Note the declared types: this interface says `heartRate: number` and
+ * `height`/`weight`, while `GET /api/clinical/hp` sends every vital as a string
+ * and names them `heightCm`/`weightKg`. Nothing here does arithmetic on them —
+ * they are interpolated straight into the summary — so the mismatch is a
+ * documentation defect rather than a live one, and is recorded rather than
+ * changed under a browser-audit commit.
+ */
+const EMPTY_VITALS: VitalSigns = {
+  bloodPressure: '',
+  heartRate: 0,
+  respiratoryRate: 0,
+  temperature: 0,
+  oxygenSaturation: 0,
+  height: '',
+  weight: '',
+  bmi: 0,
+};
+
 const HistoryAndPhysicalPage: React.FC = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'list' | 'new' | 'templates'>('list');
@@ -166,12 +187,38 @@ const HistoryAndPhysicalPage: React.FC = () => {
         const records = Array.isArray(hpData) ? hpData : ((hpData as { records?: unknown[]; hp_records?: unknown[] }).records || (hpData as { records?: unknown[]; hp_records?: unknown[] }).hp_records || []);
         if (Array.isArray(records)) {
           setHpRecords(records.map((record) => {
-            // Snake_case off the wire, camelCase in the component; the row
-            // carries whichever the writer used.
-            const row = record as HistoryAndPhysical & { date_of_exam?: string; signed_at?: string };
+            // Snake_case off the wire, camelCase in the component.
+            //
+            // `GET /api/clinical/hp` returns `patient_name`; this page reads
+            // `record.patientName` and calls `.toLowerCase()` on it in the
+            // search filter. With one saved record that is
+            // `undefined.toLowerCase()`, which throws during render — so the
+            // ErrorBoundary replaced the whole screen with "An unexpected error
+            // occurred" the moment any H&P existed. An empty list rendered
+            // fine, which is why every unit test passed.
+            const row = record as HistoryAndPhysical & {
+              date_of_exam?: string;
+              signed_at?: string;
+              patient_name?: string;
+              patient_id?: string;
+              hp_id?: string;
+              vital_signs?: VitalSigns;
+            };
             const signed = row.signedAt || row.signed_at;
             return {
               ...row,
+              id: row.id || row.hp_id || '',
+              patientId: row.patientId || row.patient_id || '',
+              patientName: row.patientName || row.patient_name || '',
+              mrn: row.mrn || '',
+              // `vital_signs` on the wire, `vitalSigns` in the component — and
+              // the summary strip below reads `record.vitalSigns.bloodPressure`
+              // directly. Undefined there is a second crash of the same shape as
+              // `patientName`, and it fires *after* the fetch resolves, so it
+              // took down whichever screen the clinician had moved on to.
+              // (Only the outer key differs; the vitals inside are already
+              // camelCase.)
+              vitalSigns: row.vitalSigns || row.vital_signs || EMPTY_VITALS,
               dateOfExam: new Date(row.dateOfExam || row.date_of_exam || Date.now()),
               signedAt: signed ? new Date(signed) : undefined,
             };
@@ -300,9 +347,13 @@ const HistoryAndPhysicalPage: React.FC = () => {
   const translateSystem = (system: string) => t(`docHistoryPhysical.system_${system.toLowerCase().replace(/\//g, '-')}`);
 
   const filteredRecords = hpRecords.filter(record => {
-    const matchesSearch = record.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          record.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          record.mrn.includes(searchQuery);
+    // Defensive on purpose. The mapper above normalises these, but a search
+    // filter is not worth crashing a clinical screen over: a missing field
+    // should narrow the results, not replace the page with an error card.
+    const needle = searchQuery.toLowerCase();
+    const matchesSearch = (record.patientName ?? '').toLowerCase().includes(needle) ||
+                          (record.id ?? '').toLowerCase().includes(needle) ||
+                          (record.mrn ?? '').includes(searchQuery);
     const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
     return matchesSearch && matchesStatus;
   });

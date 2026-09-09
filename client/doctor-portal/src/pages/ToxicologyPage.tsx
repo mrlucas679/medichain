@@ -187,7 +187,7 @@ const ToxicologyPage: React.FC = () => {
       <div className="bg-blue-600 text-white p-3 flex items-center gap-3">
         <Phone className="w-5 h-5" />
         <span className="font-semibold">{t('docToxicology.poisonControl')}</span>
-        <span className="text-blue-200 text-sm ml-4">{t('docToxicology.poisonControlAvail')}</span>
+        <span className="text-blue-50 text-sm ml-4">{t('docToxicology.poisonControlAvail')}</span>
       </div>
 
       {/* Tabs */}

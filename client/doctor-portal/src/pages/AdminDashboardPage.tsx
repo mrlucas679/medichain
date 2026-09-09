@@ -302,7 +302,7 @@ export default function AdminDashboardPage() {
             <button
               onClick={loadHealthStatus}
               disabled={healthLoading}
-              className="flex items-center gap-1 text-xs text-notice-subtle-fg hover:text-notice-subtle-fg disabled:text-content-muted"
+              className="flex items-center gap-1 min-h-[24px] py-1 text-xs text-notice-subtle-fg hover:text-notice-subtle-fg disabled:text-content-muted"
             >
               <RefreshCw size={12} className={healthLoading ? 'animate-spin' : ''} />
               {t('docAdmin.refresh')}
@@ -457,7 +457,7 @@ export default function AdminDashboardPage() {
           </h3>
           <button
             onClick={() => navigate('/access-logs')}
-            className="text-xs text-content-secondary hover:text-content-secondary"
+            className="inline-flex items-center min-h-[24px] py-1 text-xs text-content-secondary hover:text-content-secondary"
           >
             {t('docAdmin.viewAll')}
           </button>

@@ -159,7 +159,7 @@ export default function StaffSelect({
     <div className={`relative ${className}`} ref={wrapperRef}>
       {label && (
         <label htmlFor={id} className="block text-sm font-medium text-content-secondary dark:text-gray-200 mb-2">
-          {label} {required && <span className="text-red-500">*</span>}
+          {label} {required && <span className="text-critical">*</span>}
         </label>
       )}
       

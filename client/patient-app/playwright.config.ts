@@ -22,5 +22,18 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:5174',
     reuseExistingServer: !process.env.CI,
+    env: {
+      // Point the dev server's /api proxy at the Nginx front door, matching the
+      // clinician portal's config.
+      //
+      // The default is 127.0.0.1:8090, where a standalone `cargo run` API binds.
+      // Against the Docker stack the API is not published on the host at all —
+      // it listens on 8080 inside its network and Nginx on :80 is the only way
+      // in — so every request died as ECONNREFUSED. These suites still passed,
+      // because the screens they audit fall back to demo data when the API is
+      // unreachable. That is the worse failure: a green run that never spoke to
+      // a server.
+      VITE_API_PROXY_TARGET: process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1',
+    },
   },
 });

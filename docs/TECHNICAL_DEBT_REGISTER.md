@@ -1588,3 +1588,45 @@ Required-field validation surfaces as `showWarning` on some pages and
 `showError(t('docHistoryPhysical.warningRequiredFields'))` — an error toast
 carrying a string named "warning". Nothing is broken; the register is
 inconsistent. Worth one pass to settle which a blocked submit is.
+
+---
+
+## Per-account browser audit (recorded 2026-09-09)
+
+`client/doctor-portal/e2e/roles.spec.ts` signs in as each of the five staff
+accounts and sweeps every route that account's own sidebar offers, measuring
+contrast in both themes and target size. Before it existed, the browser suites
+signed in as a doctor and audited twelve routes.
+
+The findings it produced were fixed in the same pass. Two were not, and are
+here.
+
+### An administrator can open clinical screens
+
+`/mar` — the medication administration record — renders for an Admin account
+with no refusal. So does the rest of the clinical navigation reachable by URL.
+The endpoints behind those screens enforce their own RBAC, so this is not a data
+exposure: it is a screen that presents its controls and would refuse every one
+of them on submit.
+
+Whether an administrator should be able to open a clinical screen at all is a
+product decision, not a defect the test suite can assert. The four
+clinician-to-`/user-management` checks are unambiguous and are asserted; this one
+is recorded. Deciding it means choosing between:
+
+* route guards that refuse non-clinical roles at the router, or
+* accepting that an administrator sees everything and the server is the only
+  gate.
+
+### H&P vital-sign types describe something the API does not send
+
+`HistoryAndPhysicalPage`'s local `VitalSigns` interface declares
+`heartRate: number`, `respiratoryRate: number`, `temperature: number`,
+`oxygenSaturation: number`, `bmi: number` and fields named `height`/`weight`.
+`GET /api/clinical/hp` sends every one of them as a **string**, and names the
+last two `heightCm`/`weightKg`.
+
+Nothing does arithmetic on them — they are interpolated straight into the
+summary strip — so the mismatch is currently a documentation defect rather than
+a live one. It sat behind two crashes that were live (`patientName` and
+`vitalSigns`, both fixed), and it is the same drift.

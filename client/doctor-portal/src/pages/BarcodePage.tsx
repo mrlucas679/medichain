@@ -312,7 +312,7 @@ const BarcodePage: React.FC = () => {
               className={`flex-1 py-3 text-sm font-medium capitalize transition-colors ${
                 activeTab === tab
                   ? 'text-blue-400 border-b-2 border-notice'
-                  : 'text-content-muted hover:text-gray-300'
+                  : 'text-gray-300 hover:text-white'
               }`}
             >
               {tabLabel(tab)}
@@ -347,7 +347,7 @@ const BarcodePage: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-content-muted">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-300">
                 <CameraOff className="w-16 h-16 mb-4" />
                 <p>{t('docBarcode.cameraNotActive')}</p>
                 <button

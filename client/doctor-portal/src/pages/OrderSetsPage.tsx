@@ -506,7 +506,7 @@ const OrderSetsPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="orderset-name" className="block text-sm font-semibold text-content-secondary mb-2">
-                    {t('docOrderSets.orderSetNameRequired')} <span className="text-red-500">*</span>
+                    {t('docOrderSets.orderSetNameRequired')} <span className="text-critical">*</span>
                   </label>
                   <input
                     id="orderset-name"
@@ -520,7 +520,7 @@ const OrderSetsPage: React.FC = () => {
                 </div>
                 <div>
                   <label htmlFor="orderset-type" className="block text-sm font-semibold text-content-secondary mb-2">
-                    {t('docOrderSets.typeRequired')} <span className="text-red-500">*</span>
+                    {t('docOrderSets.typeRequired')} <span className="text-critical">*</span>
                   </label>
                   <select
                     id="orderset-type"
@@ -541,7 +541,7 @@ const OrderSetsPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="orderset-specialty" className="block text-sm font-semibold text-content-secondary mb-2">
-                    {t('docOrderSets.specialtyRequired')} <span className="text-red-500">*</span>
+                    {t('docOrderSets.specialtyRequired')} <span className="text-critical">*</span>
                   </label>
                   <input
                     id="orderset-specialty"
@@ -573,7 +573,7 @@ const OrderSetsPage: React.FC = () => {
 
               <div>
                 <label htmlFor="orderset-description" className="block text-sm font-semibold text-content-secondary mb-2">
-                  {t('docOrderSets.descriptionRequired')} <span className="text-red-500">*</span>
+                  {t('docOrderSets.descriptionRequired')} <span className="text-critical">*</span>
                 </label>
                 <textarea
                   id="orderset-description"
@@ -599,7 +599,7 @@ const OrderSetsPage: React.FC = () => {
               </div>
 
               <div className="border-t pt-6">
-                <h3 className="text-lg font-bold text-content mb-4">{t('docOrderSets.ordersRequired')} <span className="text-red-500">*</span></h3>
+                <h3 className="text-lg font-bold text-content mb-4">{t('docOrderSets.ordersRequired')} <span className="text-critical">*</span></h3>
 
                 {(newOrderSet.orders || []).length > 0 && (
                   <div className="space-y-2 mb-4">

@@ -323,7 +323,7 @@ export default function EPrescribePage() {
               onChange={handleChange}
               className="h-4 w-4 text-notice-subtle-fg focus:ring-blue-500 border-border-interactive rounded"
             />
-            <label htmlFor="is_controlled" className="ml-2 block text-sm text-content-secondary">
+            <label htmlFor="is_controlled" className="ml-2 flex items-center min-h-[24px] py-1 text-sm text-content-secondary">
               {t('docEPrescribe.controlled')}
             </label>
           </div>

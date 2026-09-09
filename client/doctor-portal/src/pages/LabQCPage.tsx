@@ -530,7 +530,7 @@ const LabQCPage: React.FC = () => {
               {/* Instrument */}
               <div>
                 <label htmlFor="labqc-instrument" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.instrumentRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.instrumentRequired')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="labqc-instrument"
@@ -551,7 +551,7 @@ const LabQCPage: React.FC = () => {
               {/* Analyte */}
               <div>
                 <label htmlFor="labqc-analyte" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.analyteRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.analyteRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="labqc-analyte"
@@ -567,7 +567,7 @@ const LabQCPage: React.FC = () => {
               {/* QC Level */}
               <div>
                 <label htmlFor="labqc-level" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.qcLevelRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.qcLevelRequired')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="labqc-level"
@@ -585,7 +585,7 @@ const LabQCPage: React.FC = () => {
               {/* Lot Number */}
               <div>
                 <label htmlFor="labqc-lot-number" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.lotNumberRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.lotNumberRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="labqc-lot-number"
@@ -601,7 +601,7 @@ const LabQCPage: React.FC = () => {
               {/* Expiry Date */}
               <div>
                 <label htmlFor="labqc-expiry-date" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.expiryDateRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.expiryDateRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="labqc-expiry-date"
@@ -616,7 +616,7 @@ const LabQCPage: React.FC = () => {
               {/* Observed Value */}
               <div>
                 <label htmlFor="labqc-observed-value" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.observedValueRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.observedValueRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="labqc-observed-value"
@@ -633,7 +633,7 @@ const LabQCPage: React.FC = () => {
               {/* Expected Mean */}
               <div>
                 <label htmlFor="labqc-expected-mean" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.expectedMeanRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.expectedMeanRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="labqc-expected-mean"
@@ -650,7 +650,7 @@ const LabQCPage: React.FC = () => {
               {/* Expected SD */}
               <div>
                 <label htmlFor="labqc-expected-sd" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.expectedSdRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.expectedSdRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="labqc-expected-sd"
@@ -667,7 +667,7 @@ const LabQCPage: React.FC = () => {
               {/* Unit */}
               <div>
                 <label htmlFor="labqc-unit" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.unitRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.unitRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="labqc-unit"
@@ -823,7 +823,7 @@ const LabQCPage: React.FC = () => {
               {/* Instrument */}
               <div>
                 <label htmlFor="labqc-cal-instrument" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.instrumentRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.instrumentRequired')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="labqc-cal-instrument"
@@ -844,7 +844,7 @@ const LabQCPage: React.FC = () => {
               {/* Calibration Type */}
               <div>
                 <label htmlFor="labqc-cal-type" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.calibrationTypeRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.calibrationTypeRequired')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="labqc-cal-type"
@@ -862,7 +862,7 @@ const LabQCPage: React.FC = () => {
               {/* Calibrator Lot */}
               <div>
                 <label htmlFor="labqc-cal-lot" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.calibratorLotRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.calibratorLotRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="labqc-cal-lot"
@@ -878,7 +878,7 @@ const LabQCPage: React.FC = () => {
               {/* Expiry Date */}
               <div>
                 <label htmlFor="labqc-cal-expiry-date" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.expiryDateRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.expiryDateRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="labqc-cal-expiry-date"
@@ -893,7 +893,7 @@ const LabQCPage: React.FC = () => {
               {/* Result */}
               <div>
                 <label htmlFor="labqc-cal-result" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docLabQC.resultRequired')} <span className="text-red-500">*</span>
+                  {t('docLabQC.resultRequired')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="labqc-cal-result"

@@ -415,7 +415,7 @@ const IntakeOutputPage: React.FC = () => {
                           <span className="text-xs font-medium">{t('docIntakeOutput.intakeLabel')}</span>
                         </div>
                         <p className="text-xl font-bold text-notice-subtle-fg">{patient.totalIntake24h}</p>
-                        <p className="text-xs text-blue-500">{t('docIntakeOutput.mlPer24h')}</p>
+                        <p className="text-xs text-notice-subtle-fg">{t('docIntakeOutput.mlPer24h')}</p>
                       </div>
                       <div className="bg-caution-subtle rounded-lg p-3 text-center">
                         <div className="flex items-center justify-center gap-1 text-caution-subtle-fg mb-1">
@@ -423,7 +423,7 @@ const IntakeOutputPage: React.FC = () => {
                           <span className="text-xs font-medium">{t('docIntakeOutput.outputLabel')}</span>
                         </div>
                         <p className="text-xl font-bold text-caution-subtle-fg">{patient.totalOutput24h}</p>
-                        <p className="text-xs text-amber-500">{t('docIntakeOutput.mlPer24h')}</p>
+                        <p className="text-xs text-caution-subtle-fg">{t('docIntakeOutput.mlPer24h')}</p>
                       </div>
                       <div className={`rounded-lg p-3 text-center ${patient.netBalance > 500 ? 'bg-critical-subtle' : patient.netBalance < -500 ? 'bg-notice-subtle' : 'bg-ok-subtle'}`}>
                         <div className={`flex items-center justify-center gap-1 mb-1 ${balanceStatus.color}`}>

@@ -518,7 +518,7 @@ export default function IVSitePage() {
                     'bg-critical-subtle'
                   }`}>
                     <span className="font-bold w-6 flex-shrink-0">{grade}:</span>
-                    <span className="text-content-muted">{description}</span>
+                    <span className="text-content-secondary">{description}</span>
                   </div>
                 ))}
               </div>
@@ -538,7 +538,7 @@ export default function IVSitePage() {
                     'bg-critical-subtle'
                   }`}>
                     <span className="font-bold w-6">{score}:</span>
-                    <span className="text-content-muted">{description}</span>
+                    <span className="text-content-secondary">{description}</span>
                   </div>
                 ))}
               </div>

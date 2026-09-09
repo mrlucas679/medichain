@@ -405,7 +405,7 @@ function AccessLogsPage() {
         <div className="flex items-start gap-3">
           <Shield className="text-brand mt-0.5" size={20} />
           <div>
-            <h4 className="font-medium text-primary-900">{t('docAccessLogs.blockchainVerified')}</h4>
+            <h4 className="font-medium text-brand-subtle-fg">{t('docAccessLogs.blockchainVerified')}</h4>
             <p className="text-sm text-brand mt-1">
               {t('docAccessLogs.blockchainBody')}
             </p>

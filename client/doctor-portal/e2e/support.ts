@@ -16,14 +16,65 @@ export const AUTH_STATE = 'e2e/.auth/doctor.json';
  * "locator.click: Test timeout exceeded". The guard below turns a
  * ten-minute mystery into one line naming the missing environment variable.
  */
-export async function signIn(page: Page) {
+/**
+ * Every account the portal serves.
+ *
+ * The five staff roles carry genuinely different navigation, different
+ * dashboards and different server-side authorisation, so "the app is
+ * accessible" and "the app is readable" are five separate claims. Auditing the
+ * doctor and calling it the portal is the same mistake as auditing one theme
+ * and calling it the palette.
+ *
+ * `bt.pharm2` exists as a second pharmacist because maker-checker workflows
+ * refuse self-approval; it is not a distinct role to audit, so it is absent
+ * here.
+ */
+export const ROLES = ['Doctor', 'Nurse', 'Pharmacist', 'LabTechnician', 'Admin'] as const;
+export type RoleName = (typeof ROLES)[number];
+
+/**
+ * How each role's demo button is identified on the sign-in screen.
+ *
+ * Matched on the ROLE the button advertises, never the person's name. The
+ * hardcoded demo identities were removed and the list now comes from the
+ * database, so a selector naming "Mbeki" or "Dr Browser Test" breaks silently
+ * the next time a seed changes — which is exactly what happened once already.
+ */
+const ROLE_BUTTON: Record<RoleName, RegExp> = {
+  Doctor: /doctor/i,
+  Nurse: /nurse/i,
+  Pharmacist: /pharmacist/i,
+  LabTechnician: /lab\s*tech/i,
+  Admin: /admin/i,
+};
+
+/**
+ * Where each role lands after signing in.
+ *
+ * All five land on `/dashboard`, which is not one screen: `SmartDashboardRouter`
+ * dispatches on the signed-in role and renders `AdminDashboardPage`,
+ * `NurseDashboardPage`, `LabTechDashboardPage`, `PharmacistDashboardPage` or
+ * `DashboardPage`. So one URL, five different pages, four of which no browser
+ * test had ever rendered.
+ *
+ * The administrator also has `/admin` in its navigation, and it is the same
+ * component — the sidebar entry and the landing page reach it two ways.
+ */
+export const ROLE_HOME: Record<RoleName, string> = {
+  Doctor: '/dashboard',
+  Nurse: '/dashboard',
+  Pharmacist: '/dashboard',
+  LabTechnician: '/dashboard',
+  Admin: '/dashboard',
+};
+
+export async function signIn(page: Page, role: RoleName = 'Doctor') {
   await page.goto('/login');
 
-  // Matched by ROLE, not by name. The five hardcoded demo identities were
-  // removed and the list now comes from the database — the fixtures are
-  // currently "Dr Browser Test" and "Nurse Browser Test", and a selector
-  // hardcoding a person's name breaks silently the next time a seed changes.
-  const demoButton = page.locator('button').filter({ hasText: /doctor/i });
+  const pattern = ROLE_BUTTON[role];
+  // `.first()` is deliberate: there are two Pharmacist fixtures, and either
+  // will do for an audit that only reads.
+  const demoButton = page.locator('button').filter({ hasText: pattern });
   const available = await demoButton
     .first()
     .waitFor({ state: 'visible', timeout: 5000 })
@@ -32,16 +83,22 @@ export async function signIn(page: Page) {
 
   expect(
     available,
-    'No demo sign-in buttons on the login page.\n' +
+    `No demo sign-in button for ${role} on the login page.\n` +
       'They are populated from GET /api/auth/demo-credentials, which answers only when the\n' +
       'API runs with MEDICHAIN_DEV_MODE set AND demo mode enabled. The Docker compose file\n' +
       'does not set MEDICHAIN_DEV_MODE — that is deliberate, since the endpoint exposes\n' +
       'credentials and should not be on by default in a file anyone might deploy from.\n' +
-      'To run these suites, start the API with MEDICHAIN_DEV_MODE=1.'
+      'To run these suites, start the API with MEDICHAIN_DEV_MODE=1.\n' +
+      'The accounts also have to exist. That endpoint only offers fixtures carrying a\n' +
+      'keystore, so a database seeded for Doctor and Nurse alone silently offers two\n' +
+      'buttons and no more: run scripts/seed-browser-test-fixtures.ts.'
   ).toBe(true);
 
-  await demoButton.click();
-  await expect(page).toHaveURL(/.*dashboard/);
+  await demoButton.first().click();
+  // Not every role lands on /dashboard — an administrator lands on /admin.
+  // Asserting the shared path is part of why the Admin account had never been
+  // signed in by a test.
+  await expect(page).toHaveURL(new RegExp(ROLE_HOME[role]));
 }
 
 /**
@@ -78,11 +135,21 @@ export async function settle(page: Page, path: string) {
         .catch(() => undefined);
     }
 
-    const link = page.locator(`a[href="${path}"]`).first();
-    // VISIBLE, not merely present. At 320px the sidebar is collapsed, so the
-    // link exists in the DOM and cannot be clicked — the reflow tests resize to
-    // 320 and every navigation after that stalled on an invisible target.
-    const clickable = (await link.count()) > 0 && (await link.isVisible());
+    // `:visible`, not `.first()`.
+    //
+    // `renderSidebar` runs twice — once inside the mobile `<aside>` and once
+    // inside the desktop one — so every nav route matches two anchors. At
+    // desktop width the first of them is the MOBILE copy, which is hidden, and
+    // `.first()` picked exactly that: `count=1, visible=false, boundingBox=null`,
+    // and a click that timed out after retrying an element that can never be
+    // reached. Nine of the doctor's own routes were unreachable to the suite for
+    // this reason alone, and the failure read as "the page did not render".
+    //
+    // It also still covers the original case this comment was written for: at
+    // 320px the sidebar collapses, so the link exists in the DOM and is not
+    // visible, and the reflow tests must not stall on it.
+    const link = page.locator(`a[href="${path}"]:visible`).first();
+    const clickable = (await link.count()) > 0;
     // A short timeout, then fall back. "Visible" is not the same as "inside the
     // viewport", and a click on an off-screen element retries until the whole
     // test times out — which closes the shared page and fails every test after

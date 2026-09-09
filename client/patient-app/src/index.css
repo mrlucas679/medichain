@@ -175,6 +175,33 @@ body {
   @apply outline-2 outline-offset-2 outline-primary-500;
 }
 
+/*
+ * WCAG 2.2 SC 2.4.11 Focus Not Obscured (Minimum), Level AA.
+ *
+ * The top navigation is `sticky top-0` and 4rem tall. Tabbing to a control that
+ * sits under it scrolls the control just far enough to be "in the viewport" and
+ * no further — so the browser considers the job done while the user sees
+ * nothing at all. It is a particularly quiet failure: the page did move, the
+ * focus ring is drawn, and it is drawn behind an opaque bar.
+ *
+ * `scroll-margin-top` tells the scrolling algorithm to leave the bar's height
+ * clear. Applied to everything focusable rather than to the two controls that
+ * happened to be caught, because the next one added would have the same problem
+ * and nobody would think to look.
+ *
+ * 4.5rem, not 4rem: the extra half gives the focus ring and its 2px offset
+ * somewhere to be, instead of putting the ring itself under the bar.
+ */
+a[href],
+button,
+input,
+select,
+textarea,
+summary,
+[tabindex]:not([tabindex="-1"]) {
+  scroll-margin-top: 4.5rem;
+}
+
 /* Print styles */
 @media print {
   .no-print {

@@ -609,7 +609,7 @@ const MedicationAdminPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="medadmin-status" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docMedicationAdmin.administrationStatusRequired')} <span className="text-red-500">*</span>
+                  {t('docMedicationAdmin.administrationStatusRequired')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="medadmin-status"
@@ -627,7 +627,7 @@ const MedicationAdminPage: React.FC = () => {
 
               <div>
                 <label htmlFor="medadmin-actual-time" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docMedicationAdmin.actualTimeRequired')} <span className="text-red-500">*</span>
+                  {t('docMedicationAdmin.actualTimeRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="medadmin-actual-time"
@@ -642,7 +642,7 @@ const MedicationAdminPage: React.FC = () => {
               {(status === 'not-given' || status === 'held' || status === 'refused') && (
                 <div className="md:col-span-2">
                   <label htmlFor="medadmin-reason-not-given" className="block text-sm font-medium text-content-secondary mb-1">
-                    {t('docMedicationAdmin.reasonNotGivenRequired')} <span className="text-red-500">*</span>
+                    {t('docMedicationAdmin.reasonNotGivenRequired')} <span className="text-critical">*</span>
                   </label>
                   <textarea
                     id="medadmin-reason-not-given"

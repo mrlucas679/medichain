@@ -688,7 +688,7 @@ const PathologyPage: React.FC = () => {
               {/* Patient Selection */}
               <div>
                 <label htmlFor="path-patient" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docPathology.patientRequired')} <span className="text-red-500">*</span>
+                  {t('docPathology.patientRequired')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="path-patient"
@@ -709,7 +709,7 @@ const PathologyPage: React.FC = () => {
               {/* Specimen Type */}
               <div>
                 <label htmlFor="path-specimen-type" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docPathology.specimenTypeRequired')} <span className="text-red-500">*</span>
+                  {t('docPathology.specimenTypeRequired')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="path-specimen-type"
@@ -729,7 +729,7 @@ const PathologyPage: React.FC = () => {
               {/* Collection Date/Time */}
               <div>
                 <label htmlFor="path-collection-date" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docPathology.collectionDateRequired')} <span className="text-red-500">*</span>
+                  {t('docPathology.collectionDateRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="path-collection-date"
@@ -755,7 +755,7 @@ const PathologyPage: React.FC = () => {
               {/* Anatomical Site */}
               <div>
                 <label htmlFor="path-site" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docPathology.anatomicalSiteRequired')} <span className="text-red-500">*</span>
+                  {t('docPathology.anatomicalSiteRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="path-site"
@@ -787,7 +787,7 @@ const PathologyPage: React.FC = () => {
               {/* Clinician */}
               <div>
                 <label htmlFor="path-clinician" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docPathology.orderingClinicianRequired')} <span className="text-red-500">*</span>
+                  {t('docPathology.orderingClinicianRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="path-clinician"
@@ -1202,7 +1202,7 @@ const PathologyPage: React.FC = () => {
             {isCritical && (
               <div>
                 <label htmlFor="path-communicated-to" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docPathology.communicatedToRequired')} <span className="text-red-500">*</span>
+                  {t('docPathology.communicatedToRequired')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="path-communicated-to"

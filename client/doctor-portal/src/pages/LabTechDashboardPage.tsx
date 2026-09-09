@@ -313,7 +313,7 @@ export default function LabTechDashboardPage() {
           </h3>
           <button
             onClick={() => navigate('/lab-results')}
-            className="text-xs text-notice-subtle-fg hover:text-notice-subtle-fg"
+            className="inline-flex items-center min-h-[24px] py-1 text-xs text-notice-subtle-fg hover:text-notice-subtle-fg"
           >
             {t('docLabDashboard.viewAll')}
           </button>
@@ -411,7 +411,7 @@ export default function LabTechDashboardPage() {
                       type="button"
                       onClick={() => void handleNotify(rej.id)}
                       disabled={notifyingId === rej.id || rej.notified_ordering_provider}
-                      className="text-xs font-medium underline text-critical-subtle-fg disabled:no-underline disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="inline-flex items-center min-h-[24px] py-1 text-xs font-medium underline text-critical-subtle-fg disabled:no-underline disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {rej.notified_ordering_provider
                         ? t('docLabDashboard.notified')
@@ -429,7 +429,7 @@ export default function LabTechDashboardPage() {
                       type="button"
                       onClick={() => void handleRecollect(rej.id)}
                       disabled={recollectingId === rej.id}
-                      className="text-xs font-medium underline text-critical-subtle-fg disabled:no-underline disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="inline-flex items-center min-h-[24px] py-1 text-xs font-medium underline text-critical-subtle-fg disabled:no-underline disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {recollectingId === rej.id
                         ? t('docLabDashboard.requestingRecollection')

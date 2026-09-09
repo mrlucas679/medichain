@@ -524,7 +524,7 @@ const BloodBankPage: React.FC = () => {
               {/* Patient Selection */}
               <div>
                 <label htmlFor="bloodbank-patient" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docBloodBank.patientLabel')} <span className="text-red-500">*</span>
+                  {t('docBloodBank.patientLabel')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="bloodbank-patient"
@@ -545,7 +545,7 @@ const BloodBankPage: React.FC = () => {
               {/* Product */}
               <div>
                 <label htmlFor="bloodbank-product" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docBloodBank.bloodProductLabel')} <span className="text-red-500">*</span>
+                  {t('docBloodBank.bloodProductLabel')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="bloodbank-product"
@@ -565,7 +565,7 @@ const BloodBankPage: React.FC = () => {
               {/* Units */}
               <div>
                 <label htmlFor="bloodbank-units" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docBloodBank.unitsLabel')} <span className="text-red-500">*</span>
+                  {t('docBloodBank.unitsLabel')} <span className="text-critical">*</span>
                 </label>
                 <input
                   id="bloodbank-units"
@@ -582,7 +582,7 @@ const BloodBankPage: React.FC = () => {
               {/* Priority */}
               <div>
                 <label htmlFor="bloodbank-priority" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docBloodBank.priorityLabel')} <span className="text-red-500">*</span>
+                  {t('docBloodBank.priorityLabel')} <span className="text-critical">*</span>
                 </label>
                 <select
                   id="bloodbank-priority"
@@ -600,7 +600,7 @@ const BloodBankPage: React.FC = () => {
               {/* Indication */}
               <div className="md:col-span-2">
                 <label htmlFor="bloodbank-indication" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docBloodBank.indicationLabel')} <span className="text-red-500">*</span>
+                  {t('docBloodBank.indicationLabel')} <span className="text-critical">*</span>
                 </label>
                 <textarea
                   id="bloodbank-indication"
@@ -693,7 +693,7 @@ const BloodBankPage: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <label htmlFor="bloodbank-pre-bp" className="block text-sm font-medium text-content-secondary mb-1">
-                    {t('docBloodBank.bpLabel')} <span className="text-red-500">*</span>
+                    {t('docBloodBank.bpLabel')} <span className="text-critical">*</span>
                   </label>
                   <input
                     id="bloodbank-pre-bp"
@@ -707,7 +707,7 @@ const BloodBankPage: React.FC = () => {
                 </div>
                 <div>
                   <label htmlFor="bloodbank-pre-hr" className="block text-sm font-medium text-content-secondary mb-1">
-                    {t('docBloodBank.hrLabel')} <span className="text-red-500">*</span>
+                    {t('docBloodBank.hrLabel')} <span className="text-critical">*</span>
                   </label>
                   <input
                     id="bloodbank-pre-hr"
@@ -721,7 +721,7 @@ const BloodBankPage: React.FC = () => {
                 </div>
                 <div>
                   <label htmlFor="bloodbank-pre-temp" className="block text-sm font-medium text-content-secondary mb-1">
-                    {t('docBloodBank.tempLabel')} <span className="text-red-500">*</span>
+                    {t('docBloodBank.tempLabel')} <span className="text-critical">*</span>
                   </label>
                   <input
                     id="bloodbank-pre-temp"
@@ -736,7 +736,7 @@ const BloodBankPage: React.FC = () => {
                 </div>
                 <div>
                   <label htmlFor="bloodbank-pre-rr" className="block text-sm font-medium text-content-secondary mb-1">
-                    {t('docBloodBank.rrLabel')} <span className="text-red-500">*</span>
+                    {t('docBloodBank.rrLabel')} <span className="text-critical">*</span>
                   </label>
                   <input
                     id="bloodbank-pre-rr"
@@ -757,7 +757,7 @@ const BloodBankPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="bloodbank-start-time" className="block text-sm font-medium text-content-secondary mb-1">
-                    {t('docBloodBank.startTimeLabel')} <span className="text-red-500">*</span>
+                    {t('docBloodBank.startTimeLabel')} <span className="text-critical">*</span>
                   </label>
                   <input
                     id="bloodbank-start-time"
@@ -787,7 +787,7 @@ const BloodBankPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="bloodbank-administered-by" className="block text-sm font-medium text-content-secondary mb-1">
-                    {t('docBloodBank.administeredByLabel')} <span className="text-red-500">*</span>
+                    {t('docBloodBank.administeredByLabel')} <span className="text-critical">*</span>
                   </label>
                   <input
                     id="bloodbank-administered-by"
@@ -801,7 +801,7 @@ const BloodBankPage: React.FC = () => {
                 </div>
                 <div>
                   <label htmlFor="bloodbank-witnessed-by" className="block text-sm font-medium text-content-secondary mb-1">
-                    {t('docBloodBank.witnessedByLabel')} <span className="text-red-500">*</span>
+                    {t('docBloodBank.witnessedByLabel')} <span className="text-critical">*</span>
                   </label>
                   <input
                     id="bloodbank-witnessed-by"

@@ -225,7 +225,7 @@ function SettingsPage() {
                 <div>
                   <h3 className="font-medium text-content">{user?.username || t('docSettings.userFallback')}</h3>
                   <p className="text-sm text-content-muted">{user?.role || t('docSettings.roleFallback')}</p>
-                  <button className="mt-2 text-sm text-brand hover:text-brand">
+                  <button className="mt-2 inline-flex items-center min-h-[24px] py-1 text-sm text-brand hover:text-brand">
                     {t('docSettings.changeAvatar')}
                   </button>
                 </div>

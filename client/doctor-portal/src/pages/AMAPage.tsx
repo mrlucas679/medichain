@@ -587,7 +587,7 @@ const AMAPage: React.FC = () => {
                   </div>
                   <div>
                     <label htmlFor="ama-patient-id" className="block text-sm font-medium text-content-secondary mb-1">
-                      {t('docAMA.patientIdLabel')} <span className="text-red-500">*</span>
+                      {t('docAMA.patientIdLabel')} <span className="text-critical">*</span>
                     </label>
                     <input
                       id="ama-patient-id"
@@ -600,7 +600,7 @@ const AMAPage: React.FC = () => {
                   </div>
                   <div>
                     <label htmlFor="ama-patient-name" className="block text-sm font-medium text-content-secondary mb-1">
-                      {t('docAMA.patientNameLabel')} <span className="text-red-500">*</span>
+                      {t('docAMA.patientNameLabel')} <span className="text-critical">*</span>
                     </label>
                     <input
                       id="ama-patient-name"
@@ -613,7 +613,7 @@ const AMAPage: React.FC = () => {
                   </div>
                   <div>
                     <label htmlFor="ama-mrn" className="block text-sm font-medium text-content-secondary mb-1">
-                      {t('docAMA.mrnLabel')} <span className="text-red-500">*</span>
+                      {t('docAMA.mrnLabel')} <span className="text-critical">*</span>
                     </label>
                     <input
                       id="ama-mrn"
@@ -647,7 +647,7 @@ const AMAPage: React.FC = () => {
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="ama-diagnosis" className="block text-sm font-medium text-content-secondary mb-1">
-                      {t('docAMA.diagnosisLabel')} <span className="text-red-500">*</span>
+                      {t('docAMA.diagnosisLabel')} <span className="text-critical">*</span>
                     </label>
                     <input
                       id="ama-diagnosis"
@@ -660,7 +660,7 @@ const AMAPage: React.FC = () => {
                   </div>
                   <div>
                     <label htmlFor="ama-recommended-treatment" className="block text-sm font-medium text-content-secondary mb-1">
-                      {t('docAMA.recommendedTreatmentLabel')} <span className="text-red-500">*</span>
+                      {t('docAMA.recommendedTreatmentLabel')} <span className="text-critical">*</span>
                     </label>
                     <textarea
                       id="ama-recommended-treatment"
@@ -673,7 +673,7 @@ const AMAPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-content-secondary mb-1">
-                      {t('docAMA.riskLevelLabel')} <span className="text-red-500">*</span>
+                      {t('docAMA.riskLevelLabel')} <span className="text-critical">*</span>
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       {(['low', 'moderate', 'high', 'critical'] as RiskLevel[]).map(level => (

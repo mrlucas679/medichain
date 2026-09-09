@@ -424,8 +424,61 @@ async function main(): Promise<void> {
   }
 
   // ---- Staff --------------------------------------------------------------
+  //
+  // Resumable, because a half-seeded database was previously a dead end.
+  //
+  // A staff credential cannot be re-pointed at a new wallet — there is
+  // deliberately no server-side reset — so the script used to `exit(1)` the
+  // moment it met a `LOGIN_ID_TAKEN`. That is the right refusal and the wrong
+  // response: this database had `bt.doctor` and `bt.nurse` from one run and no
+  // `bt.pharm`, `bt.pharm2` or `bt.lab` at all, and no invocation could ever
+  // add them. Every attempt died on the first fixture and left behind a second
+  // user row under the same username, because `/auth/register` had already
+  // succeeded with a freshly minted wallet before enrolment refused. That is
+  // where this database's duplicate `btdoctor` and its five `btpatient` rows
+  // came from.
+  //
+  // So: look first. A fixture whose username already exists is adopted at its
+  // existing wallet and never re-registered. Its manifest entry says so and
+  // carries no mnemonic, because this run does not hold that key — which is the
+  // exact confusion the original refusal existed to prevent.
+  // Page through it. `/api/users` answers 20 rows by default and caps `limit`
+  // at 100, and this database holds 208 accounts — reading page one and
+  // concluding a fixture is absent is how a second row under the same username
+  // gets created. `getUsers()` in the shared client pages for the same reason.
+  const existingByUsername = new Map<string, string>();
+  for (let page = 1; page <= 50; page++) {
+    const roster = await call('GET', `/users?page=${page}&limit=100`, undefined, adminWallet);
+    if (!ok(roster.status)) fail('read the user roster', roster.status, roster.json);
+    const rows = (roster.json.data ?? roster.json.users ?? []) as Array<Record<string, string>>;
+    for (const row of rows) {
+      // Oldest wins. A duplicate username means an earlier run registered a
+      // second wallet after its enrolment refused, and it is the FIRST row that
+      // carries the credential. Rows arrive newest-first and this overwrites,
+      // so the oldest is what remains.
+      if (row.username && row.wallet_address) existingByUsername.set(row.username, row.wallet_address);
+    }
+    if (rows.length < 100) break;
+  }
+
   const staffOut: Array<Record<string, string>> = [];
+  const adopted: string[] = [];
   for (const fixture of STAFF) {
+    const already = existingByUsername.get(fixture.username);
+    if (already) {
+      adopted.push(fixture.loginId);
+      console.log(`  · ${fixture.role.padEnd(6)} ${fixture.loginId}  ${already}  (from an earlier run)`);
+      staffOut.push({
+        role: fixture.role,
+        login_id: fixture.loginId,
+        password: PASSWORD,
+        wallet: already,
+        pre_existing: 'true',
+        sign_in: 'POST /api/auth/staff/login (employee identifier + password)',
+      });
+      continue;
+    }
+
     const identity = await generateWalletIdentity();
 
     const reg = await call(
@@ -458,6 +511,18 @@ async function main(): Promise<void> {
       mnemonic: identity.mnemonic,
       sign_in: 'POST /api/auth/staff/login (employee identifier + password)',
     });
+  }
+
+  if (adopted.length) {
+    console.log(
+      `
+  ${adopted.length} fixture(s) already existed and were adopted: ${adopted.join(', ')}.
+` +
+        `  Their password is unchanged (it is a constant in this script), but this run
+` +
+        `  does not hold their keys, so the manifest carries no mnemonic for them.
+`
+    );
   }
 
   // `find` on role would match whichever Doctor is first; name the fixture.

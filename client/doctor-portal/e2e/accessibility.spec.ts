@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { signIn, settle } from './support';
+import { auditTargetSize } from './audit';
 
 /**
  * One sign-in per spec file, on a page shared by every test in it.
@@ -133,44 +134,11 @@ for (const route of ROUTES) {
 test('interactive targets are at least 24x24 CSS pixels', async () => {
   await settle(page, '/dashboard');
 
-  const undersized = await page.evaluate(() => {
-    const MIN = 24;
-    const results: { selector: string; w: number; h: number; text: string }[] = [];
-    document.querySelectorAll<HTMLElement>('button, a[href], input, select, [role="button"]').forEach((el) => {
-      const cs = getComputedStyle(el);
-      if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) === 0) return;
-      const r = el.getBoundingClientRect();
-      if (r.width === 0 || r.height === 0) return;
-      // A visually-hidden control is clipped to about 1px until it is focused.
-      // The skip link is the canonical case: measured while hidden it reports
-      // 16x8 and looks like a violation, when in reality it is not a target at
-      // all until a keyboard user reaches it. Its focused size is checked
-      // separately below.
-      const clipped =
-        cs.clip === 'rect(0px, 0px, 0px, 0px)' ||
-        cs.clipPath === 'inset(50%)' ||
-        (r.width <= 2 && r.height <= 2);
-      if (clipped || el.className.includes('sr-only')) return;
-      // SC 2.5.8 exempts targets in a sentence ("inline"), and those whose
-      // spacing gives them a 24px exclusion zone. Approximate the inline
-      // exception by skipping anchors laid out inline inside text.
-      if (el.tagName === 'A' && cs.display === 'inline') return;
-      if (r.width < MIN || r.height < MIN) {
-        const cls = (el.getAttribute('class') || '').split(/\s+/).slice(0, 2).join('.');
-        results.push({
-          selector: `${el.tagName.toLowerCase()}${cls ? '.' + cls : ''}`,
-          w: Math.round(r.width),
-          h: Math.round(r.height),
-          text: (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 24),
-        });
-      }
-    });
-    return results;
-  });
+  const undersized = await auditTargetSize(page);
 
   expect(
     undersized,
-    `Targets below 24x24 CSS px (WCAG 2.2 SC 2.5.8, Level AA):\n` +
+    'Targets below 24x24 CSS px (WCAG 2.2 SC 2.5.8, Level AA):\n' +
       undersized.map((u) => `  ${u.selector} ${u.w}x${u.h} "${u.text}"`).join('\n')
   ).toHaveLength(0);
 });

@@ -566,7 +566,7 @@ const UserManagementPage: React.FC = () => {
                   {systemUser.status === 'inactive' && (
                     <button
                       onClick={() => handleStatusChange(systemUser.userId, 'active')}
-                      className="px-4 py-2 bg-green-500 hover:bg-ok text-ok-fg rounded-lg text-sm transition-colors flex items-center gap-2"
+                      className="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg text-sm transition-colors flex items-center gap-2"
                     >
                       <CheckCircle className="w-4 h-4" />
                       {t('docUserManagement.activateButton')}
@@ -575,7 +575,7 @@ const UserManagementPage: React.FC = () => {
                   {systemUser.status === 'pending' && (
                     <button
                       onClick={() => handleStatusChange(systemUser.userId, 'active')}
-                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm transition-colors flex items-center gap-2"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors flex items-center gap-2"
                     >
                       <CheckCircle className="w-4 h-4" />
                       {t('docUserManagement.approveButton')}
@@ -584,7 +584,7 @@ const UserManagementPage: React.FC = () => {
                   {systemUser.status !== 'suspended' && (
                     <button
                       onClick={() => handleStatusChange(systemUser.userId, 'suspended')}
-                      className="px-4 py-2 bg-red-500 hover:bg-critical text-critical-fg rounded-lg text-sm transition-colors flex items-center gap-2"
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors flex items-center gap-2"
                     >
                       <Lock className="w-4 h-4" />
                       {t('docUserManagement.suspendButton')}
@@ -593,7 +593,7 @@ const UserManagementPage: React.FC = () => {
                   {systemUser.status === 'suspended' && (
                     <button
                       onClick={() => handleStatusChange(systemUser.userId, 'active')}
-                      className="px-4 py-2 bg-green-500 hover:bg-ok text-ok-fg rounded-lg text-sm transition-colors flex items-center gap-2"
+                      className="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg text-sm transition-colors flex items-center gap-2"
                     >
                       <Unlock className="w-4 h-4" />
                       {t('docUserManagement.unsuspendButton')}
@@ -1037,7 +1037,7 @@ const UserManagementPage: React.FC = () => {
                             onClick={() => handleTogglePermission(perm.id)}
                             className={`ml-4 px-4 py-2 rounded-lg font-semibold transition-colors ${
                               selectedUser.permissions.includes(perm.id)
-                                ? 'bg-green-500 text-ok-fg hover:bg-ok'
+                                ? 'bg-green-700 text-white hover:bg-green-800'
                                 : 'bg-surface-sunken text-content-secondary hover:bg-gray-300'
                             }`}
                           >

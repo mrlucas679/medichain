@@ -842,7 +842,7 @@ const CDSAlertsPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="cds-rule-name" className="block text-sm font-medium text-content-secondary mb-1">
-                    {t('docCDS.ruleNameLabel')} <span className="text-red-500">*</span>
+                    {t('docCDS.ruleNameLabel')} <span className="text-critical">*</span>
                   </label>
                   <input
                     id="cds-rule-name"
@@ -941,7 +941,7 @@ const CDSAlertsPage: React.FC = () => {
 
               <div>
                 <label htmlFor="cds-description" className="block text-sm font-medium text-content-secondary mb-1">
-                  {t('docCDS.descriptionLabel')} <span className="text-red-500">*</span>
+                  {t('docCDS.descriptionLabel')} <span className="text-critical">*</span>
                 </label>
                 <textarea
                   id="cds-description"
@@ -982,7 +982,7 @@ const CDSAlertsPage: React.FC = () => {
           <div className="bg-surface rounded-lg shadow p-6">
             <h2 className="text-xl font-bold text-content mb-4 flex items-center gap-2">
               <Filter className="w-6 h-6 text-notice-subtle-fg" />
-              {t('docCDS.conditionsTitle')} <span className="text-red-500">*</span>
+              {t('docCDS.conditionsTitle')} <span className="text-critical">*</span>
             </h2>
 
             {/* Add Condition Form */}
@@ -1088,7 +1088,7 @@ const CDSAlertsPage: React.FC = () => {
           <div className="bg-surface rounded-lg shadow p-6">
             <h2 className="text-xl font-bold text-content mb-4 flex items-center gap-2">
               <AlertTriangle className="w-6 h-6 text-content-secondary" />
-              {t('docCDS.actionsTitle')} <span className="text-red-500">*</span>
+              {t('docCDS.actionsTitle')} <span className="text-critical">*</span>
             </h2>
 
             {/* Add Action Form */}

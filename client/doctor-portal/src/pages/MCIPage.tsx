@@ -146,12 +146,46 @@ export default function MCIPage() {
     notes: ''
   });
 
-  const triageCategories: { value: TriageCategory; label: string; color: string; bgColor: string; description: string }[] = [
-    { value: 'immediate', label: t('docMCI.category_immediate_label'), color: 'text-critical-subtle-fg', bgColor: 'bg-red-500', description: t('docMCI.category_immediate_desc') },
-    { value: 'delayed', label: t('docMCI.category_delayed_label'), color: 'text-caution-subtle-fg', bgColor: 'bg-caution', description: t('docMCI.category_delayed_desc') },
-    { value: 'minor', label: t('docMCI.category_minor_label'), color: 'text-ok-subtle-fg', bgColor: 'bg-green-500', description: t('docMCI.category_minor_desc') },
-    { value: 'expectant', label: t('docMCI.category_expectant_label'), color: 'text-content-secondary', bgColor: 'bg-gray-500', description: t('docMCI.category_expectant_desc') },
-    { value: 'deceased', label: t('docMCI.category_deceased_label'), color: 'text-black', bgColor: 'bg-black', description: t('docMCI.category_deceased_desc') }
+  /**
+   * The five START triage categories.
+   *
+   * The hues are conventional and cannot change — a triage officer reads the
+   * colour before the word. The *shades* can, and had to: white on the previous
+   * `bg-green-500` measured 2.28:1 and white on the yellow measures 1.67:1, on a
+   * board whose entire purpose is to be counted at a glance across a room.
+   *
+   * `summaryFg` exists because a single foreground cannot serve all five. Yellow
+   * takes dark text — which is what a physical yellow triage tag uses — and the
+   * rest take white. Rendering `text-white` uniformly is what made the DELAYED
+   * count unreadable.
+   *
+   * The yellow is a fixed `bg-amber-500` rather than the `bg-caution` token on
+   * purpose. That token flips with the theme — amber-700 on light, amber-400 on
+   * dark — so no single foreground could pass in both, and more importantly a
+   * triage colour code must not change because the operator prefers dark mode.
+   * The five colours here mean the same thing on every screen in the building.
+   *
+   * And `text-black`, not `text-gray-900`: `src/index.css` carries
+   * `.dark .text-gray-900 { @apply text-white }`, a compatibility override at
+   * specificity (0,2,0) that beats the utility. On this card — whose background
+   * does *not* flip — that turned the dark text white and put it back at 2.15:1.
+   * The same override layer is what repainted a green alert's text grey on the
+   * critical-value screen (WF-018); it is narrower now but still catches any
+   * `text-gray-900` placed on a deliberately fixed background.
+   */
+  const triageCategories: {
+    value: TriageCategory;
+    label: string;
+    color: string;
+    bgColor: string;
+    summaryFg: string;
+    description: string;
+  }[] = [
+    { value: 'immediate', label: t('docMCI.category_immediate_label'), color: 'text-critical-subtle-fg', bgColor: 'bg-red-600', summaryFg: 'text-white', description: t('docMCI.category_immediate_desc') },
+    { value: 'delayed', label: t('docMCI.category_delayed_label'), color: 'text-caution-subtle-fg', bgColor: 'bg-amber-500', summaryFg: 'text-black', description: t('docMCI.category_delayed_desc') },
+    { value: 'minor', label: t('docMCI.category_minor_label'), color: 'text-ok-subtle-fg', bgColor: 'bg-green-700', summaryFg: 'text-white', description: t('docMCI.category_minor_desc') },
+    { value: 'expectant', label: t('docMCI.category_expectant_label'), color: 'text-content-secondary', bgColor: 'bg-gray-600', summaryFg: 'text-white', description: t('docMCI.category_expectant_desc') },
+    { value: 'deceased', label: t('docMCI.category_deceased_label'), color: 'text-black', bgColor: 'bg-black', summaryFg: 'text-white', description: t('docMCI.category_deceased_desc') }
   ];
 
   const incidentTypes = [
@@ -330,8 +364,8 @@ export default function MCIPage() {
         <div className="grid grid-cols-5 gap-2 mb-6">
           {triageCategories.map(cat => (
             <div key={cat.value} className={`${cat.bgColor} rounded-lg p-4 text-center`}>
-              <p className="text-white text-4xl font-bold">{counts[cat.value] || 0}</p>
-              <p className="text-white/90 text-sm font-medium">{cat.label}</p>
+              <p className={`${cat.summaryFg} text-4xl font-bold`}>{counts[cat.value] || 0}</p>
+              <p className={`${cat.summaryFg} text-sm font-medium`}>{cat.label}</p>
             </div>
           ))}
         </div>

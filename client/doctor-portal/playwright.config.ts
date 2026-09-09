@@ -30,5 +30,21 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
+    env: {
+      // Point the dev server's /api proxy at the Nginx front door.
+      //
+      // Its default is 127.0.0.1:8090, which is where a standalone `cargo run`
+      // API binds. These suites drive the Docker stack, where the API is not
+      // published on the host at all — it listens on 8080 inside its network
+      // and Nginx on :80 is the only way in. With the default, every request
+      // died as ECONNREFUSED, `GET /api/auth/demo-credentials` returned
+      // nothing, the login page rendered no demo buttons, and all five accounts
+      // failed with "no sign-in button" — a message about seeding, for a
+      // problem that was a proxy target.
+      //
+      // Overridable, because the standalone deployment is still a supported way
+      // to run this.
+      VITE_API_PROXY_TARGET: process.env.VITE_API_PROXY_TARGET || 'http://127.0.0.1',
+    },
   },
 });

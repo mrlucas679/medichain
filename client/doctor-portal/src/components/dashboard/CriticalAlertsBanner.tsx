@@ -140,7 +140,7 @@ export default function CriticalAlertsBanner({
       {remainingCount > 0 && (
         <div className="p-3 bg-critical text-center">
           {renderViewAll(
-            'text-critical-fg text-sm hover:text-white transition-colors',
+            'inline-flex items-center min-h-[24px] py-1 text-critical-fg text-sm hover:text-white transition-colors',
             <>
               + {remainingCount} more alert{remainingCount !== 1 ? 's' : ''} →
             </>

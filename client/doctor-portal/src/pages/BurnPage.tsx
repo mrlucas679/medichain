@@ -514,7 +514,7 @@ export default function BurnPage() {
                       className="w-full p-2 border border-border-interactive rounded"
                     />
                   </div>
-                  <label htmlFor="burn-is-child" className="flex items-center space-x-2 cursor-pointer">
+                  <label htmlFor="burn-is-child" className="flex items-center space-x-2 min-h-[24px] py-1 cursor-pointer">
                     <input
                       id="burn-is-child"
                       type="checkbox"
@@ -555,7 +555,7 @@ export default function BurnPage() {
                       max="10"
                       value={painLevel}
                       onChange={(e) => setPainLevel(Number(e.target.value))}
-                      className="w-full"
+                      className="w-full h-6"
                     />
                     <div className="flex justify-between text-xs text-content-muted">
                       <span>{t('docBurn.painNone')}</span>
@@ -649,7 +649,7 @@ export default function BurnPage() {
                   <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
                   {t('docBurn.inhalationInjuryTitle')}
                 </h3>
-                <label htmlFor="burn-inhalation-suspected" className="flex items-center space-x-2 mb-4 cursor-pointer">
+                <label htmlFor="burn-inhalation-suspected" className="flex items-center space-x-2 mb-4 min-h-[24px] py-1 cursor-pointer">
                   <input
                     id="burn-inhalation-suspected"
                     type="checkbox"
@@ -668,7 +668,7 @@ export default function BurnPage() {
                       { key: 'stridor', label: t('docBurn.inhal_stridor') },
                       { key: 'carbonMonoxide', label: t('docBurn.inhal_carbonMonoxide') }
                     ].map(({ key, label }) => (
-                      <label key={key} htmlFor={`burn-inhalation-${key}`} className="flex items-center space-x-2 cursor-pointer">
+                      <label key={key} htmlFor={`burn-inhalation-${key}`} className="flex items-center space-x-2 min-h-[24px] py-1 cursor-pointer">
                         <input
                           id={`burn-inhalation-${key}`}
                           type="checkbox"
@@ -702,7 +702,7 @@ export default function BurnPage() {
                   <AlertCircle className="h-5 w-5 mr-2 text-purple-500" />
                   {t('docBurn.circumferentialTitle')}
                 </h3>
-                <label htmlFor="burn-circumferential" className="flex items-center space-x-2 mb-4 cursor-pointer">
+                <label htmlFor="burn-circumferential" className="flex items-center space-x-2 mb-4 min-h-[24px] py-1 cursor-pointer">
                   <input
                     id="burn-circumferential"
                     type="checkbox"
@@ -733,7 +733,7 @@ export default function BurnPage() {
                         ))}
                       </div>
                     </div>
-                    <label htmlFor="burn-escharotomy-needed" className="flex items-center space-x-2 cursor-pointer">
+                    <label htmlFor="burn-escharotomy-needed" className="flex items-center space-x-2 min-h-[24px] py-1 cursor-pointer">
                       <input
                         id="burn-escharotomy-needed"
                         type="checkbox"
@@ -773,7 +773,7 @@ export default function BurnPage() {
                   <h3 className="font-bold text-content mb-3">{t('docBurn.interventionsTitle')}</h3>
                   <div className="max-h-48 overflow-y-auto space-y-1">
                     {interventionOptions.map(intervention => (
-                      <label key={intervention} htmlFor={`burn-intervention-${intervention.toLowerCase().replace(/\s+/g, '-')}`} className="flex items-center space-x-2 cursor-pointer">
+                      <label key={intervention} htmlFor={`burn-intervention-${intervention.toLowerCase().replace(/\s+/g, '-')}`} className="flex items-center space-x-2 min-h-[24px] py-1 cursor-pointer">
                         <input
                           id={`burn-intervention-${intervention.toLowerCase().replace(/\s+/g, '-')}`}
                           type="checkbox"
