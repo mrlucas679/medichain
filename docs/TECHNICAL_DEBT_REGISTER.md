@@ -1637,14 +1637,52 @@ The API is untouched, so anything that legitimately depends on that authority
 still works. `roles.spec.ts` asserts it for all five accounts now, including the
 Admin case it previously skipped.
 
-**Still open, and genuinely a policy question:** whether
-`can_edit_medical_records` should include `Admin` at all. Separation of duties
-says the account that grants and revokes roles should not also be able to write
-clinical records, because it can grant itself anything and then act while the
-audit trail shows a legitimate role at the time. That is a backend authorization
-change with a wide blast radius — the synthetic e2e harness and the fixture
-seeder both act as the administrator — and it is not something to change as a
-side effect of a browser audit.
+**The policy question is now decided too.** `Admin` has been removed from
+`Role::can_edit_medical_records` in `api/src/types/domain.rs`. Separation of
+duties: the account that grants and revokes roles must not also write clinical
+records, because it can grant itself anything and then act while the audit trail
+shows a legitimate role at the moment of the act.
+
+What that did *not* touch, and why:
+
+* **`is_healthcare_provider` still includes `Admin`.** Patient registration is
+  gated on it, so `POST /api/register` remains open to administrators — it is an
+  administrative act, and CLAUDE.md documents it as such.
+* **`can_view_medical_records` still includes `Admin`.** Reading is not writing,
+  and an administrator investigating an access-log entry needs to see what was
+  accessed.
+* **`pallet_access_control::can_edit_medical_records` is unchanged.** It gates
+  which *chain account* may submit a medical-record extrinsic, and the API's own
+  service signer holds `Role::Admin` there — the dev genesis grants `//Alice`
+  Admin precisely because it is the API's default signer. Removing it there would
+  stop every on-chain write the API makes. That predicate is about a service
+  identity; the API one is about a person. Same name, different question.
+
+The blast radius was checked before the change: 59 call sites, all of which
+compile; both scripts that act as the administrator (the synthetic e2e harness
+and the fixture seeder) use it only for account management and already route
+clinical writes through clinician wallets; and no test asserted that an
+administrator could edit.
+
+One pre-existing bug surfaced while checking it. `handlers/lab.rs` gated a
+**read** on `can_edit_medical_records`, against a comment that said "healthcare
+provider" — so it had always excluded pharmacists, who are providers and who need
+to see a lab result before dispensing against it. It now uses
+`can_view_medical_records`, which is both correct on its own terms and immune to
+changes in the edit predicate.
+
+The two frontend mirrors of the predicate — `canEditMedicalRecords` in
+`client/shared/src/wallet/types.ts` and the `editor` list in
+`useCurrentProvider.ts` — were updated with it. Leaving either behind would have
+put the UI straight back into the state this entry exists to describe: offering
+an affordance the server refuses.
+
+The boundary is now asserted rather than described:
+`api/src/types/domain.rs::role_authority_tests` pins what an administrator
+cannot do, what it deliberately still can, and the read/write asymmetry that
+`handlers/lab.rs` had wrong. A security boundary held up only by prose is one
+careless `matches!` edit away from returning, and it returns silently — nothing
+fails, an administrator can simply write clinical records again.
 
 ### H&P vital-sign types described something nothing produced — CLOSED
 

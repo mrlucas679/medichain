@@ -193,10 +193,21 @@ export function canRegisterPatients(role: Role): boolean {
 }
 
 /**
- * Check if a role can edit medical records
+ * Check if a role can edit medical records.
+ *
+ * Mirrors `Role::can_edit_medical_records` in `api/src/types/domain.rs`, which
+ * is the authority — this is here so the UI can hide an affordance the server
+ * would refuse, never to decide anything on its own.
+ *
+ * `Admin` is deliberately absent from both. An administrator creates accounts
+ * and assigns roles; letting the same account write clinical records means it
+ * can grant itself anything and then act, with the audit trail showing a
+ * legitimate role at the moment of the act. Note the contrast with
+ * `canRegisterPatients` just above, which *does* include Admin — registering a
+ * patient is an administrative act, and it is gated on `is_healthcare_provider`.
  */
 export function canEditMedicalRecords(role: Role): boolean {
-  return role === 'Admin' || role === 'Doctor' || role === 'Nurse';
+  return role === 'Doctor' || role === 'Nurse';
 }
 
 /**

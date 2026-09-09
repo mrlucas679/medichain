@@ -24,9 +24,39 @@ impl Role {
         )
     }
 
-    /// Check if this role can edit medical records
+    /// Which roles may write to a patient's clinical record.
+    ///
+    /// **Not `Admin`.** An administrator creates accounts, assigns and revokes
+    /// roles, and reads the audit log. Letting the same account also write
+    /// clinical records collapses a separation of duties that exists for a
+    /// specific reason: the holder can grant themselves any role and then act,
+    /// and the audit trail will show a legitimate role at the moment of the act.
+    /// The one account able to rewrite the permission system is the one account
+    /// that must not also be able to use it clinically.
+    ///
+    /// This is not a theoretical boundary. `ADMIN_NAV` in the clinician portal
+    /// has never offered the bedside screens — somebody had already drawn this
+    /// line in the product — but the router let an administrator reach them by
+    /// URL and this predicate let the writes through. The two halves disagreed
+    /// and the permissive one won silently.
+    ///
+    /// # What still works
+    ///
+    /// * Registering a patient — `POST /api/register` gates on
+    ///   `is_healthcare_provider`, which still includes `Admin`.
+    /// * Reading clinical data — that is `can_view_medical_records`, which also
+    ///   still includes `Admin`.
+    ///
+    /// # The pallet's predicate of the same name is a different question
+    ///
+    /// `pallet_access_control::can_edit_medical_records` gates which *chain
+    /// account* may submit a medical-record extrinsic, and the API's own service
+    /// signer holds `Role::Admin` there — the dev genesis grants `//Alice` Admin
+    /// precisely because it is the API's default signer. Removing `Admin` there
+    /// would stop every on-chain write the API makes. That predicate is about a
+    /// service identity; this one is about a person.
     pub fn can_edit_medical_records(&self) -> bool {
-        matches!(self, Role::Admin | Role::Doctor | Role::Nurse)
+        matches!(self, Role::Doctor | Role::Nurse)
     }
 
     /// Check if this role can view medical records (all healthcare providers can read)
@@ -560,4 +590,73 @@ pub struct AccessLogEntry {
     pub location: Option<String>,
     pub timestamp: DateTime<Utc>,
     pub emergency: bool,
+}
+
+#[cfg(test)]
+mod role_authority_tests {
+    use super::*;
+
+    /// The separation of duties, asserted rather than commented.
+    ///
+    /// This boundary was previously described in prose and enforced nowhere a
+    /// test could see. It is one careless `matches!` edit away from coming back,
+    /// and the way it comes back is silent: nothing fails, an administrator can
+    /// simply write clinical records again.
+    ///
+    /// Demonstrated before the change, against a running instance: an
+    /// administrator POSTing to `/api/clinical/vitals` was answered `201` with a
+    /// stored reading id. It was never theoretical.
+    #[test]
+    fn administrators_cannot_write_clinical_records() {
+        assert!(
+            !Role::Admin.can_edit_medical_records(),
+            "an administrator assigns and revokes roles; letting the same account write \
+             clinical records means it can grant itself anything and then act, with the \
+             audit trail showing a legitimate role at the moment of the act"
+        );
+        assert!(Role::Doctor.can_edit_medical_records());
+        assert!(Role::Nurse.can_edit_medical_records());
+        assert!(!Role::LabTechnician.can_edit_medical_records());
+        assert!(!Role::Pharmacist.can_edit_medical_records());
+        assert!(!Role::Patient.can_edit_medical_records());
+    }
+
+    /// What removing that authority deliberately did NOT remove.
+    ///
+    /// Both of these carry an administrator, and both should: registering a
+    /// patient is an administrative act, and an administrator investigating an
+    /// access-log entry has to be able to see what was accessed. Narrowing
+    /// either as a side effect of narrowing the write predicate would be a
+    /// regression, so they are pinned here next to it.
+    #[test]
+    fn administrators_keep_registration_and_read_authority() {
+        assert!(
+            Role::Admin.is_healthcare_provider(),
+            "POST /api/register gates on this; an administrator registers patients"
+        );
+        assert!(
+            Role::Admin.can_view_medical_records(),
+            "reading is not writing"
+        );
+        assert!(Role::Admin.is_admin());
+    }
+
+    /// Every provider can read, which is not the same set that can write.
+    ///
+    /// `handlers/lab.rs` gated a *read* on `can_edit_medical_records` against a
+    /// comment that said "healthcare provider", so it had always excluded
+    /// pharmacists — who need to see a lab result before dispensing against it.
+    #[test]
+    fn pharmacists_and_lab_technicians_can_read_but_not_write() {
+        for role in [Role::Pharmacist, Role::LabTechnician] {
+            assert!(
+                role.can_view_medical_records(),
+                "{role} must be able to read"
+            );
+            assert!(
+                !role.can_edit_medical_records(),
+                "{role} must not be able to write"
+            );
+        }
+    }
 }

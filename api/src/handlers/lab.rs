@@ -420,8 +420,14 @@ pub async fn get_lab_submission(
         }
     };
 
-    // Allow access if: healthcare provider OR the lab tech who submitted it
-    let can_view = current_user.role.can_edit_medical_records()
+    // Allow access if: healthcare provider OR the lab tech who submitted it.
+    //
+    // `can_view_medical_records`, not `can_edit_medical_records`. This is a read,
+    // and the comment above has always said "healthcare provider" while the code
+    // asked the *edit* predicate — which excluded pharmacists, who are providers
+    // and who need to see a lab result before dispensing against it. It also
+    // means this gate does not change when the edit predicate does.
+    let can_view = current_user.role.can_view_medical_records()
         || (current_user.role == Role::LabTechnician && submission.submitted_by == current_user_id);
 
     if !can_view {

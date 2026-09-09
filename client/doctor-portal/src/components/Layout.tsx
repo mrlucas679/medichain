@@ -376,7 +376,9 @@ function Layout() {
    * The navigation and the router disagreed: `ADMIN_NAV` deliberately omits the
    * bedside clinical screens, and an administrator could still type `/mar` and
    * get a working medication administration record. Nothing refused it — not the
-   * router, and not the API, whose `can_edit_medical_records` includes `Admin`.
+   * router, and not the API, whose `can_edit_medical_records` then included
+   * `Admin`. It no longer does; this guard is the half that keeps the control
+   * from being offered at all.
    *
    * The shell stays rendered, so a reader can see where they are and navigate
    * away, rather than being bounced somewhere they did not ask for. A redirect

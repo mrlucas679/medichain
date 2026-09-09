@@ -668,17 +668,16 @@ const ASSIGNED_ROUTES: ReadonlySet<string> = new Set(
  *
  * That was found by `e2e/roles.spec.ts` signing in as each account. The first
  * reading of it was that the screen would be harmless because the server would
- * refuse the writes. It would not: `Role::can_edit_medical_records` is
- * `Admin | Doctor | Nurse`, so an administrator's clinical writes succeed. The
+ * refuse the writes. It would not have: `Role::can_edit_medical_records` was
+ * `Admin | Doctor | Nurse`, so an administrator's clinical writes succeeded. The
  * two halves of the product had different ideas about what an administrator
  * does, and the permissive half was winning silently.
  *
- * This makes the navigation the answer, because it is the half somebody
- * deliberately authored. Whether `can_edit_medical_records` should include
- * `Admin` at all is a separate and larger question — see
- * docs/TECHNICAL_DEBT_REGISTER.md — and this does not prejudge it: the API is
- * unchanged, so anything that legitimately depends on that authority still
- * works.
+ * Both halves have since been settled the same way. `Admin` has been removed
+ * from `can_edit_medical_records` in `api/src/types/domain.rs`, so the server
+ * refuses those writes too, and this guard is what stops the screen offering
+ * them in the first place. Neither is redundant: the API is the authority, and
+ * this is what keeps a clinician from being shown a control that will fail.
  */
 export function rolesOwningRoute(role: Role, path: string): Role[] {
   if (!ASSIGNED_ROUTES.has(path)) return [];
